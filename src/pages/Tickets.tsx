@@ -1,5 +1,4 @@
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -10,12 +9,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { useTickets } from "@/hooks/use-tickets";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { CreateTicketDialog } from "@/components/tickets/create-ticket-dialog";
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -47,10 +46,7 @@ export default function Tickets() {
               </p>
             )}
           </div>
-          <Button disabled>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Ticket
-          </Button>
+          <CreateTicketDialog />
         </div>
 
         <Card className="slide-in">
@@ -75,10 +71,7 @@ export default function Tickets() {
             </p>
           )}
         </div>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Ticket
-        </Button>
+        <CreateTicketDialog />
       </div>
 
       <Card className="slide-in">
