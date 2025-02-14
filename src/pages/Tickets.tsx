@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Plus } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 
 const mockTickets = [
   {
@@ -20,6 +21,22 @@ const mockTickets = [
     status: "ABERTO",
     createdAt: "2024-03-20 14:30",
     scheduledFor: "2024-03-21 10:00",
+  },
+  {
+    id: "TICK-002",
+    client: "Empresa ABC Ltda",
+    description: "Manutenção preventiva",
+    status: "ATENDENDO",
+    createdAt: "2024-03-20 15:30",
+    scheduledFor: "2024-03-21 14:00",
+  },
+  {
+    id: "TICK-003",
+    client: "Empresa XYZ Ltda",
+    description: "Atualização de sistema",
+    status: "FECHADO",
+    createdAt: "2024-03-20 16:30",
+    scheduledFor: "2024-03-20 17:00",
   },
 ];
 
@@ -37,10 +54,24 @@ const getStatusColor = (status: string) => {
 };
 
 export default function Tickets() {
+  const [searchParams] = useSearchParams();
+  const statusFilter = searchParams.get("status");
+
+  const filteredTickets = statusFilter 
+    ? mockTickets.filter(ticket => ticket.status === statusFilter)
+    : mockTickets;
+
   return (
     <div className="fade-in">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Tickets</h1>
+        <div>
+          <h1 className="text-3xl font-bold">Tickets</h1>
+          {statusFilter && (
+            <p className="text-muted-foreground mt-2">
+              Filtrando por status: {statusFilter}
+            </p>
+          )}
+        </div>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
           Novo Ticket
@@ -61,7 +92,7 @@ export default function Tickets() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockTickets.map((ticket) => (
+              {filteredTickets.map((ticket) => (
                 <TableRow key={ticket.id}>
                   <TableCell className="font-medium">{ticket.id}</TableCell>
                   <TableCell>{ticket.client}</TableCell>
