@@ -1,4 +1,5 @@
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -9,12 +10,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { useSearchParams } from "react-router-dom";
-import { useTickets } from "@/hooks/use-tickets";
-import { Skeleton } from "@/components/ui/skeleton";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { CreateTicketDialog } from "@/components/tickets/create-ticket-dialog";
+import { Plus } from "lucide-react";
+
+const mockTickets = [
+  {
+    id: "TICK-001",
+    client: "Empresa Exemplo Ltda",
+    description: "Problema com sistema X",
+    status: "ABERTO",
+    createdAt: "2024-03-20 14:30",
+    scheduledFor: "2024-03-21 10:00",
+  },
+];
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -30,48 +37,14 @@ const getStatusColor = (status: string) => {
 };
 
 export default function Tickets() {
-  const [searchParams] = useSearchParams();
-  const statusFilter = searchParams.get("status");
-  const { tickets, isLoading } = useTickets(statusFilter || undefined);
-
-  if (isLoading) {
-    return (
-      <div className="fade-in">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Tickets</h1>
-            {statusFilter && (
-              <p className="text-muted-foreground mt-2">
-                Filtrando por status: {statusFilter}
-              </p>
-            )}
-          </div>
-          <CreateTicketDialog />
-        </div>
-
-        <Card className="slide-in">
-          <CardContent className="p-6 space-y-4">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="fade-in">
       <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">Tickets</h1>
-          {statusFilter && (
-            <p className="text-muted-foreground mt-2">
-              Filtrando por status: {statusFilter}
-            </p>
-          )}
-        </div>
-        <CreateTicketDialog />
+        <h1 className="text-3xl font-bold">Tickets</h1>
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
+          Novo Ticket
+        </Button>
       </div>
 
       <Card className="slide-in">
@@ -88,16 +61,12 @@ export default function Tickets() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tickets?.map((ticket) => (
+              {mockTickets.map((ticket) => (
                 <TableRow key={ticket.id}>
-                  <TableCell className="font-medium">{ticket.codigo}</TableCell>
-                  <TableCell>{ticket.clients.razao_social}</TableCell>
+                  <TableCell className="font-medium">{ticket.id}</TableCell>
+                  <TableCell>{ticket.client}</TableCell>
                   <TableCell>{ticket.description}</TableCell>
-                  <TableCell>
-                    {format(new Date(ticket.scheduled_for), "PPp", {
-                      locale: ptBR,
-                    })}
-                  </TableCell>
+                  <TableCell>{ticket.scheduledFor}</TableCell>
                   <TableCell>
                     <Badge className={getStatusColor(ticket.status)}>
                       {ticket.status}
