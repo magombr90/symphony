@@ -75,11 +75,32 @@ export default function Tickets() {
   const { toast } = useToast();
   const [selectedStatus, setSelectedStatus] = useState("PENDENTE");
   const [selectedClient, setSelectedClient] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+
+  const { data: statusCounts } = useQuery({
+    queryKey: ["tickets-count"],
+    queryFn: async () => {
+      const counts = await Promise.all(
+        statusOptions.map(async (status) => {
+          const { count } = await supabase
+            .from("tickets")
+            .select("*", { count: "exact", head: true })
+            .eq("status", status.value);
+          return {
+            status: status.value,
+            label: status.label,
+            count: count || 0,
+          };
+        })
+      );
+      return counts;
+    },
+  });
 
   const { data: tickets, refetch } = useQuery({
-    queryKey: ["tickets"],
+    queryKey: ["tickets", filterStatus],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("tickets")
         .select(`
           *,
@@ -87,6 +108,11 @@ export default function Tickets() {
         `)
         .order("created_at", { ascending: false });
 
+      if (filterStatus) {
+        query = query.eq("status", filterStatus);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as Ticket[];
     },
@@ -206,6 +232,31 @@ export default function Tickets() {
             </form>
           </DialogContent>
         </Dialog>
+      </div>
+
+      <div className="grid grid-cols-4 gap-4 mb-8">
+        {statusCounts?.map((statusCount) => (
+          <Card
+            key={statusCount.status}
+            className={`cursor-pointer hover:opacity-80 transition-opacity ${
+              filterStatus === statusCount.status ? "ring-2 ring-primary" : ""
+            }`}
+            onClick={() =>
+              setFilterStatus(
+                filterStatus === statusCount.status ? null : statusCount.status
+              )
+            }
+          >
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center">
+                <Badge className={getStatusColor(statusCount.status)}>
+                  {statusCount.label}
+                </Badge>
+                <span className="text-2xl font-bold">{statusCount.count}</span>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <Card className="slide-in">
