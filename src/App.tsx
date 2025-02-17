@@ -5,6 +5,7 @@ import "./App.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import Clients from "./pages/Clients";
+import Tickets from "./pages/Tickets";
 
 const queryClient = new QueryClient();
 
@@ -15,6 +16,7 @@ function App() {
         <AppLayout>
           <Routes>
             <Route path="/clients" element={<Clients />} />
+            <Route path="/tickets" element={<Tickets />} />
           </Routes>
         </AppLayout>
         <Toaster />

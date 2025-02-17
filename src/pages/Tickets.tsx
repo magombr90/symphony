@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -11,40 +12,200 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Plus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { format } from "date-fns";
 
-const mockTickets = [
-  {
-    id: "TICK-001",
-    client: "Empresa Exemplo Ltda",
-    description: "Problema com sistema X",
-    status: "ABERTO",
-    createdAt: "2024-03-20 14:30",
-    scheduledFor: "2024-03-21 10:00",
-  },
+type Ticket = {
+  id: string;
+  codigo: string;
+  status: string;
+  description: string;
+  client_id: string;
+  scheduled_for: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  client: {
+    razao_social: string;
+  };
+};
+
+const statusOptions = [
+  { value: "PENDENTE", label: "Pendente" },
+  { value: "EM_ANDAMENTO", label: "Em Andamento" },
+  { value: "CONCLUIDO", label: "Concluído" },
+  { value: "CANCELADO", label: "Cancelado" },
 ];
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case "ABERTO":
-      return "bg-blue-500";
-    case "ATENDENDO":
+    case "PENDENTE":
       return "bg-yellow-500";
-    case "FECHADO":
+    case "EM_ANDAMENTO":
+      return "bg-blue-500";
+    case "CONCLUIDO":
       return "bg-green-500";
+    case "CANCELADO":
+      return "bg-red-500";
     default:
       return "bg-gray-500";
   }
 };
 
 export default function Tickets() {
+  const [open, setOpen] = useState(false);
+  const { toast } = useToast();
+  const [selectedStatus, setSelectedStatus] = useState("PENDENTE");
+  const [selectedClient, setSelectedClient] = useState("");
+
+  const { data: tickets, refetch } = useQuery({
+    queryKey: ["tickets"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tickets")
+        .select(`
+          *,
+          client:clients(razao_social)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data as Ticket[];
+    },
+  });
+
+  const { data: clients } = useQuery({
+    queryKey: ["clients"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("clients").select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+
+    const scheduledFor = new Date(String(formData.get("scheduled_for")));
+    
+    const newTicket = {
+      description: String(formData.get("description")),
+      client_id: selectedClient,
+      status: selectedStatus,
+      scheduled_for: scheduledFor.toISOString(),
+      created_by: "system", // Temporário até implementar autenticação
+    };
+
+    const { error } = await supabase.from("tickets").insert(newTicket);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao criar ticket",
+        description: error.message,
+      });
+      return;
+    }
+
+    toast({
+      title: "Ticket criado com sucesso!",
+    });
+    setOpen(false);
+    refetch();
+  };
+
   return (
     <div className="fade-in">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Tickets</h1>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Ticket
-        </Button>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Ticket
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Novo Ticket</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label>Cliente</Label>
+                <Select
+                  value={selectedClient}
+                  onValueChange={setSelectedClient}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um cliente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clients?.map((client) => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.razao_social}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="description">Descrição</Label>
+                <Input id="description" name="description" required />
+              </div>
+              <div>
+                <Label>Status</Label>
+                <Select
+                  value={selectedStatus}
+                  onValueChange={setSelectedStatus}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusOptions.map((status) => (
+                      <SelectItem key={status.value} value={status.value}>
+                        {status.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="scheduled_for">Data Agendada</Label>
+                <Input
+                  id="scheduled_for"
+                  name="scheduled_for"
+                  type="datetime-local"
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full">
+                Salvar
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Card className="slide-in">
@@ -55,21 +216,23 @@ export default function Tickets() {
                 <TableHead>Código</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Descrição</TableHead>
-                <TableHead>Agendamento</TableHead>
+                <TableHead>Data Agendada</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockTickets.map((ticket) => (
+              {tickets?.map((ticket) => (
                 <TableRow key={ticket.id}>
-                  <TableCell className="font-medium">{ticket.id}</TableCell>
-                  <TableCell>{ticket.client}</TableCell>
+                  <TableCell>{ticket.codigo}</TableCell>
+                  <TableCell>{ticket.client.razao_social}</TableCell>
                   <TableCell>{ticket.description}</TableCell>
-                  <TableCell>{ticket.scheduledFor}</TableCell>
+                  <TableCell>
+                    {format(new Date(ticket.scheduled_for), "dd/MM/yyyy HH:mm")}
+                  </TableCell>
                   <TableCell>
                     <Badge className={getStatusColor(ticket.status)}>
-                      {ticket.status}
+                      {statusOptions.find((s) => s.value === ticket.status)?.label}
                     </Badge>
                   </TableCell>
                   <TableCell>
