@@ -39,8 +39,36 @@ export type Database = {
         }
         Relationships: []
       }
+      system_users: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          role: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          role?: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          role?: string
+        }
+        Relationships: []
+      }
       tickets: {
         Row: {
+          assigned_to: string | null
           client_id: string
           codigo: string
           created_at: string
@@ -52,6 +80,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_to?: string | null
           client_id: string
           codigo: string
           created_at?: string
@@ -63,6 +92,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_to?: string | null
           client_id?: string
           codigo?: string
           created_at?: string
@@ -75,10 +105,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "system_users"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "tickets_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "system_users"
             referencedColumns: ["id"]
           },
         ]

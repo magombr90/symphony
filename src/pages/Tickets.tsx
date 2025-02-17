@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -48,6 +47,14 @@ type Ticket = {
   };
 };
 
+type SystemUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  active: boolean;
+};
+
 const statusOptions = [
   { value: "PENDENTE", label: "Pendente" },
   { value: "EM_ANDAMENTO", label: "Em Andamento" },
@@ -75,7 +82,44 @@ export default function Tickets() {
   const { toast } = useToast();
   const [selectedStatus, setSelectedStatus] = useState("PENDENTE");
   const [selectedClient, setSelectedClient] = useState("");
+  const [selectedUser, setSelectedUser] = useState("");
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [filterUser, setFilterUser] = useState<string | null>(null);
+
+  const { data: userStats } = useQuery({
+    queryKey: ["user-tickets-stats"],
+    queryFn: async () => {
+      const { data: users } = await supabase
+        .from("system_users")
+        .select("*")
+        .eq("active", true);
+
+      if (!users) return [];
+
+      const stats = await Promise.all(
+        users.map(async (user) => {
+          const { count: total } = await supabase
+            .from("tickets")
+            .select("*", { count: "exact", head: true })
+            .eq("assigned_to", user.id);
+
+          const { data: inProgress } = await supabase
+            .from("tickets")
+            .select("*")
+            .eq("assigned_to", user.id)
+            .eq("status", "EM_ANDAMENTO");
+
+          return {
+            user,
+            total: total || 0,
+            inProgress: inProgress?.length || 0,
+          };
+        })
+      );
+
+      return stats;
+    },
+  });
 
   const { data: statusCounts } = useQuery({
     queryKey: ["tickets-count"],
@@ -98,13 +142,14 @@ export default function Tickets() {
   });
 
   const { data: tickets, refetch } = useQuery({
-    queryKey: ["tickets", filterStatus],
+    queryKey: ["tickets", filterStatus, filterUser],
     queryFn: async () => {
       let query = supabase
         .from("tickets")
         .select(`
           *,
-          client:clients(razao_social)
+          client:clients(razao_social),
+          assigned_user:system_users(name)
         `)
         .order("created_at", { ascending: false });
 
@@ -112,9 +157,13 @@ export default function Tickets() {
         query = query.eq("status", filterStatus);
       }
 
+      if (filterUser) {
+        query = query.eq("assigned_to", filterUser);
+      }
+
       const { data, error } = await query;
       if (error) throw error;
-      return data as Ticket[];
+      return data as (Ticket & { assigned_user: { name: string } })[];
     },
   });
 
@@ -124,6 +173,18 @@ export default function Tickets() {
       const { data, error } = await supabase.from("clients").select("*");
       if (error) throw error;
       return data;
+    },
+  });
+
+  const { data: systemUsers } = useQuery({
+    queryKey: ["system-users"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("system_users")
+        .select("*")
+        .eq("active", true);
+      if (error) throw error;
+      return data as SystemUser[];
     },
   });
 
@@ -138,7 +199,8 @@ export default function Tickets() {
       client_id: selectedClient,
       status: selectedStatus,
       scheduled_for: scheduledFor.toISOString(),
-      created_by: "system", // Temporário até implementar autenticação
+      assigned_to: selectedUser,
+      created_by: selectedUser, // Temporário, idealmente viria do contexto de autenticação
     };
 
     const { error } = await supabase.from("tickets").insert(newTicket);
@@ -195,6 +257,25 @@ export default function Tickets() {
                 </Select>
               </div>
               <div>
+                <Label>Responsável</Label>
+                <Select
+                  value={selectedUser}
+                  onValueChange={setSelectedUser}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um responsável" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {systemUsers?.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
                 <Label htmlFor="description">Descrição</Label>
                 <Input id="description" name="description" required />
               </div>
@@ -234,6 +315,34 @@ export default function Tickets() {
         </Dialog>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        {userStats?.map(({ user, total, inProgress }) => (
+          <Card
+            key={user.id}
+            className={`cursor-pointer hover:opacity-80 transition-opacity ${
+              filterUser === user.id ? "ring-2 ring-primary" : ""
+            }`}
+            onClick={() =>
+              setFilterUser(filterUser === user.id ? null : user.id)
+            }
+          >
+            <CardContent className="p-6">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-semibold">{user.name}</h3>
+                  <Badge className="bg-blue-500">
+                    {inProgress} em andamento
+                  </Badge>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Total de tickets: {total}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       <div className="grid grid-cols-4 gap-4 mb-8">
         {statusCounts?.map((statusCount) => (
           <Card
@@ -266,6 +375,7 @@ export default function Tickets() {
               <TableRow>
                 <TableHead>Código</TableHead>
                 <TableHead>Cliente</TableHead>
+                <TableHead>Responsável</TableHead>
                 <TableHead>Descrição</TableHead>
                 <TableHead>Data Agendada</TableHead>
                 <TableHead>Status</TableHead>
@@ -277,6 +387,7 @@ export default function Tickets() {
                 <TableRow key={ticket.id}>
                   <TableCell>{ticket.codigo}</TableCell>
                   <TableCell>{ticket.client.razao_social}</TableCell>
+                  <TableCell>{ticket.assigned_user?.name}</TableCell>
                   <TableCell>{ticket.description}</TableCell>
                   <TableCell>
                     {format(new Date(ticket.scheduled_for), "dd/MM/yyyy HH:mm")}

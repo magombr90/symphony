@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import Clients from "./pages/Clients";
 import Tickets from "./pages/Tickets";
+import SystemUsers from "./pages/SystemUsers";
 
 const queryClient = new QueryClient();
 
@@ -17,6 +18,7 @@ function App() {
           <Routes>
             <Route path="/clients" element={<Clients />} />
             <Route path="/tickets" element={<Tickets />} />
+            <Route path="/system-users" element={<SystemUsers />} />
           </Routes>
         </AppLayout>
         <Toaster />
