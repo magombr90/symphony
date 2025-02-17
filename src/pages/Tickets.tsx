@@ -45,6 +45,10 @@ type Ticket = {
   client: {
     razao_social: string;
   };
+  assigned_to: string | null;
+  assigned_user?: {
+    name: string | null;
+  } | null;
 };
 
 type SystemUser = {
@@ -163,7 +167,7 @@ export default function Tickets() {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as (Ticket & { assigned_user: { name: string } })[];
+      return data as Ticket[];
     },
   });
 
@@ -199,11 +203,13 @@ export default function Tickets() {
       client_id: selectedClient,
       status: selectedStatus,
       scheduled_for: scheduledFor.toISOString(),
-      assigned_to: selectedUser,
-      created_by: selectedUser, // Temporário, idealmente viria do contexto de autenticação
+      assigned_to: selectedUser || null,
+      created_by: selectedUser // Temporário, idealmente viria do contexto de autenticação
     };
 
-    const { error } = await supabase.from("tickets").insert(newTicket);
+    const { error } = await supabase
+      .from("tickets")
+      .insert(newTicket as any);
 
     if (error) {
       toast({
