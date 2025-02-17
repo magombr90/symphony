@@ -31,6 +31,7 @@ type Client = {
   endereco: string | null;
   telefone: string | null;
   email: string | null;
+  created_at: string;
 };
 
 export default function Clients() {
@@ -40,8 +41,20 @@ export default function Clients() {
   const { data: clients, refetch } = useQuery({
     queryKey: ["clients"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("clients").select("*");
-      if (error) throw error;
+      const { data, error } = await supabase
+        .from("clients")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao carregar clientes",
+          description: error.message,
+        });
+        throw error;
+      }
+
       return data as Client[];
     },
   });
@@ -73,6 +86,24 @@ export default function Clients() {
       title: "Cliente criado com sucesso!",
     });
     setOpen(false);
+    refetch();
+  };
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from("clients").delete().eq("id", id);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao deletar cliente",
+        description: error.message,
+      });
+      return;
+    }
+
+    toast({
+      title: "Cliente deletado com sucesso!",
+    });
     refetch();
   };
 
@@ -139,9 +170,13 @@ export default function Clients() {
                   <TableCell>{client.razao_social}</TableCell>
                   <TableCell>{client.telefone}</TableCell>
                   <TableCell>{client.email}</TableCell>
-                  <TableCell>
-                    <Button variant="outline" size="sm">
-                      Ver Histórico
+                  <TableCell className="space-x-2">
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={() => handleDelete(client.id)}
+                    >
+                      Excluir
                     </Button>
                   </TableCell>
                 </TableRow>
