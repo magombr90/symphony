@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus } from "lucide-react";
+import { Plus, History, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -23,6 +23,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 type Client = {
   id: string;
@@ -34,8 +42,40 @@ type Client = {
   created_at: string;
 };
 
+type Ticket = {
+  id: string;
+  codigo: string;
+  description: string;
+  status: string;
+  scheduled_for: string;
+  created_at: string;
+};
+
+const statusOptions = [
+  { value: "PENDENTE", label: "Pendente" },
+  { value: "EM_ANDAMENTO", label: "Em Andamento" },
+  { value: "CONCLUIDO", label: "Concluído" },
+  { value: "CANCELADO", label: "Cancelado" },
+];
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "PENDENTE":
+      return "bg-yellow-500";
+    case "EM_ANDAMENTO":
+      return "bg-blue-500";
+    case "CONCLUIDO":
+      return "bg-green-500";
+    case "CANCELADO":
+      return "bg-red-500";
+    default:
+      return "bg-gray-500";
+  }
+};
+
 export default function Clients() {
   const [open, setOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const { toast } = useToast();
 
   const { data: clients, refetch } = useQuery({
@@ -56,6 +96,29 @@ export default function Clients() {
       }
 
       return data as Client[];
+    },
+  });
+
+  const { data: clientTickets } = useQuery({
+    queryKey: ["client-tickets", selectedClient?.id],
+    enabled: !!selectedClient,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tickets")
+        .select("*")
+        .eq("client_id", selectedClient?.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao carregar tickets",
+          description: error.message,
+        });
+        throw error;
+      }
+
+      return data as Ticket[];
     },
   });
 
@@ -172,6 +235,14 @@ export default function Clients() {
                   <TableCell>{client.email}</TableCell>
                   <TableCell className="space-x-2">
                     <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setSelectedClient(client)}
+                    >
+                      <History className="h-4 w-4 mr-2" />
+                      Histórico
+                    </Button>
+                    <Button 
                       variant="destructive" 
                       size="sm"
                       onClick={() => handleDelete(client.id)}
@@ -185,6 +256,51 @@ export default function Clients() {
           </Table>
         </CardContent>
       </Card>
+
+      <Sheet open={!!selectedClient} onOpenChange={() => setSelectedClient(null)}>
+        <SheetContent className="w-full sm:max-w-2xl">
+          <SheetHeader>
+            <SheetTitle>
+              Histórico de Tickets - {selectedClient?.razao_social}
+            </SheetTitle>
+          </SheetHeader>
+          <div className="mt-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Código</TableHead>
+                  <TableHead>Descrição</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Data Agendada</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {clientTickets?.map((ticket) => (
+                  <TableRow key={ticket.id}>
+                    <TableCell>{ticket.codigo}</TableCell>
+                    <TableCell>{ticket.description}</TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(ticket.status)}>
+                        {statusOptions.find(s => s.value === ticket.status)?.label}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {format(new Date(ticket.scheduled_for), "dd/MM/yyyy HH:mm")}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {clientTickets?.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-4">
+                      Nenhum ticket encontrado para este cliente.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
