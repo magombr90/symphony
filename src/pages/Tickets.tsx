@@ -153,7 +153,7 @@ export default function Tickets() {
         .select(`
           *,
           client:clients(razao_social),
-          assigned_user:system_users(name)
+          assigned_user:system_users!tickets_assigned_to_fkey(name)
         `)
         .order("created_at", { ascending: false });
 
