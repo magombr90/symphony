@@ -66,6 +66,48 @@ export type Database = {
         }
         Relationships: []
       }
+      ticket_history: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          reason: string | null
+          status: string
+          ticket_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          reason?: string | null
+          status: string
+          ticket_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          reason?: string | null
+          status?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_history_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "system_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_history_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tickets: {
         Row: {
           assigned_to: string | null

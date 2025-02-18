@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { format } from "date-fns";
+import { Textarea } from "@/components/ui/textarea";
 
 type Ticket = {
   id: string;
@@ -83,6 +84,9 @@ const getStatusColor = (status: string) => {
 
 export default function Tickets() {
   const [open, setOpen] = useState(false);
+  const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
+  const [showReasonDialog, setShowReasonDialog] = useState(false);
+  const [reason, setReason] = useState("");
   const { toast } = useToast();
   const [selectedStatus, setSelectedStatus] = useState("PENDENTE");
   const [selectedClient, setSelectedClient] = useState("");
@@ -225,6 +229,68 @@ export default function Tickets() {
     });
     setOpen(false);
     refetch();
+  };
+
+  const handleStatusChange = async (ticketId: string, newStatus: string) => {
+    if (newStatus === "CANCELADO" || newStatus === "CONCLUIDO") {
+      setEditingTicket({
+        ...(tickets?.find((t) => t.id === ticketId) as Ticket),
+        status: newStatus,
+      });
+      setShowReasonDialog(true);
+      return;
+    }
+
+    await updateTicketStatus(ticketId, newStatus);
+  };
+
+  const updateTicketStatus = async (ticketId: string, newStatus: string, reasonText?: string) => {
+    const { error: updateError } = await supabase
+      .from("tickets")
+      .update({ status: newStatus })
+      .eq("id", ticketId);
+
+    if (updateError) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao atualizar status",
+        description: updateError.message,
+      });
+      return;
+    }
+
+    if (reasonText) {
+      const { error: historyError } = await supabase
+        .from("ticket_history")
+        .insert({
+          ticket_id: ticketId,
+          status: newStatus,
+          reason: reasonText,
+          created_by: selectedUser, // Idealmente viria do contexto de autenticação
+        });
+
+      if (historyError) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao registrar histórico",
+          description: historyError.message,
+        });
+        return;
+      }
+    }
+
+    toast({
+      title: "Status atualizado com sucesso!",
+    });
+    refetch();
+    setShowReasonDialog(false);
+    setReason("");
+    setEditingTicket(null);
+  };
+
+  const handleReasonSubmit = async () => {
+    if (!editingTicket) return;
+    await updateTicketStatus(editingTicket.id, editingTicket.status, reason);
   };
 
   return (
@@ -404,9 +470,21 @@ export default function Tickets() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Button variant="outline" size="sm">
-                      Detalhes
-                    </Button>
+                    <Select
+                      value={ticket.status}
+                      onValueChange={(value) => handleStatusChange(ticket.id, value)}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue>Alterar Status</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {statusOptions.map((status) => (
+                          <SelectItem key={status.value} value={status.value}>
+                            {status.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </TableCell>
                 </TableRow>
               ))}
@@ -414,6 +492,36 @@ export default function Tickets() {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={showReasonDialog} onOpenChange={setShowReasonDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingTicket?.status === "CANCELADO"
+                ? "Motivo do Cancelamento"
+                : "Motivo da Conclusão"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Motivo</Label>
+              <Textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Digite o motivo..."
+                required
+              />
+            </div>
+            <Button
+              onClick={handleReasonSubmit}
+              className="w-full"
+              disabled={!reason.trim()}
+            >
+              Salvar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
