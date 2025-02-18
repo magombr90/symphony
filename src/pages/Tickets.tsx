@@ -1,16 +1,5 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -21,12 +10,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -37,8 +20,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
+import { TicketStats } from "@/components/tickets/TicketStats";
+import { TicketsTable } from "@/components/tickets/TicketsTable";
+import { TicketDetails } from "@/components/tickets/TicketDetails";
 
 type Ticket = {
   id: string;
@@ -59,44 +44,12 @@ type Ticket = {
   } | null;
 };
 
-type SystemUser = {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  active: boolean;
-};
-
-type TicketHistory = {
-  id: string;
-  ticket_id: string;
-  status: string;
-  reason: string;
-  created_at: string;
-  created_by: string;
-};
-
 const statusOptions = [
   { value: "PENDENTE", label: "Pendente" },
   { value: "EM_ANDAMENTO", label: "Em Andamento" },
   { value: "CONCLUIDO", label: "Concluído" },
   { value: "CANCELADO", label: "Cancelado" },
 ];
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "PENDENTE":
-      return "bg-yellow-500";
-    case "EM_ANDAMENTO":
-      return "bg-blue-500";
-    case "CONCLUIDO":
-      return "bg-green-500";
-    case "CANCELADO":
-      return "bg-red-500";
-    default:
-      return "bg-gray-500";
-  }
-};
 
 export default function Tickets() {
   const [open, setOpen] = useState(false);
@@ -422,120 +375,20 @@ export default function Tickets() {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        {userStats?.map(({ user, total, inProgress }) => (
-          <Card
-            key={user.id}
-            className={`cursor-pointer hover:opacity-80 transition-opacity ${
-              filterUser === user.id ? "ring-2 ring-primary" : ""
-            }`}
-            onClick={() =>
-              setFilterUser(filterUser === user.id ? null : user.id)
-            }
-          >
-            <CardContent className="p-6">
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-semibold">{user.name}</h3>
-                  <Badge className="bg-blue-500">
-                    {inProgress} em andamento
-                  </Badge>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  Total de tickets: {total}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <TicketStats
+        userStats={userStats || []}
+        statusCounts={statusCounts || []}
+        filterUser={filterUser}
+        filterStatus={filterStatus}
+        onFilterUserChange={setFilterUser}
+        onFilterStatusChange={setFilterStatus}
+      />
 
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        {statusCounts?.map((statusCount) => (
-          <Card
-            key={statusCount.status}
-            className={`cursor-pointer hover:opacity-80 transition-opacity ${
-              filterStatus === statusCount.status ? "ring-2 ring-primary" : ""
-            }`}
-            onClick={() =>
-              setFilterStatus(
-                filterStatus === statusCount.status ? null : statusCount.status
-              )
-            }
-          >
-            <CardContent className="p-6">
-              <div className="flex justify-between items-center">
-                <Badge className={getStatusColor(statusCount.status)}>
-                  {statusCount.label}
-                </Badge>
-                <span className="text-2xl font-bold">{statusCount.count}</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Card className="slide-in">
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Código</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Responsável</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Data Agendada</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tickets?.map((ticket) => (
-                <TableRow key={ticket.id}>
-                  <TableCell>{ticket.codigo}</TableCell>
-                  <TableCell>{ticket.client.razao_social}</TableCell>
-                  <TableCell>{ticket.assigned_user?.name}</TableCell>
-                  <TableCell>{ticket.description}</TableCell>
-                  <TableCell>
-                    {format(new Date(ticket.scheduled_for), "dd/MM/yyyy HH:mm")}
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(ticket.status)}>
-                      {statusOptions.find((s) => s.value === ticket.status)?.label}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedTicketDetails(ticket)}
-                      >
-                        Detalhes
-                      </Button>
-                      <Select
-                        value={ticket.status}
-                        onValueChange={(value) => handleStatusChange(ticket.id, value)}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue>Alterar Status</SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {statusOptions.map((status) => (
-                            <SelectItem key={status.value} value={status.value}>
-                              {status.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <TicketsTable
+        tickets={tickets || []}
+        onStatusChange={handleStatusChange}
+        onViewDetails={setSelectedTicketDetails}
+      />
 
       <Dialog open={showReasonDialog} onOpenChange={setShowReasonDialog}>
         <DialogContent>
@@ -567,79 +420,11 @@ export default function Tickets() {
         </DialogContent>
       </Dialog>
 
-      <Sheet 
-        open={!!selectedTicketDetails} 
-        onOpenChange={() => setSelectedTicketDetails(null)}
-      >
-        <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>
-              Detalhes do Ticket - {selectedTicketDetails?.codigo}
-            </SheetTitle>
-          </SheetHeader>
-          {selectedTicketDetails && (
-            <div className="mt-6 space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Cliente</Label>
-                  <p className="mt-1">{selectedTicketDetails.client.razao_social}</p>
-                </div>
-                <div>
-                  <Label>Responsável</Label>
-                  <p className="mt-1">{selectedTicketDetails.assigned_user?.name}</p>
-                </div>
-                <div>
-                  <Label>Data Agendada</Label>
-                  <p className="mt-1">
-                    {format(new Date(selectedTicketDetails.scheduled_for), "dd/MM/yyyy HH:mm")}
-                  </p>
-                </div>
-                <div>
-                  <Label>Status Atual</Label>
-                  <Badge className={`mt-1 ${getStatusColor(selectedTicketDetails.status)}`}>
-                    {statusOptions.find((s) => s.value === selectedTicketDetails.status)?.label}
-                  </Badge>
-                </div>
-              </div>
-
-              <div>
-                <Label>Descrição</Label>
-                <p className="mt-1">{selectedTicketDetails.description}</p>
-              </div>
-
-              <div>
-                <Label className="mb-2 block">Histórico de Status</Label>
-                {ticketHistory && ticketHistory.length > 0 ? (
-                  <div className="space-y-4">
-                    {ticketHistory.map((history) => (
-                      <div key={history.id} className="border p-4 rounded-lg">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <Badge className={getStatusColor(history.status)}>
-                              {statusOptions.find((s) => s.value === history.status)?.label}
-                            </Badge>
-                            {history.reason && (
-                              <p className="mt-2 text-sm text-gray-600">
-                                Motivo: {history.reason}
-                              </p>
-                            )}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            <p>{format(new Date(history.created_at), "dd/MM/yyyy HH:mm")}</p>
-                            <p className="text-right">por {history.created_by_user.name}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">Nenhuma alteração de status registrada.</p>
-                )}
-              </div>
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
+      <TicketDetails
+        ticket={selectedTicketDetails}
+        history={ticketHistory || []}
+        onClose={() => setSelectedTicketDetails(null)}
+      />
     </div>
   );
 }
