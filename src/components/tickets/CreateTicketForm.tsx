@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,14 +19,14 @@ interface CreateTicketFormProps {
 }
 
 const statusOptions = [
-  { value: "PENDENTE", label: "Pendente" },
-  { value: "EM_ANDAMENTO", label: "Em Andamento" },
-  { value: "CONCLUIDO", label: "Concluído" },
-  { value: "CANCELADO", label: "Cancelado" },
+  { value: "pending", label: "Pendente" },
+  { value: "in_progress", label: "Em Andamento" },
+  { value: "completed", label: "Concluído" },
+  { value: "canceled", label: "Cancelado" },
 ];
 
 export function CreateTicketForm({ clients, systemUsers, onSuccess }: CreateTicketFormProps) {
-  const [selectedStatus, setSelectedStatus] = useState("PENDENTE");
+  const [selectedStatus, setSelectedStatus] = useState("pending");
   const [selectedClient, setSelectedClient] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
   const { toast } = useToast();
