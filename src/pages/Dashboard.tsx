@@ -36,8 +36,19 @@ export default function Dashboard() {
     const existingUser = acc.find(u => u.user.id === ticket.assigned_to);
     if (existingUser) {
       existingUser.total += 1;
-      if (ticket.status === 'EM_ANDAMENTO') {
-        existingUser.inProgress += 1;
+      switch (ticket.status) {
+        case 'PENDENTE':
+          existingUser.pending += 1;
+          break;
+        case 'EM_ANDAMENTO':
+          existingUser.inProgress += 1;
+          break;
+        case 'CONCLUIDO':
+          existingUser.completed += 1;
+          break;
+        case 'CANCELADO':
+          existingUser.canceled += 1;
+          break;
       }
     } else {
       acc.push({
@@ -46,7 +57,10 @@ export default function Dashboard() {
           name: ticket.assigned_user.name || 'Usuário',
         },
         total: 1,
+        pending: ticket.status === 'PENDENTE' ? 1 : 0,
         inProgress: ticket.status === 'EM_ANDAMENTO' ? 1 : 0,
+        completed: ticket.status === 'CONCLUIDO' ? 1 : 0,
+        canceled: ticket.status === 'CANCELADO' ? 1 : 0,
       });
     }
     return acc;

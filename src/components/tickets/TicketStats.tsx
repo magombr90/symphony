@@ -14,7 +14,10 @@ type UserStats = {
     name: string;
   };
   total: number;
+  pending: number;
   inProgress: number;
+  completed: number;
+  canceled: number;
 };
 
 interface TicketStatsProps {
@@ -52,7 +55,7 @@ export function TicketStats({
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        {userStats?.map(({ user, total, inProgress }) => (
+        {userStats?.map(({ user, total, pending, inProgress, completed, canceled }) => (
           <Card
             key={user.id}
             className={`cursor-pointer hover:opacity-80 transition-opacity ${
@@ -64,12 +67,23 @@ export function TicketStats({
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <h3 className="font-semibold">{user.name}</h3>
-                  <Badge className="bg-blue-500">
-                    {inProgress} em andamento
+                  <Badge className="bg-gray-500">
+                    Total: {total}
                   </Badge>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  Total de tickets: {total}
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <Badge className="bg-yellow-500">
+                    Pendente: {pending}
+                  </Badge>
+                  <Badge className="bg-blue-500">
+                    Em andamento: {inProgress}
+                  </Badge>
+                  <Badge className="bg-green-500">
+                    Concluído: {completed}
+                  </Badge>
+                  <Badge className="bg-red-500">
+                    Cancelado: {canceled}
+                  </Badge>
                 </div>
               </div>
             </CardContent>
