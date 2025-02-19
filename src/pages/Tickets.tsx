@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, DollarSign } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useTickets } from "@/hooks/use-tickets";
 import { TicketsTable } from "@/components/tickets/TicketsTable";
 import { TicketDetails } from "@/components/tickets/TicketDetails";
@@ -43,17 +43,7 @@ export default function Tickets() {
 
   const renderFaturarButton = (ticket: Ticket) => {
     if (ticket.status === "CONCLUIDO" && !ticket.faturado) {
-      return (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handleFaturarTicket(ticket.id)}
-          className="text-green-600 hover:text-green-700"
-        >
-          <DollarSign className="h-4 w-4 mr-2" />
-          Faturar
-        </Button>
-      );
+      return handleFaturarTicket(ticket.id);
     }
     return null;
   };

@@ -2,6 +2,7 @@
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { CircleCheck, Circle } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -73,6 +74,26 @@ export function TicketsTable({
     }
   };
 
+  const renderFaturarButton = (ticket: Ticket) => {
+    if (ticket.status === "CONCLUIDO") {
+      const iconColor = ticket.faturado ? "text-green-600" : "text-gray-400";
+      const Icon = ticket.faturado ? CircleCheck : Circle;
+      
+      return (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => renderActions?.(ticket)}
+          className={iconColor}
+          disabled={ticket.faturado}
+        >
+          <Icon className="h-5 w-5" />
+        </Button>
+      );
+    }
+    return null;
+  };
+
   return (
     <Card className="slide-in">
       <CardContent className="p-0">
@@ -129,7 +150,7 @@ export function TicketsTable({
                         </SelectContent>
                       </Select>
                     )}
-                    {renderActions?.(ticket)}
+                    {renderFaturarButton(ticket)}
                   </div>
                 </TableCell>
               </TableRow>
