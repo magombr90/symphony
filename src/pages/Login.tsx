@@ -24,27 +24,31 @@ export default function Login() {
     const password = String(formData.get("password"));
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log("Tentando fazer login com:", { email });
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        console.error("Erro de autenticação:", error);
-        throw new Error("Credenciais inválidas");
+        console.error("Detalhes do erro:", error);
+        throw error;
       }
 
+      console.log("Login bem-sucedido:", data);
+      
       navigate("/");
       
       toast({
         title: "Login realizado com sucesso!",
       });
     } catch (error) {
-      console.error("Erro ao fazer login:", error);
+      console.error("Erro completo:", error);
       toast({
         variant: "destructive",
         title: "Erro ao fazer login",
-        description: error instanceof Error ? error.message : "Erro desconhecido",
+        description: error instanceof Error ? error.message : "Erro ao conectar com o banco de dados",
       });
     } finally {
       setIsLoading(false);
