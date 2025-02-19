@@ -22,35 +22,36 @@ export default function Login() {
     const password = String(formData.get("password"));
 
     try {
-      // Primeiro, tenta fazer login direto com o email
-      let { error: authError } = await supabase.auth.signInWithPassword({
-        email: identifier,
-        password,
-      });
-
-      // Se falhar e o identificador não parece ser um email, tenta buscar o usuário pelo username
-      if (authError && !identifier.includes('@')) {
+      // Se não for um email, busca o email associado ao username
+      let loginEmail = identifier;
+      
+      if (!identifier.includes('@')) {
         const { data: userData, error: userError } = await supabase
           .from("system_users")
           .select("email")
           .eq("username", identifier)
-          .eq("active", true)
-          .single();
+          .maybeSingle();
 
-        if (userError || !userData) {
-          throw new Error("Usuário não encontrado ou inativo");
+        if (userError) {
+          console.error("Erro ao buscar usuário:", userError);
+          throw new Error("Erro ao buscar usuário");
         }
 
-        // Tenta fazer login com o email encontrado
-        const { error: secondAuthError } = await supabase.auth.signInWithPassword({
-          email: userData.email,
-          password,
-        });
-
-        if (secondAuthError) {
-          throw new Error("Credenciais inválidas");
+        if (!userData) {
+          throw new Error("Usuário não encontrado");
         }
-      } else if (authError) {
+
+        loginEmail = userData.email;
+      }
+
+      // Tenta fazer login com o email
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password,
+      });
+
+      if (authError) {
+        console.error("Erro de autenticação:", authError);
         throw new Error("Credenciais inválidas");
       }
 
