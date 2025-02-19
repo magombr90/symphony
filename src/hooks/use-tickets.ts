@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -35,10 +34,6 @@ export function useTickets() {
 
       if (statusFilter) {
         query = query.eq("status", statusFilter);
-      }
-
-      if (!searchTerm && !statusFilter) {
-        query = query.eq("faturado", false);
       }
 
       const { data, error } = await query;
@@ -125,7 +120,6 @@ export function useTickets() {
 
   const updateTicketStatus = async (ticketId: string, newStatus: string, reasonText?: string) => {
     try {
-      // Primeiro, atualiza o status do ticket
       const { error: updateError } = await supabase
         .from("tickets")
         .update({ status: newStatus })
@@ -140,7 +134,6 @@ export function useTickets() {
         return;
       }
 
-      // Se houver um motivo, registra no histórico
       if (reasonText) {
         const historyData = {
           ticket_id: ticketId,
