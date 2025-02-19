@@ -1,13 +1,14 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, UserPlus } from "lucide-react";
 import { useTickets } from "@/hooks/use-tickets";
 import { TicketsTable } from "@/components/tickets/TicketsTable";
 import { TicketDetails } from "@/components/tickets/TicketDetails";
 import { CreateTicketForm } from "@/components/tickets/CreateTicketForm";
 import { TicketSearch } from "@/components/tickets/TicketSearch";
 import { ReasonDialog } from "@/components/tickets/ReasonDialog";
+import { AssignDialog } from "@/components/tickets/AssignDialog";
 import {
   Dialog,
   DialogContent,
@@ -37,7 +38,12 @@ export default function Tickets() {
     setShowReasonDialog,
     reason,
     setReason,
+    showAssignDialog,
+    setShowAssignDialog,
+    selectedUser,
+    setSelectedUser,
     handleStatusChange,
+    handleAssignTicket,
     updateTicketStatus,
     refetch,
   } = useTickets();
@@ -45,6 +51,11 @@ export default function Tickets() {
   const handleReasonSubmit = async () => {
     if (!editingTicket) return;
     await updateTicketStatus(editingTicket.id, editingTicket.status, reason);
+  };
+
+  const handleAssignSubmit = async () => {
+    if (!editingTicket || !selectedUser) return;
+    await handleAssignTicket(editingTicket.id, selectedUser);
   };
 
   return (
@@ -90,6 +101,10 @@ export default function Tickets() {
         tickets={tickets || []}
         onStatusChange={handleStatusChange}
         onViewDetails={(ticket: Ticket) => setSelectedTicketDetails(ticket)}
+        onAssign={(ticket: Ticket) => {
+          setEditingTicket(ticket);
+          setShowAssignDialog(true);
+        }}
       />
 
       <ReasonDialog
@@ -99,6 +114,16 @@ export default function Tickets() {
         reason={reason}
         onReasonChange={setReason}
         onSubmit={handleReasonSubmit}
+      />
+
+      <AssignDialog
+        open={showAssignDialog}
+        onOpenChange={setShowAssignDialog}
+        ticket={editingTicket}
+        users={systemUsers || []}
+        selectedUser={selectedUser}
+        onUserChange={setSelectedUser}
+        onSubmit={handleAssignSubmit}
       />
 
       <TicketDetails

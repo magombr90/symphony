@@ -8,30 +8,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-
-type Ticket = {
-  id: string;
-  codigo: string;
-  status: string;
-  description: string;
-  scheduled_for: string;
-  client: {
-    razao_social: string;
-  };
-  assigned_user?: {
-    name: string | null;
-  } | null;
-};
-
-type TicketHistory = {
-  id: string;
-  status: string;
-  reason: string;
-  created_at: string;
-  created_by_user: {
-    name: string;
-  };
-};
+import { Ticket, TicketHistory } from "@/types/ticket";
 
 interface TicketDetailsProps {
   ticket: Ticket | null;
@@ -44,6 +21,7 @@ const statusOptions = [
   { value: "EM_ANDAMENTO", label: "Em Andamento" },
   { value: "CONCLUIDO", label: "Concluído" },
   { value: "CANCELADO", label: "Cancelado" },
+  { value: "FATURADO", label: "Faturado" },
 ];
 
 export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) {
@@ -57,8 +35,22 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
         return "bg-green-500";
       case "CANCELADO":
         return "bg-red-500";
+      case "FATURADO":
+        return "bg-green-700";
       default:
         return "bg-gray-500";
+    }
+  };
+
+  const getHistoryText = (item: TicketHistory) => {
+    if (item.action_type === 'USER_ASSIGNMENT') {
+      const previousUser = item.previous_assigned_to ? 
+        `${item.previous_assigned_to_user?.name}` : 
+        "Nenhum usuário";
+      const newUser = item.new_assigned_to_user?.name;
+      return `Ticket reatribuído de ${previousUser} para ${newUser}`;
+    } else {
+      return `Status alterado para ${statusOptions.find(s => s.value === item.status)?.label}`;
     }
   };
 
@@ -101,16 +93,16 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
             </div>
 
             <div>
-              <Label className="mb-2 block">Histórico de Status</Label>
+              <Label className="mb-2 block">Histórico</Label>
               {history.length > 0 ? (
                 <div className="space-y-4">
                   {history.map((item) => (
                     <div key={item.id} className="border p-4 rounded-lg">
                       <div className="flex justify-between items-start">
                         <div>
-                          <Badge className={getStatusColor(item.status)}>
-                            {statusOptions.find((s) => s.value === item.status)?.label}
-                          </Badge>
+                          <p className="font-medium">
+                            {getHistoryText(item)}
+                          </p>
                           {item.reason && (
                             <p className="mt-2 text-sm text-gray-600">
                               Motivo: {item.reason}
@@ -126,7 +118,7 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500">Nenhuma alteração de status registrada.</p>
+                <p className="text-sm text-gray-500">Nenhuma alteração registrada.</p>
               )}
             </div>
           </div>

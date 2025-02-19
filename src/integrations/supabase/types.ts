@@ -74,30 +74,53 @@ export type Database = {
       }
       ticket_history: {
         Row: {
+          action_type: string
           created_at: string
           created_by: string
           id: string
+          new_assigned_to: string | null
+          previous_assigned_to: string | null
           reason: string | null
           status: string
           ticket_id: string
         }
         Insert: {
+          action_type?: string
           created_at?: string
           created_by: string
           id?: string
+          new_assigned_to?: string | null
+          previous_assigned_to?: string | null
           reason?: string | null
           status: string
           ticket_id: string
         }
         Update: {
+          action_type?: string
           created_at?: string
           created_by?: string
           id?: string
+          new_assigned_to?: string | null
+          previous_assigned_to?: string | null
           reason?: string | null
           status?: string
           ticket_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_new_assigned_to"
+            columns: ["new_assigned_to"]
+            isOneToOne: false
+            referencedRelation: "system_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_previous_assigned_to"
+            columns: ["previous_assigned_to"]
+            isOneToOne: false
+            referencedRelation: "system_users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ticket_history_created_by_fkey"
             columns: ["created_by"]

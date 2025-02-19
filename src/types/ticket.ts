@@ -32,10 +32,19 @@ export type TicketHistory = {
   id: string;
   ticket_id: string;
   status: string;
-  reason: string;
+  reason: string | null;
   created_at: string;
   created_by: string;
   created_by_user: {
     name: string;
   };
+  action_type: 'STATUS_CHANGE' | 'USER_ASSIGNMENT';
+  previous_assigned_to: string | null;
+  new_assigned_to: string | null;
+  previous_assigned_to_user?: {
+    name: string;
+  } | null;
+  new_assigned_to_user?: {
+    name: string;
+  } | null;
 };

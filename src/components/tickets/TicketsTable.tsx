@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { UserPlus } from "lucide-react";
 
 type Ticket = {
   id: string;
@@ -38,6 +39,7 @@ interface TicketsTableProps {
   tickets: Ticket[];
   onStatusChange: (ticketId: string, newStatus: string) => void;
   onViewDetails: (ticket: Ticket) => void;
+  onAssign: (ticket: Ticket) => void;
 }
 
 const statusOptions = [
@@ -52,6 +54,7 @@ export function TicketsTable({
   tickets, 
   onStatusChange, 
   onViewDetails,
+  onAssign,
 }: TicketsTableProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -108,6 +111,14 @@ export function TicketsTable({
                       onClick={() => onViewDetails(ticket)}
                     >
                       Detalhes
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onAssign(ticket)}
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Reatribuir
                     </Button>
                     <Select
                       value={ticket.status}

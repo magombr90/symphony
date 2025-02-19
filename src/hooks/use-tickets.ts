@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +14,8 @@ export function useTickets() {
   const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
   const [showReasonDialog, setShowReasonDialog] = useState(false);
   const [reason, setReason] = useState("");
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const { toast } = useToast();
 
   const { data: tickets, refetch } = useQuery({
@@ -202,6 +203,50 @@ export function useTickets() {
     }
   };
 
+  const handleAssignTicket = async (ticketId: string, newUserId: string) => {
+    const ticket = tickets?.find((t) => t.id === ticketId);
+    if (!ticket) return;
+
+    try {
+      const { error: updateError } = await supabase
+        .from("tickets")
+        .update({ assigned_to: newUserId })
+        .eq("id", ticketId);
+
+      if (updateError) throw updateError;
+
+      const historyData = {
+        ticket_id: ticketId,
+        action_type: 'USER_ASSIGNMENT',
+        previous_assigned_to: ticket.assigned_to,
+        new_assigned_to: newUserId,
+        created_by: systemUsers?.[0]?.id,
+        status: ticket.status
+      };
+
+      const { error: historyError } = await supabase
+        .from("ticket_history")
+        .insert([historyData]);
+
+      if (historyError) throw historyError;
+
+      toast({
+        title: "Ticket reatribuído com sucesso!",
+      });
+
+      setShowAssignDialog(false);
+      setSelectedUser(null);
+      refetch();
+    } catch (error) {
+      console.error("Erro ao reatribuir ticket:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao reatribuir ticket",
+        description: "Ocorreu um erro ao reatribuir o ticket. Tente novamente.",
+      });
+    }
+  };
+
   return {
     tickets,
     clients,
@@ -220,7 +265,12 @@ export function useTickets() {
     setShowReasonDialog,
     reason,
     setReason,
+    showAssignDialog,
+    setShowAssignDialog,
+    selectedUser,
+    setSelectedUser,
     handleStatusChange,
+    handleAssignTicket,
     updateTicketStatus,
     refetch,
   };
