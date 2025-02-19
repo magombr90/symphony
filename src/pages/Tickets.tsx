@@ -43,7 +43,7 @@ export default function Tickets() {
 
   const renderFaturarButton = (ticket: Ticket) => {
     if (ticket.status === "CONCLUIDO" && !ticket.faturado) {
-      return handleFaturarTicket(ticket.id);
+      return () => handleFaturarTicket(ticket.id);
     }
     return null;
   };
