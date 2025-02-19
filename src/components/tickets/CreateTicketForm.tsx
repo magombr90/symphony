@@ -44,7 +44,8 @@ export function CreateTicketForm({ clients, systemUsers, onSuccess }: CreateTick
       status: selectedStatus,
       scheduled_for: scheduledFor.toISOString(),
       assigned_to: selectedUser || null,
-      created_by: selectedUser // Temporário, idealmente viria do contexto de autenticação
+      created_by: selectedUser, // Temporário, idealmente viria do contexto de autenticação
+      codigo: "TEMP", // Valor temporário que será substituído pelo trigger generate_ticket_code
     };
 
     const { error } = await supabase
