@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import Clients from "./pages/Clients";
 import Tickets from "./pages/Tickets";
 import SystemUsers from "./pages/SystemUsers";
+import Dashboard from "./pages/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -16,6 +17,7 @@ function App() {
       <BrowserRouter>
         <AppLayout>
           <Routes>
+            <Route path="/" element={<Dashboard />} />
             <Route path="/clients" element={<Clients />} />
             <Route path="/tickets" element={<Tickets />} />
             <Route path="/system-users" element={<SystemUsers />} />
