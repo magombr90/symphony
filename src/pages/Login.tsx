@@ -24,19 +24,29 @@ export default function Login() {
     const password = String(formData.get("password"));
 
     try {
-      console.log("Tentando fazer login com:", { email });
+      console.log("Iniciando processo de login...");
       
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data: { session }, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        console.error("Detalhes do erro:", error);
+        console.error("Erro detalhado:", error);
+        
+        if (error.message.includes("Invalid login credentials")) {
+          throw new Error("Email ou senha incorretos");
+        }
+        
         throw error;
       }
 
-      console.log("Login bem-sucedido:", data);
+      if (!session) {
+        console.error("Sessão não criada após login bem-sucedido");
+        throw new Error("Erro ao criar sessão");
+      }
+
+      console.log("Login bem-sucedido!", { session });
       
       navigate("/");
       
