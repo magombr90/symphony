@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -124,47 +123,57 @@ export function useTickets() {
   };
 
   const updateTicketStatus = async (ticketId: string, newStatus: string, reasonText?: string) => {
-    const { error: updateError } = await supabase
-      .from("tickets")
-      .update({ status: newStatus })
-      .eq("id", ticketId);
+    try {
+      const { error: updateError } = await supabase
+        .from("tickets")
+        .update({ status: newStatus })
+        .eq("id", ticketId);
 
-    if (updateError) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao atualizar status",
-        description: updateError.message,
-      });
-      return;
-    }
-
-    if (reasonText) {
-      const { error: historyError } = await supabase
-        .from("ticket_history")
-        .insert({
-          ticket_id: ticketId,
-          status: newStatus,
-          reason: reasonText,
-          created_by: systemUsers?.[0]?.id,
-        });
-
-      if (historyError) {
+      if (updateError) {
         toast({
           variant: "destructive",
-          title: "Erro ao registrar histórico",
-          description: historyError.message,
+          title: "Erro ao atualizar status",
+          description: updateError.message,
         });
         return;
       }
-    }
 
-    toast({
-      title: "Status atualizado com sucesso!",
-    });
-    refetch();
-    setShowReasonDialog(false);
-    setReason("");
-    setEditingTicket(null);
+      if (reasonText) {
+        const { error: historyError } = await supabase
+          .from("ticket_history")
+          .insert([{
+            ticket_id: ticketId,
+            status: newStatus,
+            reason: reasonText,
+            created_by: systemUsers?.[0]?.id,
+          }]);
+
+        if (historyError) {
+          toast({
+            variant: "destructive",
+            title: "Erro ao registrar histórico",
+            description: historyError.message,
+          });
+          return;
+        }
+      }
+
+      toast({
+        title: "Status atualizado com sucesso!",
+      });
+      
+      setShowReasonDialog(false);
+      setReason("");
+      setEditingTicket(null);
+      refetch();
+    } catch (error) {
+      console.error("Erro ao atualizar ticket:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao atualizar ticket",
+        description: "Ocorreu um erro ao atualizar o ticket. Tente novamente.",
+      });
+    }
   };
 
   return {
