@@ -5,11 +5,12 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Ticket, SystemUser, TicketHistory } from "@/types/ticket";
 import { startOfDay, endOfDay } from "date-fns";
+import { DateRange } from "react-day-picker";
 
 export function useTickets() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
-  const [dateFilter, setDateFilter] = useState<Date>();
+  const [dateFilter, setDateFilter] = useState<DateRange>();
   const [selectedTicketDetails, setSelectedTicketDetails] = useState<Ticket | null>(null);
   const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
   const [showReasonDialog, setShowReasonDialog] = useState(false);
@@ -39,10 +40,12 @@ export function useTickets() {
         query = query.eq("status", statusFilter);
       }
 
-      if (dateFilter) {
-        query = query
-          .gte("created_at", startOfDay(dateFilter).toISOString())
-          .lte("created_at", endOfDay(dateFilter).toISOString());
+      if (dateFilter?.from) {
+        query = query.gte("created_at", startOfDay(dateFilter.from).toISOString());
+        
+        if (dateFilter.to) {
+          query = query.lte("created_at", endOfDay(dateFilter.to).toISOString());
+        }
       }
 
       const { data, error } = await query;

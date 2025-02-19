@@ -14,14 +14,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DateRange } from "react-day-picker";
 
 interface TicketSearchProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
   statusFilter: string | null;
   onStatusFilterChange: (value: string | null) => void;
-  dateFilter: Date | undefined;
-  onDateFilterChange: (date: Date | undefined) => void;
+  dateFilter: DateRange | undefined;
+  onDateFilterChange: (date: DateRange | undefined) => void;
   onSearch: () => void;
 }
 
@@ -73,20 +74,33 @@ export function TicketSearch({
           <Button
             variant={"outline"}
             className={cn(
-              "w-[200px] justify-start text-left font-normal",
+              "w-[300px] justify-start text-left font-normal",
               !dateFilter && "text-muted-foreground"
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {dateFilter ? format(dateFilter, "dd/MM/yyyy") : "Data de criação"}
+            {dateFilter?.from ? (
+              dateFilter.to ? (
+                <>
+                  {format(dateFilter.from, "dd/MM/yyyy")} -{" "}
+                  {format(dateFilter.to, "dd/MM/yyyy")}
+                </>
+              ) : (
+                format(dateFilter.from, "dd/MM/yyyy")
+              )
+            ) : (
+              "Período de criação"
+            )}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
-            mode="single"
+            initialFocus
+            mode="range"
+            defaultMonth={dateFilter?.from}
             selected={dateFilter}
             onSelect={onDateFilterChange}
-            initialFocus
+            numberOfMonths={2}
           />
         </PopoverContent>
       </Popover>
