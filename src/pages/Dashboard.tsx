@@ -20,10 +20,15 @@ type Ticket = {
   codigo: string;
   status: string;
   description: string;
+  client_id: string;
   scheduled_for: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
   client: {
     razao_social: string;
   };
+  assigned_to: string | null;
   assigned_user?: {
     name: string | null;
   } | null;
