@@ -22,29 +22,40 @@ export default function Login() {
     const password = String(formData.get("password"));
 
     try {
-      // Corrigindo a query para usar a sintaxe correta do Supabase
-      const { data: user, error: userError } = await supabase
-        .from("system_users")
-        .select("email")
-        .or(`email.eq."${identifier}",username.eq."${identifier}"`)
-        .eq("active", true)
-        .single();
-
-      console.log("Resultado da busca:", user, userError);
-
-      if (userError || !user) {
-        throw new Error("Usuário não encontrado ou inativo");
-      }
-
-      // Agora tenta fazer login com o email do usuário
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: user.email,
+      // Tentando login direto com o Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: identifier, // Tentando usar o identificador diretamente como email
         password,
       });
 
-      console.log("Resultado do login:", authError);
+      console.log("Resultado da autenticação:", { authData, authError });
 
-      if (authError) throw authError;
+      if (authError) {
+        // Se falhar com o identificador direto, tenta buscar o email do usuário
+        console.log("Tentando buscar usuário pelo identificador alternativo...");
+        const { data: user, error: userError } = await supabase
+          .from("system_users")
+          .select("email")
+          .or(`email.eq."${identifier}",username.eq."${identifier}"`)
+          .eq("active", true)
+          .single();
+
+        console.log("Resultado da busca pelo identificador:", { user, userError });
+
+        if (userError || !user) {
+          throw new Error("Usuário não encontrado ou inativo");
+        }
+
+        // Tenta fazer login novamente com o email encontrado
+        const { error: secondAuthError } = await supabase.auth.signInWithPassword({
+          email: user.email,
+          password,
+        });
+
+        console.log("Resultado do segundo login:", secondAuthError);
+
+        if (secondAuthError) throw secondAuthError;
+      }
 
       navigate("/");
       
