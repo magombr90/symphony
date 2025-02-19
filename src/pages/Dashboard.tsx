@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { TicketsTable } from "@/components/tickets/TicketsTable";
 import { TicketStats } from "@/components/tickets/TicketStats";
@@ -7,8 +8,44 @@ import { Ticket } from "@/types/ticket";
 
 export default function Dashboard() {
   const { tickets } = useTickets();
+  const [filterUser, setFilterUser] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
 
   const recentTickets = tickets?.slice(0, 5) || [];
+
+  // Calcular stats dos usuários
+  const userStats = tickets?.reduce((acc: any[], ticket: Ticket) => {
+    if (!ticket.assigned_to || !ticket.assigned_user) return acc;
+    
+    const existingUser = acc.find(u => u.user.id === ticket.assigned_to);
+    if (existingUser) {
+      existingUser.total += 1;
+      if (ticket.status === 'EM_ANDAMENTO') {
+        existingUser.inProgress += 1;
+      }
+    } else {
+      acc.push({
+        user: {
+          id: ticket.assigned_to,
+          name: ticket.assigned_user.name || 'Usuário',
+        },
+        total: 1,
+        inProgress: ticket.status === 'EM_ANDAMENTO' ? 1 : 0,
+      });
+    }
+    return acc;
+  }, []) || [];
+
+  // Calcular contagem de status
+  const statusCounts = [
+    { status: 'PENDENTE', label: 'Pendente', count: 0 },
+    { status: 'EM_ANDAMENTO', label: 'Em Andamento', count: 0 },
+    { status: 'CONCLUIDO', label: 'Concluído', count: 0 },
+    { status: 'CANCELADO', label: 'Cancelado', count: 0 },
+  ].map(statusItem => ({
+    ...statusItem,
+    count: tickets?.filter(t => t.status === statusItem.status).length || 0,
+  }));
 
   return (
     <div className="fade-in space-y-8">
@@ -17,7 +54,14 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-4">
-        <TicketStats tickets={tickets || []} />
+        <TicketStats 
+          userStats={userStats}
+          statusCounts={statusCounts}
+          filterUser={filterUser}
+          filterStatus={filterStatus}
+          onFilterUserChange={setFilterUser}
+          onFilterStatusChange={setFilterStatus}
+        />
         
         <Card>
           <div className="p-6">
@@ -26,7 +70,7 @@ export default function Dashboard() {
               tickets={recentTickets} 
               onStatusChange={() => {}} 
               onViewDetails={() => {}}
-              onAssign={() => {}} // Adicionando a propriedade que faltava
+              onAssign={() => {}}
             />
           </div>
         </Card>
