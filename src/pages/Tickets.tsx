@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, CircleCheck, Circle } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useTickets } from "@/hooks/use-tickets";
 import { TicketsTable } from "@/components/tickets/TicketsTable";
 import { TicketDetails } from "@/components/tickets/TicketDetails";
@@ -40,26 +40,6 @@ export default function Tickets() {
     updateTicketStatus,
     refetch,
   } = useTickets();
-
-  const renderFaturarButton = (ticket: Ticket) => {
-    if (ticket.status === "CONCLUIDO" && !ticket.faturado) {
-      const iconColor = ticket.faturado ? "text-green-600" : "text-gray-400";
-      const Icon = ticket.faturado ? CircleCheck : Circle;
-      
-      return (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => handleFaturarTicket(ticket.id)}
-          className={iconColor}
-          disabled={ticket.faturado}
-        >
-          <Icon className="h-5 w-5" />
-        </Button>
-      );
-    }
-    return null;
-  };
 
   const handleReasonSubmit = async () => {
     if (!editingTicket) return;
@@ -107,7 +87,6 @@ export default function Tickets() {
         tickets={tickets || []}
         onStatusChange={handleStatusChange}
         onViewDetails={(ticket: Ticket) => setSelectedTicketDetails(ticket)}
-        renderActions={renderFaturarButton}
       />
 
       <ReasonDialog
