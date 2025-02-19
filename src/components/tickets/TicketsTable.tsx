@@ -76,66 +76,68 @@ export function TicketsTable({
   return (
     <Card className="slide-in">
       <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Código</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Responsável</TableHead>
-              <TableHead>Descrição</TableHead>
-              <TableHead>Data Agendada</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {tickets?.map((ticket) => (
-              <TableRow key={ticket.id}>
-                <TableCell>{ticket.codigo}</TableCell>
-                <TableCell>{ticket.client.razao_social}</TableCell>
-                <TableCell>{ticket.assigned_user?.name}</TableCell>
-                <TableCell>{ticket.description}</TableCell>
-                <TableCell>
-                  {format(new Date(ticket.scheduled_for), "dd/MM/yyyy HH:mm")}
-                </TableCell>
-                <TableCell>
-                  <Badge className={getStatusColor(ticket.status)}>
-                    {statusOptions.find((s) => s.value === ticket.status)?.label}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onViewDetails(ticket)}
-                    >
-                      Detalhes
-                    </Button>
-                    {!ticket.faturado && (
-                      <Select
-                        value={ticket.status}
-                        onValueChange={(value) => onStatusChange(ticket.id, value)}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue>Alterar Status</SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {statusOptions.map((status) => (
-                            <SelectItem key={status.value} value={status.value}>
-                              {status.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                    {renderActions?.(ticket)}
-                  </div>
-                </TableCell>
+        <div className="relative w-full">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[10%]">Código</TableHead>
+                <TableHead className="w-[20%]">Cliente</TableHead>
+                <TableHead className="w-[15%]">Responsável</TableHead>
+                <TableHead className="w-[25%]">Descrição</TableHead>
+                <TableHead className="w-[10%]">Data Agendada</TableHead>
+                <TableHead className="w-[10%]">Status</TableHead>
+                <TableHead className="w-[10%]">Ações</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {tickets?.map((ticket) => (
+                <TableRow key={ticket.id}>
+                  <TableCell className="truncate">{ticket.codigo}</TableCell>
+                  <TableCell className="truncate">{ticket.client.razao_social}</TableCell>
+                  <TableCell className="truncate">{ticket.assigned_user?.name}</TableCell>
+                  <TableCell className="truncate max-w-[300px]">{ticket.description}</TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {format(new Date(ticket.scheduled_for), "dd/MM/yyyy HH:mm")}
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={getStatusColor(ticket.status)}>
+                      {statusOptions.find((s) => s.value === ticket.status)?.label}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onViewDetails(ticket)}
+                      >
+                        Detalhes
+                      </Button>
+                      {!ticket.faturado && (
+                        <Select
+                          value={ticket.status}
+                          onValueChange={(value) => onStatusChange(ticket.id, value)}
+                        >
+                          <SelectTrigger className="w-32">
+                            <SelectValue>Alterar Status</SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {statusOptions.map((status) => (
+                              <SelectItem key={status.value} value={status.value}>
+                                {status.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                      {renderActions?.(ticket)}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );
