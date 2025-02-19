@@ -10,8 +10,8 @@ import {
   Loader, 
   XOctagon,
   User,
-  LucideIcon
 } from "lucide-react";
+import { startOfDay, endOfDay } from "date-fns";
 
 type Ticket = {
   id: string;
@@ -108,8 +108,15 @@ export default function Dashboard() {
           *,
           client:clients(razao_social),
           assigned_user:system_users!tickets_assigned_to_fkey(name)
-        `)
-        .order("created_at", { ascending: false });
+        `);
+
+      // Adiciona filtro por data para tickets concluídos e cancelados
+      if (["CONCLUIDO", "CANCELADO"].includes(filterStatus || '')) {
+        const today = new Date();
+        query = query
+          .gte("created_at", startOfDay(today).toISOString())
+          .lte("created_at", endOfDay(today).toISOString());
+      }
 
       if (filterStatus) {
         query = query.eq("status", filterStatus);
@@ -118,6 +125,8 @@ export default function Dashboard() {
       if (filterUser) {
         query = query.eq("assigned_to", filterUser);
       }
+
+      query = query.order("created_at", { ascending: false });
 
       const { data, error } = await query;
       if (error) throw error;
