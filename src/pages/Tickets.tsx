@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, DollarSign } from "lucide-react";
@@ -59,13 +60,6 @@ type TicketHistory = {
   };
 };
 
-const statusOptions = [
-  { value: "PENDENTE", label: "Pendente" },
-  { value: "EM_ANDAMENTO", label: "Em Andamento" },
-  { value: "CONCLUIDO", label: "Concluído" },
-  { value: "CANCELADO", label: "Cancelado" },
-];
-
 export default function Tickets() {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -97,11 +91,6 @@ export default function Tickets() {
 
       if (statusFilter) {
         query = query.eq("status", statusFilter);
-      }
-
-      // Se não estiver buscando, ocultar tickets faturados
-      if (!searchTerm && !statusFilter) {
-        query = query.eq("faturado", false);
       }
 
       const { data, error } = await query;
@@ -154,7 +143,7 @@ export default function Tickets() {
       .from("tickets")
       .update({ 
         faturado: true,
-        status: "FATURADO"
+        faturado_at: new Date().toISOString()
       })
       .eq("id", ticketId);
 
@@ -242,10 +231,9 @@ export default function Tickets() {
           variant="outline"
           size="sm"
           onClick={() => handleFaturarTicket(ticket.id)}
-          className="text-green-600 hover:text-green-700"
+          className={`${ticket.faturado ? 'text-green-600' : 'text-black hover:text-black'}`}
         >
-          <DollarSign className="h-4 w-4 mr-2" />
-          Faturar
+          <DollarSign className="h-4 w-4" />
         </Button>
       );
     }
