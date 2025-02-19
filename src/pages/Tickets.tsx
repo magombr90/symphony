@@ -2,13 +2,17 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, DollarSign } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { TicketsTable } from "@/components/tickets/TicketsTable";
 import { TicketDetails } from "@/components/tickets/TicketDetails";
 import { CreateTicketForm } from "@/components/tickets/CreateTicketForm";
 import { TicketSearch } from "@/components/tickets/TicketSearch";
+import { TicketReasonDialog } from "@/components/tickets/TicketReasonDialog";
+import { ticketService } from "@/services/ticketService";
+import { useTickets } from "@/hooks/useTickets";
+import { useClients } from "@/hooks/useClients";
+import { useSystemUsers } from "@/hooks/useSystemUsers";
+import { useTicketHistory } from "@/hooks/useTicketHistory";
 import {
   Dialog,
   DialogContent,
@@ -16,16 +20,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-
-type SystemUser = {
-  id: string;
-  name: string;
-  active: boolean;
-  role: string;
-  email: string;
-};
 
 type Ticket = {
   id: string;
@@ -48,118 +42,33 @@ type Ticket = {
   faturado_at: string | null;
 };
 
-type TicketHistory = {
-  id: string;
-  ticket_id: string;
-  status: string;
-  reason: string;
-  created_at: string;
-  created_by: string;
-  created_by_user: {
-    name: string;
-  };
-};
-
 export default function Tickets() {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [selectedTicketDetails, setSelectedTicketDetails] = useState<Ticket | null>(null);
-  const { toast } = useToast();
   const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
   const [showReasonDialog, setShowReasonDialog] = useState(false);
   const [reason, setReason] = useState("");
+  const { toast } = useToast();
 
-  const { data: tickets, refetch } = useQuery({
-    queryKey: ["tickets", searchTerm, statusFilter],
-    queryFn: async () => {
-      let query = supabase
-        .from("tickets")
-        .select(`
-          *,
-          client:clients(razao_social),
-          assigned_user:system_users!tickets_assigned_to_fkey(name)
-        `)
-        .order("created_at", { ascending: false });
-
-      if (searchTerm) {
-        query = query.or(`
-          codigo.ilike.%${searchTerm}%,
-          clients.razao_social.ilike.%${searchTerm}%
-        `);
-      }
-
-      if (statusFilter) {
-        query = query.eq("status", statusFilter);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as Ticket[];
-    },
-  });
-
-  const { data: clients } = useQuery({
-    queryKey: ["clients"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("clients").select("*");
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: systemUsers } = useQuery({
-    queryKey: ["system-users"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("system_users")
-        .select("*")
-        .eq("active", true);
-      if (error) throw error;
-      return data as SystemUser[];
-    },
-  });
-
-  const { data: ticketHistory } = useQuery({
-    queryKey: ["ticket-history", selectedTicketDetails?.id],
-    enabled: !!selectedTicketDetails?.id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("ticket_history")
-        .select(`
-          *,
-          created_by_user:system_users!ticket_history_created_by_fkey(name)
-        `)
-        .eq("ticket_id", selectedTicketDetails?.id)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data as TicketHistory[];
-    },
-  });
+  const { data: tickets, refetch } = useTickets(searchTerm, statusFilter);
+  const { data: clients } = useClients();
+  const { data: systemUsers } = useSystemUsers();
+  const { data: ticketHistory } = useTicketHistory(selectedTicketDetails?.id);
 
   const handleFaturarTicket = async (ticketId: string) => {
-    const { error } = await supabase
-      .from("tickets")
-      .update({ 
-        faturado: true,
-        faturado_at: new Date().toISOString()
-      })
-      .eq("id", ticketId);
-
-    if (error) {
+    try {
+      await ticketService.faturarTicket(ticketId);
+      toast({ title: "Ticket faturado com sucesso!" });
+      refetch();
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Erro ao faturar ticket",
         description: error.message,
       });
-      return;
     }
-
-    toast({
-      title: "Ticket faturado com sucesso!",
-    });
-    refetch();
   };
 
   const handleStatusChange = async (ticketId: string, newStatus: string) => {
@@ -176,47 +85,30 @@ export default function Tickets() {
   };
 
   const updateTicketStatus = async (ticketId: string, newStatus: string, reasonText?: string) => {
-    const { error: updateError } = await supabase
-      .from("tickets")
-      .update({ status: newStatus })
-      .eq("id", ticketId);
+    try {
+      await ticketService.updateStatus(ticketId, newStatus);
+      
+      if (reasonText) {
+        await ticketService.addHistoryEntry(
+          ticketId,
+          newStatus,
+          reasonText,
+          systemUsers?.[0]?.id as string
+        );
+      }
 
-    if (updateError) {
+      toast({ title: "Status atualizado com sucesso!" });
+      refetch();
+      setShowReasonDialog(false);
+      setReason("");
+      setEditingTicket(null);
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Erro ao atualizar status",
-        description: updateError.message,
+        description: error.message,
       });
-      return;
     }
-
-    if (reasonText) {
-      const { error: historyError } = await supabase
-        .from("ticket_history")
-        .insert({
-          ticket_id: ticketId,
-          status: newStatus,
-          reason: reasonText,
-          created_by: systemUsers?.[0]?.id,
-        });
-
-      if (historyError) {
-        toast({
-          variant: "destructive",
-          title: "Erro ao registrar histórico",
-          description: historyError.message,
-        });
-        return;
-      }
-    }
-
-    toast({
-      title: "Status atualizado com sucesso!",
-    });
-    refetch();
-    setShowReasonDialog(false);
-    setReason("");
-    setEditingTicket(null);
   };
 
   const handleReasonSubmit = async () => {
@@ -284,35 +176,14 @@ export default function Tickets() {
         renderActions={(ticket: Ticket) => renderFaturarButton(ticket)}
       />
 
-      <Dialog open={showReasonDialog} onOpenChange={setShowReasonDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {editingTicket?.status === "CANCELADO"
-                ? "Motivo do Cancelamento"
-                : "Motivo da Conclusão"}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Motivo</Label>
-              <Textarea
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder="Digite o motivo..."
-                required
-              />
-            </div>
-            <Button
-              onClick={handleReasonSubmit}
-              className="w-full"
-              disabled={!reason.trim()}
-            >
-              Salvar
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <TicketReasonDialog
+        open={showReasonDialog}
+        onOpenChange={setShowReasonDialog}
+        status={editingTicket?.status || ""}
+        reason={reason}
+        onReasonChange={setReason}
+        onSubmit={handleReasonSubmit}
+      />
 
       <TicketDetails
         ticket={selectedTicketDetails}
