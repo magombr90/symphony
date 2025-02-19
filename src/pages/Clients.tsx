@@ -76,6 +76,14 @@ const getStatusColor = (status: string) => {
 export default function Clients() {
   const [open, setOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    cnpj: "",
+    razao_social: "",
+    endereco: "",
+    telefone: "",
+    email: "",
+  });
   const { toast } = useToast();
 
   const { data: clients, refetch } = useQuery({
@@ -122,19 +130,67 @@ export default function Clients() {
     },
   });
 
+  const fetchCNPJData = async (cnpj: string) => {
+    setLoading(true);
+    try {
+      const formattedCNPJ = cnpj.replace(/[^\d]/g, '');
+      const response = await fetch(`https://publica.cnpj.ws/cnpj/${formattedCNPJ}`);
+      
+      if (!response.ok) {
+        throw new Error('CNPJ não encontrado');
+      }
+
+      const data = await response.json();
+      
+      setFormData({
+        cnpj: cnpj,
+        razao_social: data.razao_social,
+        endereco: `${data.estabelecimento.logradouro}, ${data.estabelecimento.numero} - ${data.estabelecimento.bairro}, ${data.estabelecimento.cidade.nome}/${data.estabelecimento.estado.sigla}`,
+        telefone: data.estabelecimento.ddd1 && data.estabelecimento.telefone1 
+          ? `${data.estabelecimento.ddd1}${data.estabelecimento.telefone1}`
+          : "",
+        email: data.estabelecimento.email || "",
+      });
+
+      toast({
+        title: "Dados do CNPJ carregados com sucesso!",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao buscar dados do CNPJ",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCNPJChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFormData(prev => ({ ...prev, cnpj: value }));
+    
+    // Se o CNPJ tem 14 dígitos, busca os dados
+    if (value.replace(/[^\d]/g, '').length === 14) {
+      fetchCNPJData(value);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
     
-    const newClient = {
-      cnpj: String(formData.get("cnpj")),
-      razao_social: String(formData.get("razao_social")),
-      endereco: formData.get("endereco") ? String(formData.get("endereco")) : null,
-      telefone: formData.get("telefone") ? String(formData.get("telefone")) : null,
-      email: formData.get("email") ? String(formData.get("email")) : null,
-    };
-
-    const { error } = await supabase.from("clients").insert(newClient);
+    const { error } = await supabase.from("clients").insert({
+      cnpj: formData.cnpj,
+      razao_social: formData.razao_social,
+      endereco: formData.endereco || null,
+      telefone: formData.telefone || null,
+      email: formData.email || null,
+    });
 
     if (error) {
       toast({
@@ -149,6 +205,13 @@ export default function Clients() {
       title: "Cliente criado com sucesso!",
     });
     setOpen(false);
+    setFormData({
+      cnpj: "",
+      razao_social: "",
+      endereco: "",
+      telefone: "",
+      email: "",
+    });
     refetch();
   };
 
@@ -188,25 +251,54 @@ export default function Clients() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Label htmlFor="cnpj">CNPJ</Label>
-                <Input id="cnpj" name="cnpj" required />
+                <Input 
+                  id="cnpj" 
+                  name="cnpj" 
+                  value={formData.cnpj}
+                  onChange={handleCNPJChange}
+                  required 
+                  disabled={loading}
+                />
               </div>
               <div>
                 <Label htmlFor="razao_social">Razão Social</Label>
-                <Input id="razao_social" name="razao_social" required />
+                <Input 
+                  id="razao_social" 
+                  name="razao_social" 
+                  value={formData.razao_social}
+                  onChange={handleInputChange}
+                  required 
+                />
               </div>
               <div>
                 <Label htmlFor="endereco">Endereço</Label>
-                <Input id="endereco" name="endereco" />
+                <Input 
+                  id="endereco" 
+                  name="endereco" 
+                  value={formData.endereco}
+                  onChange={handleInputChange}
+                />
               </div>
               <div>
                 <Label htmlFor="telefone">Telefone</Label>
-                <Input id="telefone" name="telefone" />
+                <Input 
+                  id="telefone" 
+                  name="telefone" 
+                  value={formData.telefone}
+                  onChange={handleInputChange}
+                />
               </div>
               <div>
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email" />
+                <Input 
+                  id="email" 
+                  name="email" 
+                  type="email" 
+                  value={formData.email}
+                  onChange={handleInputChange}
+                />
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" disabled={loading}>
                 Salvar
               </Button>
             </form>
