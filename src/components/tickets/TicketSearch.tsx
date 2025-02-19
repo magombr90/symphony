@@ -1,7 +1,12 @@
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter } from "lucide-react";
+import { Search } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -15,6 +20,8 @@ interface TicketSearchProps {
   onSearchChange: (value: string) => void;
   statusFilter: string | null;
   onStatusFilterChange: (value: string | null) => void;
+  dateFilter: Date | undefined;
+  onDateFilterChange: (date: Date | undefined) => void;
   onSearch: () => void;
 }
 
@@ -23,6 +30,8 @@ export function TicketSearch({
   onSearchChange,
   statusFilter,
   onStatusFilterChange,
+  dateFilter,
+  onDateFilterChange,
   onSearch,
 }: TicketSearchProps) {
   const statusOptions = [
@@ -59,7 +68,29 @@ export function TicketSearch({
           ))}
         </SelectContent>
       </Select>
-      <Button onClick={onSearch}>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant={"outline"}
+            className={cn(
+              "w-[200px] justify-start text-left font-normal",
+              !dateFilter && "text-muted-foreground"
+            )}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {dateFilter ? format(dateFilter, "dd/MM/yyyy") : "Data de criação"}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={dateFilter}
+            onSelect={onDateFilterChange}
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
+      <Button onClick={onSearch} className="whitespace-nowrap">
         <Search className="h-4 w-4 mr-2" />
         Buscar
       </Button>

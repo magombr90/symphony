@@ -1,12 +1,15 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Ticket, SystemUser, TicketHistory } from "@/types/ticket";
+import { startOfDay, endOfDay } from "date-fns";
 
 export function useTickets() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [dateFilter, setDateFilter] = useState<Date>();
   const [selectedTicketDetails, setSelectedTicketDetails] = useState<Ticket | null>(null);
   const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
   const [showReasonDialog, setShowReasonDialog] = useState(false);
@@ -14,7 +17,7 @@ export function useTickets() {
   const { toast } = useToast();
 
   const { data: tickets, refetch } = useQuery({
-    queryKey: ["tickets", searchTerm, statusFilter],
+    queryKey: ["tickets", searchTerm, statusFilter, dateFilter],
     queryFn: async () => {
       let query = supabase
         .from("tickets")
@@ -34,6 +37,12 @@ export function useTickets() {
 
       if (statusFilter) {
         query = query.eq("status", statusFilter);
+      }
+
+      if (dateFilter) {
+        query = query
+          .gte("created_at", startOfDay(dateFilter).toISOString())
+          .lte("created_at", endOfDay(dateFilter).toISOString());
       }
 
       const { data, error } = await query;
@@ -183,6 +192,8 @@ export function useTickets() {
     setSearchTerm,
     statusFilter,
     setStatusFilter,
+    dateFilter,
+    setDateFilter,
     selectedTicketDetails,
     setSelectedTicketDetails,
     editingTicket,
@@ -190,7 +201,6 @@ export function useTickets() {
     setShowReasonDialog,
     reason,
     setReason,
-    handleFaturarTicket,
     handleStatusChange,
     updateTicketStatus,
     refetch,

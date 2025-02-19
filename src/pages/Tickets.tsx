@@ -28,6 +28,8 @@ export default function Tickets() {
     setSearchTerm,
     statusFilter,
     setStatusFilter,
+    dateFilter,
+    setDateFilter,
     selectedTicketDetails,
     setSelectedTicketDetails,
     editingTicket,
@@ -35,7 +37,6 @@ export default function Tickets() {
     setShowReasonDialog,
     reason,
     setReason,
-    handleFaturarTicket,
     handleStatusChange,
     updateTicketStatus,
     refetch,
@@ -79,6 +80,8 @@ export default function Tickets() {
           onSearchChange={setSearchTerm}
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
+          dateFilter={dateFilter}
+          onDateFilterChange={setDateFilter}
           onSearch={refetch}
         />
       </div>
