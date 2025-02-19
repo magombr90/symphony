@@ -99,6 +99,7 @@ export default function Tickets() {
         query = query.eq("status", statusFilter);
       }
 
+      // Se não estiver buscando, ocultar tickets faturados
       if (!searchTerm && !statusFilter) {
         query = query.eq("faturado", false);
       }
@@ -153,7 +154,7 @@ export default function Tickets() {
       .from("tickets")
       .update({ 
         faturado: true,
-        status: "billed"
+        status: "FATURADO"
       })
       .eq("id", ticketId);
 
@@ -170,23 +171,6 @@ export default function Tickets() {
       title: "Ticket faturado com sucesso!",
     });
     refetch();
-  };
-
-  const renderFaturarButton = (ticket: Ticket) => {
-    if (ticket.status === "completed" && !ticket.faturado) {
-      return (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handleFaturarTicket(ticket.id)}
-          className="text-green-600 hover:text-green-700"
-        >
-          <DollarSign className="h-4 w-4 mr-2" />
-          Faturar
-        </Button>
-      );
-    }
-    return null;
   };
 
   const handleStatusChange = async (ticketId: string, newStatus: string) => {
@@ -249,6 +233,23 @@ export default function Tickets() {
   const handleReasonSubmit = async () => {
     if (!editingTicket) return;
     await updateTicketStatus(editingTicket.id, editingTicket.status, reason);
+  };
+
+  const renderFaturarButton = (ticket: Ticket) => {
+    if (ticket.status === "CONCLUIDO" && !ticket.faturado) {
+      return (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleFaturarTicket(ticket.id)}
+          className="text-green-600 hover:text-green-700"
+        >
+          <DollarSign className="h-4 w-4 mr-2" />
+          Faturar
+        </Button>
+      );
+    }
+    return null;
   };
 
   return (

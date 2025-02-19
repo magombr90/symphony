@@ -43,11 +43,11 @@ interface TicketsTableProps {
 }
 
 const statusOptions = [
-  { value: "pending", label: "Pendente" },
-  { value: "in_progress", label: "Em Andamento" },
-  { value: "completed", label: "Concluído" },
-  { value: "canceled", label: "Cancelado" },
-  { value: "billed", label: "Faturado" },
+  { value: "PENDENTE", label: "Pendente" },
+  { value: "EM_ANDAMENTO", label: "Em Andamento" },
+  { value: "CONCLUIDO", label: "Concluído" },
+  { value: "CANCELADO", label: "Cancelado" },
+  { value: "FATURADO", label: "Faturado" },
 ];
 
 export function TicketsTable({ 
@@ -58,15 +58,15 @@ export function TicketsTable({
 }: TicketsTableProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "pending":
+      case "PENDENTE":
         return "bg-yellow-500";
-      case "in_progress":
+      case "EM_ANDAMENTO":
         return "bg-blue-500";
-      case "completed":
+      case "CONCLUIDO":
         return "bg-green-500";
-      case "canceled":
+      case "CANCELADO":
         return "bg-red-500";
-      case "billed":
+      case "FATURADO":
         return "bg-green-700";
       default:
         return "bg-gray-500";
