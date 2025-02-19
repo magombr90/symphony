@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, DollarSign } from "lucide-react";
@@ -58,13 +59,6 @@ type TicketHistory = {
     name: string;
   };
 };
-
-const statusOptions = [
-  { value: "PENDENTE", label: "Pendente" },
-  { value: "EM_ANDAMENTO", label: "Em Andamento" },
-  { value: "CONCLUIDO", label: "Concluído" },
-  { value: "CANCELADO", label: "Cancelado" },
-];
 
 export default function Tickets() {
   const [open, setOpen] = useState(false);
@@ -153,7 +147,7 @@ export default function Tickets() {
       .from("tickets")
       .update({ 
         faturado: true,
-        status: "billed"
+        status: "FATURADO"
       })
       .eq("id", ticketId);
 
@@ -173,7 +167,7 @@ export default function Tickets() {
   };
 
   const renderFaturarButton = (ticket: Ticket) => {
-    if (ticket.status === "completed" && !ticket.faturado) {
+    if (ticket.status === "CONCLUIDO" && !ticket.faturado) {
       return (
         <Button
           variant="outline"
@@ -224,7 +218,7 @@ export default function Tickets() {
           ticket_id: ticketId,
           status: newStatus,
           reason: reasonText,
-          created_by: systemUsers?.[0]?.id,
+          created_by: systemUsers?.[0]?.id, // Idealmente, isso viria do contexto de autenticação
         });
 
       if (historyError) {

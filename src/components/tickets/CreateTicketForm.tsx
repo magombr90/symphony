@@ -20,14 +20,14 @@ interface CreateTicketFormProps {
 }
 
 const statusOptions = [
-  { value: "pending", label: "Pendente" },
-  { value: "in_progress", label: "Em Andamento" },
-  { value: "completed", label: "Concluído" },
-  { value: "canceled", label: "Cancelado" },
+  { value: "PENDENTE", label: "Pendente" },
+  { value: "EM_ANDAMENTO", label: "Em Andamento" },
+  { value: "CONCLUIDO", label: "Concluído" },
+  { value: "CANCELADO", label: "Cancelado" },
 ];
 
 export function CreateTicketForm({ clients, systemUsers, onSuccess }: CreateTicketFormProps) {
-  const [selectedStatus, setSelectedStatus] = useState("pending");
+  const [selectedStatus, setSelectedStatus] = useState("PENDENTE");
   const [selectedClient, setSelectedClient] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
   const { toast } = useToast();
