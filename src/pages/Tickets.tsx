@@ -20,6 +20,8 @@ import { Ticket } from "@/types/ticket";
 
 export default function Tickets() {
   const [open, setOpen] = useState(false);
+  const [editingTicket, setEditingTicket] = useState<Ticket | null>(null); // Adicionando o estado que faltava
+  
   const {
     tickets,
     clients,
@@ -33,7 +35,6 @@ export default function Tickets() {
     setDateFilter,
     selectedTicketDetails,
     setSelectedTicketDetails,
-    editingTicket,
     showReasonDialog,
     setShowReasonDialog,
     reason,
