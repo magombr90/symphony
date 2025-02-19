@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import bcrypt from "bcryptjs";
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
@@ -23,27 +22,13 @@ export default function Login() {
     const password = String(formData.get("password"));
 
     try {
-      // Buscar usuário pelo email
-      const { data: users, error: userError } = await supabase
-        .from("system_users")
-        .select("*")
-        .eq("email", email)
-        .eq("active", true)
-        .single();
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      if (userError || !users) {
-        throw new Error("Usuário não encontrado ou inativo");
-      }
+      if (error) throw error;
 
-      // Verificar senha
-      const isPasswordValid = await bcrypt.compare(password, users.password_hash);
-      
-      if (!isPasswordValid) {
-        throw new Error("Senha incorreta");
-      }
-
-      // Login bem sucedido
-      localStorage.setItem("user", JSON.stringify(users));
       navigate("/");
       
       toast({
