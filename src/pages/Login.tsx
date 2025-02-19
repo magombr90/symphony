@@ -18,43 +18,30 @@ export default function Login() {
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const identifier = String(formData.get("identifier")); // Pode ser email ou username
+    const identifier = String(formData.get("identifier"));
     const password = String(formData.get("password"));
 
     try {
-      // Tentando login direto com o Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: identifier, // Tentando usar o identificador diretamente como email
+      // Primeiro, tenta encontrar o usuário pelo identificador
+      const { data: userData, error: userError } = await supabase
+        .from("system_users")
+        .select("email")
+        .or(`email.eq.${identifier},username.eq.${identifier}`)
+        .eq("active", true)
+        .single();
+
+      if (userError || !userData) {
+        throw new Error("Usuário não encontrado ou inativo");
+      }
+
+      // Agora tenta fazer login com o email encontrado
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: userData.email,
         password,
       });
 
-      console.log("Resultado da autenticação:", { authData, authError });
-
       if (authError) {
-        // Se falhar com o identificador direto, tenta buscar o email do usuário
-        console.log("Tentando buscar usuário pelo identificador alternativo...");
-        const { data: user, error: userError } = await supabase
-          .from("system_users")
-          .select("email")
-          .or(`email.eq."${identifier}",username.eq."${identifier}"`)
-          .eq("active", true)
-          .single();
-
-        console.log("Resultado da busca pelo identificador:", { user, userError });
-
-        if (userError || !user) {
-          throw new Error("Usuário não encontrado ou inativo");
-        }
-
-        // Tenta fazer login novamente com o email encontrado
-        const { error: secondAuthError } = await supabase.auth.signInWithPassword({
-          email: user.email,
-          password,
-        });
-
-        console.log("Resultado do segundo login:", secondAuthError);
-
-        if (secondAuthError) throw secondAuthError;
+        throw new Error("Credenciais inválidas");
       }
 
       navigate("/");
@@ -63,7 +50,7 @@ export default function Login() {
         title: "Login realizado com sucesso!",
       });
     } catch (error) {
-      console.error("Erro completo:", error);
+      console.error("Erro ao fazer login:", error);
       toast({
         variant: "destructive",
         title: "Erro ao fazer login",
