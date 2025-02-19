@@ -18,16 +18,29 @@ export default function Login() {
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const email = String(formData.get("email"));
+    const identifier = String(formData.get("identifier")); // Pode ser email ou username
     const password = String(formData.get("password"));
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
+      // Primeiro, tenta encontrar o usuário pelo identificador (email ou username)
+      const { data: user, error: userError } = await supabase
+        .from("system_users")
+        .select("email")
+        .or(`email.eq.${identifier},username.eq.${identifier}`)
+        .eq("active", true)
+        .single();
+
+      if (userError || !user) {
+        throw new Error("Usuário não encontrado ou inativo");
+      }
+
+      // Agora tenta fazer login com o email do usuário
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: user.email,
         password,
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
 
       navigate("/");
       
@@ -54,13 +67,14 @@ export default function Login() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="identifier">E-mail ou Nome de Usuário</Label>
               <Input
-                id="email"
-                name="email"
-                type="email"
+                id="identifier"
+                name="identifier"
+                type="text"
                 required
                 disabled={isLoading}
+                placeholder="Digite seu e-mail ou nome de usuário"
               />
             </div>
             <div className="space-y-2">
@@ -71,6 +85,7 @@ export default function Login() {
                 type="password"
                 required
                 disabled={isLoading}
+                placeholder="Digite sua senha"
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>

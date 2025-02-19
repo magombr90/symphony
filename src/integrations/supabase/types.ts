@@ -48,6 +48,7 @@ export type Database = {
           name: string
           password_hash: string
           role: string
+          username: string | null
         }
         Insert: {
           active?: boolean | null
@@ -57,6 +58,7 @@ export type Database = {
           name: string
           password_hash?: string
           role?: string
+          username?: string | null
         }
         Update: {
           active?: boolean | null
@@ -66,6 +68,7 @@ export type Database = {
           name?: string
           password_hash?: string
           role?: string
+          username?: string | null
         }
         Relationships: []
       }
