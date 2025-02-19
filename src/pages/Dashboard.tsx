@@ -11,7 +11,23 @@ export default function Dashboard() {
   const [filterUser, setFilterUser] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
 
-  const recentTickets = tickets?.slice(0, 5) || [];
+  // Aplicar filtros aos tickets
+  const filteredTickets = tickets?.filter(ticket => {
+    let matchesFilter = true;
+    
+    if (filterUser) {
+      matchesFilter = matchesFilter && ticket.assigned_to === filterUser;
+    }
+    
+    if (filterStatus) {
+      matchesFilter = matchesFilter && ticket.status === filterStatus;
+    }
+    
+    return matchesFilter;
+  }) || [];
+
+  // Pegar os 5 tickets mais recentes dos filtrados
+  const recentTickets = filteredTickets.slice(0, 5);
 
   // Calcular stats dos usuários
   const userStats = tickets?.reduce((acc: any[], ticket: Ticket) => {
@@ -65,7 +81,14 @@ export default function Dashboard() {
         
         <Card>
           <div className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Tickets Recentes</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              Tickets Recentes
+              {(filterUser || filterStatus) && (
+                <span className="text-sm font-normal text-muted-foreground ml-2">
+                  (Filtrados)
+                </span>
+              )}
+            </h2>
             <TicketsTable 
               tickets={recentTickets} 
               onStatusChange={() => {}} 
