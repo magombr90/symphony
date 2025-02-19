@@ -20,39 +20,31 @@ interface CreateTicketFormProps {
 }
 
 const statusOptions = [
-  { value: "PENDENTE", label: "Pendente" },
-  { value: "EM_ANDAMENTO", label: "Em Andamento" },
-  { value: "CONCLUIDO", label: "Concluído" },
-  { value: "CANCELADO", label: "Cancelado" },
+  { value: "pending", label: "Pendente" },
+  { value: "in_progress", label: "Em Andamento" },
+  { value: "completed", label: "Concluído" },
+  { value: "canceled", label: "Cancelado" },
 ];
 
 export function CreateTicketForm({ clients, systemUsers, onSuccess }: CreateTicketFormProps) {
-  const [selectedStatus, setSelectedStatus] = useState("PENDENTE");
+  const [selectedStatus, setSelectedStatus] = useState("pending");
   const [selectedClient, setSelectedClient] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
-  const [description, setDescription] = useState("");
-  const [scheduledFor, setScheduledFor] = useState("");
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    if (!selectedClient || !selectedUser || !description || !scheduledFor) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao criar ticket",
-        description: "Por favor, preencha todos os campos obrigatórios",
-      });
-      return;
-    }
+    const formData = new FormData(e.currentTarget);
 
+    const scheduledFor = new Date(String(formData.get("scheduled_for")));
+    
     const newTicket = {
-      description,
+      description: String(formData.get("description")),
       client_id: selectedClient,
       status: selectedStatus,
-      scheduled_for: new Date(scheduledFor).toISOString(),
-      assigned_to: selectedUser,
-      created_by: selectedUser, // Idealmente viria do contexto de autenticação
+      scheduled_for: scheduledFor.toISOString(),
+      assigned_to: selectedUser || null,
+      created_by: selectedUser, // Temporário, idealmente viria do contexto de autenticação
       codigo: "TEMP", // Valor temporário que será substituído pelo trigger generate_ticket_code
     };
 
@@ -61,7 +53,6 @@ export function CreateTicketForm({ clients, systemUsers, onSuccess }: CreateTick
       .insert(newTicket);
 
     if (error) {
-      console.error("Erro ao criar ticket:", error);
       toast({
         variant: "destructive",
         title: "Erro ao criar ticket",
@@ -73,14 +64,6 @@ export function CreateTicketForm({ clients, systemUsers, onSuccess }: CreateTick
     toast({
       title: "Ticket criado com sucesso!",
     });
-    
-    // Limpar formulário
-    setSelectedClient("");
-    setSelectedUser("");
-    setDescription("");
-    setScheduledFor("");
-    setSelectedStatus("PENDENTE");
-    
     onSuccess();
   };
 
@@ -126,12 +109,7 @@ export function CreateTicketForm({ clients, systemUsers, onSuccess }: CreateTick
       </div>
       <div>
         <Label htmlFor="description">Descrição</Label>
-        <Input 
-          id="description" 
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required 
-        />
+        <Input id="description" name="description" required />
       </div>
       <div>
         <Label>Status</Label>
@@ -156,9 +134,8 @@ export function CreateTicketForm({ clients, systemUsers, onSuccess }: CreateTick
         <Label htmlFor="scheduled_for">Data Agendada</Label>
         <Input
           id="scheduled_for"
+          name="scheduled_for"
           type="datetime-local"
-          value={scheduledFor}
-          onChange={(e) => setScheduledFor(e.target.value)}
           required
         />
       </div>
