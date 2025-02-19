@@ -44,14 +44,14 @@ export function TicketSearch({
         />
       </div>
       <Select
-        value={statusFilter || ""}
-        onValueChange={(value) => onStatusFilterChange(value || null)}
+        value={statusFilter || "all"}
+        onValueChange={(value) => onStatusFilterChange(value === "all" ? null : value)}
       >
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Filtrar por status" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Todos</SelectItem>
+          <SelectItem value="all">Todos</SelectItem>
           {statusOptions.map((status) => (
             <SelectItem key={status.value} value={status.value}>
               {status.label}
