@@ -100,7 +100,7 @@ export function TicketsTable({
                 </TableCell>
                 <TableCell>
                   <Badge className={getStatusColor(ticket.status)}>
-                    {statusOptions.find((s) => s.value === ticket.status)?.label}
+                    {statusOptions.find((s) => s.value === ticket.status)?.label || ticket.status}
                   </Badge>
                 </TableCell>
                 <TableCell>
