@@ -36,16 +36,14 @@ export function TicketStats({
 }: TicketStatsProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "pending":
+      case "PENDENTE":
         return "bg-yellow-500";
-      case "in_progress":
+      case "EM_ANDAMENTO":
         return "bg-blue-500";
-      case "completed":
+      case "CONCLUIDO":
         return "bg-green-500";
-      case "canceled":
+      case "CANCELADO":
         return "bg-red-500";
-      case "billed":
-        return "bg-green-700";
       default:
         return "bg-gray-500";
     }

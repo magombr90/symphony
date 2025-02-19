@@ -2,7 +2,6 @@
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -48,6 +47,7 @@ const statusOptions = [
   { value: "in_progress", label: "Em Andamento" },
   { value: "completed", label: "Concluído" },
   { value: "canceled", label: "Cancelado" },
+  { value: "billed", label: "Faturado" },
 ];
 
 export function TicketsTable({ 
@@ -100,7 +100,7 @@ export function TicketsTable({
                 </TableCell>
                 <TableCell>
                   <Badge className={getStatusColor(ticket.status)}>
-                    {statusOptions.find((s) => s.value === ticket.status)?.label || "Faturado"}
+                    {statusOptions.find((s) => s.value === ticket.status)?.label}
                   </Badge>
                 </TableCell>
                 <TableCell>

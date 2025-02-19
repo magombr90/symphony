@@ -179,9 +179,10 @@ export default function Tickets() {
           variant="outline"
           size="sm"
           onClick={() => handleFaturarTicket(ticket.id)}
-          className={`${ticket.faturado ? 'text-green-700' : 'text-green-600 hover:text-green-700'}`}
+          className="text-green-600 hover:text-green-700"
         >
-          <DollarSign className="h-4 w-4" />
+          <DollarSign className="h-4 w-4 mr-2" />
+          Faturar
         </Button>
       );
     }
@@ -189,7 +190,7 @@ export default function Tickets() {
   };
 
   const handleStatusChange = async (ticketId: string, newStatus: string) => {
-    if (newStatus === "canceled" || newStatus === "completed") {
+    if (newStatus === "CANCELADO" || newStatus === "CONCLUIDO") {
       setEditingTicket({
         ...(tickets?.find((t) => t.id === ticketId) as Ticket),
         status: newStatus,
