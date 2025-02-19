@@ -11,7 +11,8 @@ import {
   AlertOctagon, 
   Loader, 
   XOctagon,
-  User
+  User,
+  LucideIcon
 } from "lucide-react";
 
 type Ticket = {
@@ -140,6 +141,9 @@ export default function Dashboard() {
     return "Tickets";
   };
 
+  const StatusIcon = filterStatus ? 
+    statusOptions.find(s => s.value === filterStatus)?.icon : null;
+
   return (
     <div className="fade-in">
       <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
@@ -158,9 +162,9 @@ export default function Dashboard() {
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               {filterUser && <User className="h-5 w-5" />}
-              {filterStatus && statusOptions.find(s => s.value === filterStatus)?.icon && (
-                <statusOptions.find(s => s.value === filterStatus)!.icon 
-                  className={`h-5 w-5 ${statusOptions.find(s => s.value === filterStatus)?.color}`} 
+              {StatusIcon && (
+                <StatusIcon 
+                  className={`h-5 w-5 ${statusOptions.find(s => s.value === filterStatus)?.color}`}
                 />
               )}
               {getSheetTitle()}
