@@ -31,7 +31,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { TicketDetails } from "@/components/tickets/TicketDetails";
 
 type Client = {
   id: string;
@@ -50,12 +49,6 @@ type Ticket = {
   status: string;
   scheduled_for: string;
   created_at: string;
-  client: {
-    razao_social: string;
-  };
-  assigned_user?: {
-    name: string | null;
-  } | null;
 };
 
 const statusOptions = [
@@ -63,7 +56,6 @@ const statusOptions = [
   { value: "EM_ANDAMENTO", label: "Em Andamento" },
   { value: "CONCLUIDO", label: "Concluído" },
   { value: "CANCELADO", label: "Cancelado" },
-  { value: "FATURADO", label: "Faturado" },
 ];
 
 const getStatusColor = (status: string) => {
@@ -76,8 +68,6 @@ const getStatusColor = (status: string) => {
       return "bg-green-500";
     case "CANCELADO":
       return "bg-red-500";
-    case "FATURADO":
-      return "bg-green-700";
     default:
       return "bg-gray-500";
   }
@@ -86,7 +76,6 @@ const getStatusColor = (status: string) => {
 export default function Clients() {
   const [open, setOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const { toast } = useToast();
 
   const { data: clients, refetch } = useQuery({
@@ -116,11 +105,7 @@ export default function Clients() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tickets")
-        .select(`
-          *,
-          client:clients(razao_social),
-          assigned_user:system_users!tickets_assigned_to_fkey(name)
-        `)
+        .select("*")
         .eq("client_id", selectedClient?.id)
         .order("created_at", { ascending: false });
 
@@ -134,32 +119,6 @@ export default function Clients() {
       }
 
       return data as Ticket[];
-    },
-  });
-
-  const { data: ticketHistory } = useQuery({
-    queryKey: ["ticket-history", selectedTicket?.id],
-    enabled: !!selectedTicket?.id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("ticket_history")
-        .select(`
-          *,
-          created_by_user:system_users!ticket_history_created_by_fkey(name)
-        `)
-        .eq("ticket_id", selectedTicket?.id)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Erro ao carregar histórico",
-          description: error.message,
-        });
-        throw error;
-      }
-
-      return data;
     },
   });
 
@@ -313,7 +272,6 @@ export default function Clients() {
                   <TableHead>Descrição</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Data Agendada</TableHead>
-                  <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -329,20 +287,11 @@ export default function Clients() {
                     <TableCell>
                       {format(new Date(ticket.scheduled_for), "dd/MM/yyyy HH:mm")}
                     </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedTicket(ticket)}
-                      >
-                        Detalhes
-                      </Button>
-                    </TableCell>
                   </TableRow>
                 ))}
                 {clientTickets?.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-4">
+                    <TableCell colSpan={4} className="text-center py-4">
                       Nenhum ticket encontrado para este cliente.
                     </TableCell>
                   </TableRow>
@@ -352,12 +301,6 @@ export default function Clients() {
           </div>
         </SheetContent>
       </Sheet>
-
-      <TicketDetails
-        ticket={selectedTicket}
-        history={ticketHistory || []}
-        onClose={() => setSelectedTicket(null)}
-      />
     </div>
   );
 }
