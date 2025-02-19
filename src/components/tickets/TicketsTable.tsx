@@ -114,11 +114,11 @@ export function TicketsTable({
                     </Button>
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="icon"
                       onClick={() => onAssign(ticket)}
+                      title="Reatribuir ticket"
                     >
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Reatribuir
+                      <UserPlus className="h-4 w-4" />
                     </Button>
                     <Select
                       value={ticket.status}
