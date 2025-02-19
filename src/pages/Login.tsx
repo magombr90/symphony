@@ -18,40 +18,17 @@ export default function Login() {
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const identifier = String(formData.get("identifier"));
+    const email = String(formData.get("email"));
     const password = String(formData.get("password"));
 
     try {
-      // Se não for um email, busca o email associado ao username
-      let loginEmail = identifier;
-      
-      if (!identifier.includes('@')) {
-        const { data: userData, error: userError } = await supabase
-          .from("system_users")
-          .select("email")
-          .eq("username", identifier)
-          .maybeSingle();
-
-        if (userError) {
-          console.error("Erro ao buscar usuário:", userError);
-          throw new Error("Erro ao buscar usuário");
-        }
-
-        if (!userData) {
-          throw new Error("Usuário não encontrado");
-        }
-
-        loginEmail = userData.email;
-      }
-
-      // Tenta fazer login com o email
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
         password,
       });
 
-      if (authError) {
-        console.error("Erro de autenticação:", authError);
+      if (error) {
+        console.error("Erro de autenticação:", error);
         throw new Error("Credenciais inválidas");
       }
 
@@ -81,14 +58,14 @@ export default function Login() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="identifier">E-mail ou Nome de Usuário</Label>
+              <Label htmlFor="email">E-mail</Label>
               <Input
-                id="identifier"
-                name="identifier"
-                type="text"
+                id="email"
+                name="email"
+                type="email"
                 required
                 disabled={isLoading}
-                placeholder="Digite seu e-mail ou nome de usuário"
+                placeholder="Digite seu e-mail"
               />
             </div>
             <div className="space-y-2">
