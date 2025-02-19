@@ -13,7 +13,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
-import { TicketStats } from "@/components/tickets/TicketStats";
 import { TicketsTable } from "@/components/tickets/TicketsTable";
 import { TicketDetails } from "@/components/tickets/TicketDetails";
 import { CreateTicketForm } from "@/components/tickets/CreateTicketForm";
@@ -71,68 +70,11 @@ export default function Tickets() {
   const [reason, setReason] = useState("");
   const [selectedTicketDetails, setSelectedTicketDetails] = useState<Ticket | null>(null);
   const { toast } = useToast();
-  const [filterStatus, setFilterStatus] = useState<string | null>(null);
-  const [filterUser, setFilterUser] = useState<string | null>(null);
-
-  const { data: userStats } = useQuery({
-    queryKey: ["user-tickets-stats"],
-    queryFn: async () => {
-      const { data: users } = await supabase
-        .from("system_users")
-        .select("*")
-        .eq("active", true);
-
-      if (!users) return [];
-
-      const stats = await Promise.all(
-        users.map(async (user) => {
-          const { count: total } = await supabase
-            .from("tickets")
-            .select("*", { count: "exact", head: true })
-            .eq("assigned_to", user.id);
-
-          const { data: inProgress } = await supabase
-            .from("tickets")
-            .select("*")
-            .eq("assigned_to", user.id)
-            .eq("status", "EM_ANDAMENTO");
-
-          return {
-            user,
-            total: total || 0,
-            inProgress: inProgress?.length || 0,
-          };
-        })
-      );
-
-      return stats;
-    },
-  });
-
-  const { data: statusCounts } = useQuery({
-    queryKey: ["tickets-count"],
-    queryFn: async () => {
-      const counts = await Promise.all(
-        statusOptions.map(async (status) => {
-          const { count } = await supabase
-            .from("tickets")
-            .select("*", { count: "exact", head: true })
-            .eq("status", status.value);
-          return {
-            status: status.value,
-            label: status.label,
-            count: count || 0,
-          };
-        })
-      );
-      return counts;
-    },
-  });
 
   const { data: tickets, refetch } = useQuery({
-    queryKey: ["tickets", filterStatus, filterUser],
+    queryKey: ["tickets"],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from("tickets")
         .select(`
           *,
@@ -141,15 +83,6 @@ export default function Tickets() {
         `)
         .order("created_at", { ascending: false });
 
-      if (filterStatus) {
-        query = query.eq("status", filterStatus);
-      }
-
-      if (filterUser) {
-        query = query.eq("assigned_to", filterUser);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
       return data as Ticket[];
     },
@@ -282,15 +215,6 @@ export default function Tickets() {
           </DialogContent>
         </Dialog>
       </div>
-
-      <TicketStats
-        userStats={userStats || []}
-        statusCounts={statusCounts || []}
-        filterUser={filterUser}
-        filterStatus={filterStatus}
-        onFilterUserChange={setFilterUser}
-        onFilterStatusChange={setFilterStatus}
-      />
 
       <TicketsTable
         tickets={tickets || []}
