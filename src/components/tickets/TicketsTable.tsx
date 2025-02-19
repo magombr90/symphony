@@ -32,12 +32,14 @@ type Ticket = {
   assigned_user?: {
     name: string | null;
   } | null;
+  faturado?: boolean;
 };
 
 interface TicketsTableProps {
   tickets: Ticket[];
   onStatusChange: (ticketId: string, newStatus: string) => void;
   onViewDetails: (ticket: Ticket) => void;
+  renderActions?: (ticket: Ticket) => React.ReactNode;
 }
 
 const statusOptions = [
@@ -45,9 +47,15 @@ const statusOptions = [
   { value: "EM_ANDAMENTO", label: "Em Andamento" },
   { value: "CONCLUIDO", label: "Concluído" },
   { value: "CANCELADO", label: "Cancelado" },
+  { value: "FATURADO", label: "Faturado" },
 ];
 
-export function TicketsTable({ tickets, onStatusChange, onViewDetails }: TicketsTableProps) {
+export function TicketsTable({ 
+  tickets, 
+  onStatusChange, 
+  onViewDetails,
+  renderActions 
+}: TicketsTableProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "PENDENTE":
@@ -58,6 +66,8 @@ export function TicketsTable({ tickets, onStatusChange, onViewDetails }: Tickets
         return "bg-green-500";
       case "CANCELADO":
         return "bg-red-500";
+      case "FATURADO":
+        return "bg-green-700";
       default:
         return "bg-gray-500";
     }
@@ -102,21 +112,24 @@ export function TicketsTable({ tickets, onStatusChange, onViewDetails }: Tickets
                     >
                       Detalhes
                     </Button>
-                    <Select
-                      value={ticket.status}
-                      onValueChange={(value) => onStatusChange(ticket.id, value)}
-                    >
-                      <SelectTrigger className="w-32">
-                        <SelectValue>Alterar Status</SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {statusOptions.map((status) => (
-                          <SelectItem key={status.value} value={status.value}>
-                            {status.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {!ticket.faturado && (
+                      <Select
+                        value={ticket.status}
+                        onValueChange={(value) => onStatusChange(ticket.id, value)}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue>Alterar Status</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {statusOptions.map((status) => (
+                            <SelectItem key={status.value} value={status.value}>
+                              {status.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                    {renderActions?.(ticket)}
                   </div>
                 </TableCell>
               </TableRow>

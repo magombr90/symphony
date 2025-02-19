@@ -116,6 +116,8 @@ export type Database = {
           created_at: string
           created_by: string
           description: string
+          faturado: boolean | null
+          faturado_at: string | null
           id: string
           scheduled_for: string
           status: string
@@ -128,6 +130,8 @@ export type Database = {
           created_at?: string
           created_by: string
           description: string
+          faturado?: boolean | null
+          faturado_at?: string | null
           id?: string
           scheduled_for: string
           status: string
@@ -140,6 +144,8 @@ export type Database = {
           created_at?: string
           created_by?: string
           description?: string
+          faturado?: boolean | null
+          faturado_at?: string | null
           id?: string
           scheduled_for?: string
           status?: string
