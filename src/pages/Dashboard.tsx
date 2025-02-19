@@ -1,9 +1,7 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { TicketStats } from "@/components/tickets/TicketStats";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TicketsTable } from "@/components/tickets/TicketsTable";
 import { useState } from "react";
 import { 
@@ -44,7 +42,6 @@ const statusOptions = [
 export default function Dashboard() {
   const [filterUser, setFilterUser] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
-  const [showSheet, setShowSheet] = useState(false);
 
   const { data: userStats } = useQuery({
     queryKey: ["user-tickets-stats"],
@@ -103,7 +100,7 @@ export default function Dashboard() {
 
   const { data: filteredTickets } = useQuery({
     queryKey: ["filtered-tickets", filterStatus, filterUser],
-    enabled: showSheet && (!!filterStatus || !!filterUser),
+    enabled: !!filterStatus || !!filterUser,
     queryFn: async () => {
       let query = supabase
         .from("tickets")
@@ -131,10 +128,9 @@ export default function Dashboard() {
   const handleFilterChange = (userId: string | null, status: string | null) => {
     setFilterUser(userId);
     setFilterStatus(status);
-    setShowSheet(true);
   };
 
-  const getSheetTitle = () => {
+  const getFilterTitle = () => {
     if (filterUser) {
       const user = userStats?.find(stat => stat.user.id === filterUser);
       return `Tickets de ${user?.user.name}`;
@@ -143,15 +139,12 @@ export default function Dashboard() {
       const status = statusOptions.find(s => s.value === filterStatus);
       return `Tickets ${status?.label}`;
     }
-    return "Tickets";
+    return "Tickets Filtrados";
   };
 
-  const StatusIcon = filterStatus ? 
-    statusOptions.find(s => s.value === filterStatus)?.icon : null;
-
   return (
-    <div className="fade-in">
-      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+    <div className="fade-in space-y-8">
+      <h1 className="text-3xl font-bold">Dashboard</h1>
       
       <TicketStats
         userStats={userStats || []}
@@ -162,29 +155,27 @@ export default function Dashboard() {
         onFilterStatusChange={(status) => handleFilterChange(null, status)}
       />
 
-      <Sheet open={showSheet} onOpenChange={setShowSheet}>
-        <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle className="flex items-center gap-2">
-              {filterUser && <User className="h-5 w-5" />}
-              {StatusIcon && (
-                <StatusIcon 
-                  className={`h-5 w-5 ${statusOptions.find(s => s.value === filterStatus)?.color}`}
-                />
-              )}
-              {getSheetTitle()}
-            </SheetTitle>
-          </SheetHeader>
-          
-          <div className="mt-6">
-            <TicketsTable
-              tickets={filteredTickets || []}
-              onStatusChange={() => {}}
-              onViewDetails={() => {}}
-            />
+      {(filterStatus || filterUser) && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            {filterUser && <User className="h-5 w-5" />}
+            {filterStatus && (
+              <span className={`${statusOptions.find(s => s.value === filterStatus)?.color}`}>
+                {statusOptions.find(s => s.value === filterStatus)?.icon && 
+                  <statusOptions.find(s => s.value === filterStatus)!.icon className="h-5 w-5" />
+                }
+              </span>
+            )}
+            <h2 className="text-xl font-semibold">{getFilterTitle()}</h2>
           </div>
-        </SheetContent>
-      </Sheet>
+
+          <TicketsTable
+            tickets={filteredTickets || []}
+            onStatusChange={() => {}}
+            onViewDetails={() => {}}
+          />
+        </div>
+      )}
     </div>
   );
 }
