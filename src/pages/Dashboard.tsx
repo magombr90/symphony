@@ -142,6 +142,14 @@ export default function Dashboard() {
     return "Tickets Filtrados";
   };
 
+  const renderStatusIcon = () => {
+    if (!filterStatus) return null;
+    const status = statusOptions.find(s => s.value === filterStatus);
+    if (!status) return null;
+    const Icon = status.icon;
+    return <Icon className={`h-5 w-5 ${status.color}`} />;
+  };
+
   return (
     <div className="fade-in space-y-8">
       <h1 className="text-3xl font-bold">Dashboard</h1>
@@ -159,13 +167,7 @@ export default function Dashboard() {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             {filterUser && <User className="h-5 w-5" />}
-            {filterStatus && (
-              <span className={`${statusOptions.find(s => s.value === filterStatus)?.color}`}>
-                {statusOptions.find(s => s.value === filterStatus)?.icon && 
-                  <statusOptions.find(s => s.value === filterStatus)!.icon className="h-5 w-5" />
-                }
-              </span>
-            )}
+            {filterStatus && renderStatusIcon()}
             <h2 className="text-xl font-semibold">{getFilterTitle()}</h2>
           </div>
 
