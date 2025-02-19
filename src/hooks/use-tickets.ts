@@ -24,16 +24,29 @@ export function useTickets() {
         .from("tickets")
         .select(`
           *,
-          client:clients(razao_social),
-          assigned_user:system_users!tickets_assigned_to_fkey(name)
-        `)
-        .order("created_at", { ascending: false });
+          client:clients(id, razao_social),
+          assigned_user:system_users!tickets_assigned_to_fkey(id, name)
+        `);
 
       if (searchTerm) {
+        const searchPattern = `%${searchTerm}%`;
+        const { data: clientsData } = await supabase
+          .from("clients")
+          .select("id")
+          .ilike("razao_social", searchPattern);
+
+        const { data: usersData } = await supabase
+          .from("system_users")
+          .select("id")
+          .ilike("name", searchPattern);
+
+        const clientIds = clientsData?.map(c => c.id) || [];
+        const userIds = usersData?.map(u => u.id) || [];
+
         query = query.or(`
-          codigo.ilike.%${searchTerm}%,
-          clients.razao_social.ilike.%${searchTerm}%,
-          system_users.name.ilike.%${searchTerm}%
+          codigo.ilike.${searchPattern},
+          client_id.in.(${clientIds.join(',')}),
+          assigned_to.in.(${userIds.join(',')})
         `);
       }
 
@@ -48,6 +61,8 @@ export function useTickets() {
           query = query.lte("created_at", endOfDay(dateFilter.to).toISOString());
         }
       }
+
+      query = query.order("created_at", { ascending: false });
 
       const { data, error } = await query;
       if (error) throw error;
