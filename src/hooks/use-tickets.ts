@@ -32,7 +32,8 @@ export function useTickets() {
       if (searchTerm) {
         query = query.or(`
           codigo.ilike.%${searchTerm}%,
-          clients.razao_social.ilike.%${searchTerm}%
+          clients.razao_social.ilike.%${searchTerm}%,
+          system_users.name.ilike.%${searchTerm}%
         `);
       }
 

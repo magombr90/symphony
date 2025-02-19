@@ -47,7 +47,7 @@ export function TicketSearch({
     <div className="flex gap-4 items-end">
       <div className="flex-1">
         <Input
-          placeholder="Buscar por cliente ou código do ticket..."
+          placeholder="Buscar por cliente, código do ticket ou responsável..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
           className="w-full"
