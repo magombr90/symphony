@@ -22,13 +22,15 @@ export default function Login() {
     const password = String(formData.get("password"));
 
     try {
-      // Primeiro, tenta encontrar o usuário pelo identificador (email ou username)
+      // Corrigindo a query para usar a sintaxe correta do Supabase
       const { data: user, error: userError } = await supabase
         .from("system_users")
         .select("email")
-        .or(`email.eq.${identifier},username.eq.${identifier}`)
+        .or(`email.eq."${identifier}",username.eq."${identifier}"`)
         .eq("active", true)
         .single();
+
+      console.log("Resultado da busca:", user, userError);
 
       if (userError || !user) {
         throw new Error("Usuário não encontrado ou inativo");
@@ -40,6 +42,8 @@ export default function Login() {
         password,
       });
 
+      console.log("Resultado do login:", authError);
+
       if (authError) throw authError;
 
       navigate("/");
@@ -48,6 +52,7 @@ export default function Login() {
         title: "Login realizado com sucesso!",
       });
     } catch (error) {
+      console.error("Erro completo:", error);
       toast({
         variant: "destructive",
         title: "Erro ao fazer login",
