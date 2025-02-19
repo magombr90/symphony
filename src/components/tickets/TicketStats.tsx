@@ -76,4 +76,33 @@ export function TicketStats({
               </div>
             </CardContent>
           </Card>
-        )
+        ))}
+      </div>
+
+      <div className="grid grid-cols-4 gap-4 mb-8">
+        {statusCounts?.map((statusCount) => (
+          <Card
+            key={statusCount.status}
+            className={`cursor-pointer hover:opacity-80 transition-opacity ${
+              filterStatus === statusCount.status ? "ring-2 ring-primary" : ""
+            }`}
+            onClick={() =>
+              onFilterStatusChange(
+                filterStatus === statusCount.status ? null : statusCount.status
+              )
+            }
+          >
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center">
+                <Badge className={getStatusColor(statusCount.status)}>
+                  {statusCount.label}
+                </Badge>
+                <span className="text-2xl font-bold">{statusCount.count}</span>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </>
+  );
+}
