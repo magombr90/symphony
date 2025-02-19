@@ -31,7 +31,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import bcrypt from "bcryptjs";
 
 type SystemUser = {
   id: string;
@@ -68,14 +67,10 @@ export default function SystemUsers() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
-    const password = String(formData.get("password"));
-    const passwordHash = await bcrypt.hash(password, 10);
-
     const newUser = {
       name: String(formData.get("name")),
       email: String(formData.get("email")),
       role: selectedRole,
-      password_hash: passwordHash,
     };
 
     const { error } = await supabase.from("system_users").insert(newUser);
@@ -119,10 +114,6 @@ export default function SystemUsers() {
               <div>
                 <Label htmlFor="email">E-mail</Label>
                 <Input id="email" name="email" type="email" required />
-              </div>
-              <div>
-                <Label htmlFor="password">Senha</Label>
-                <Input id="password" name="password" type="password" required />
               </div>
               <div>
                 <Label>Função</Label>

@@ -64,12 +64,12 @@ export function TicketStats({
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <h3 className="font-semibold">{user.name}</h3>
-                  <Badge variant="secondary" className="bg-blue-500">
+                  <Badge className="bg-blue-500">
                     {inProgress} em andamento
                   </Badge>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Total de tickets do dia: {total}
+                  Total de tickets: {total}
                 </div>
               </div>
             </CardContent>

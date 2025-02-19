@@ -53,18 +53,12 @@ export default function Dashboard() {
 
       if (!users) return [];
 
-      const today = new Date();
-      const startOfToday = startOfDay(today);
-      const endOfToday = endOfDay(today);
-
       const stats = await Promise.all(
         users.map(async (user) => {
           const { count: total } = await supabase
             .from("tickets")
             .select("*", { count: "exact", head: true })
-            .eq("assigned_to", user.id)
-            .gte("created_at", startOfToday.toISOString())
-            .lte("created_at", endOfToday.toISOString());
+            .eq("assigned_to", user.id);
 
           const { data: inProgress } = await supabase
             .from("tickets")
@@ -116,11 +110,13 @@ export default function Dashboard() {
           assigned_user:system_users!tickets_assigned_to_fkey(name)
         `);
 
-      // Adiciona filtro por data para o dia atual
-      const today = new Date();
-      query = query
-        .gte("created_at", startOfDay(today).toISOString())
-        .lte("created_at", endOfDay(today).toISOString());
+      // Adiciona filtro por data para tickets concluídos e cancelados
+      if (["CONCLUIDO", "CANCELADO"].includes(filterStatus || '')) {
+        const today = new Date();
+        query = query
+          .gte("created_at", startOfDay(today).toISOString())
+          .lte("created_at", endOfDay(today).toISOString());
+      }
 
       if (filterStatus) {
         query = query.eq("status", filterStatus);

@@ -46,7 +46,6 @@ export type Database = {
           email: string
           id: string
           name: string
-          password_hash: string
           role: string
         }
         Insert: {
@@ -55,7 +54,6 @@ export type Database = {
           email: string
           id?: string
           name: string
-          password_hash?: string
           role?: string
         }
         Update: {
@@ -64,7 +62,6 @@ export type Database = {
           email?: string
           id?: string
           name?: string
-          password_hash?: string
           role?: string
         }
         Relationships: []
