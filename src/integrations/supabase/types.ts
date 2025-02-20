@@ -39,6 +39,50 @@ export type Database = {
         }
         Relationships: []
       }
+      equipamentos: {
+        Row: {
+          client_id: string | null
+          codigo: string
+          condicao: Database["public"]["Enums"]["equipment_condition"]
+          created_at: string
+          equipamento: string
+          id: string
+          numero_serie: string | null
+          observacoes: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          codigo: string
+          condicao: Database["public"]["Enums"]["equipment_condition"]
+          created_at?: string
+          equipamento: string
+          id?: string
+          numero_serie?: string | null
+          observacoes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          codigo?: string
+          condicao?: Database["public"]["Enums"]["equipment_condition"]
+          created_at?: string
+          equipamento?: string
+          id?: string
+          numero_serie?: string | null
+          observacoes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipamentos_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_users: {
         Row: {
           active: boolean | null
@@ -212,7 +256,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      equipment_condition: "NOVO" | "USADO" | "DEFEITO"
     }
     CompositeTypes: {
       [_ in never]: never

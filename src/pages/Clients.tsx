@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, History, X } from "lucide-react";
+import { Plus, History, Tool, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -31,6 +31,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
 
 type Client = {
   id: string;
@@ -48,6 +50,16 @@ type Ticket = {
   description: string;
   status: string;
   scheduled_for: string;
+  created_at: string;
+};
+
+type Equipment = {
+  id: string;
+  codigo: string;
+  equipamento: string;
+  numero_serie: string;
+  condicao: 'NOVO' | 'USADO' | 'DEFEITO';
+  observacoes: string | null;
   created_at: string;
 };
 
@@ -76,6 +88,7 @@ const getStatusColor = (status: string) => {
 export default function Clients() {
   const [open, setOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [selectedView, setSelectedView] = useState<'tickets' | 'equipment'>('tickets');
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     cnpj: "",
@@ -83,6 +96,12 @@ export default function Clients() {
     endereco: "",
     telefone: "",
     email: "",
+  });
+  const [equipmentForm, setEquipmentForm] = useState({
+    equipamento: "",
+    numero_serie: "",
+    condicao: "NOVO" as "NOVO" | "USADO" | "DEFEITO",
+    observacoes: "",
   });
   const { toast } = useToast();
 
@@ -109,7 +128,7 @@ export default function Clients() {
 
   const { data: clientTickets } = useQuery({
     queryKey: ["client-tickets", selectedClient?.id],
-    enabled: !!selectedClient,
+    enabled: !!selectedClient && selectedView === 'tickets',
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tickets")
@@ -127,6 +146,29 @@ export default function Clients() {
       }
 
       return data as Ticket[];
+    },
+  });
+
+  const { data: clientEquipment, refetch: refetchEquipment } = useQuery({
+    queryKey: ["client-equipment", selectedClient?.id],
+    enabled: !!selectedClient && selectedView === 'equipment',
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("equipamentos")
+        .select("*")
+        .eq("client_id", selectedClient?.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao carregar equipamentos",
+          description: error.message,
+        });
+        throw error;
+      }
+
+      return data as Equipment[];
     },
   });
 
@@ -170,7 +212,6 @@ export default function Clients() {
     const value = e.target.value;
     setFormData(prev => ({ ...prev, cnpj: value }));
     
-    // Se o CNPJ tem 14 dígitos, busca os dados
     if (value.replace(/[^\d]/g, '').length === 14) {
       fetchCNPJData(value);
     }
@@ -231,6 +272,39 @@ export default function Clients() {
       title: "Cliente deletado com sucesso!",
     });
     refetch();
+  };
+
+  const handleEquipmentSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedClient) return;
+
+    const { error } = await supabase.from("equipamentos").insert({
+      client_id: selectedClient.id,
+      equipamento: equipmentForm.equipamento,
+      numero_serie: equipmentForm.numero_serie,
+      condicao: equipmentForm.condicao,
+      observacoes: equipmentForm.observacoes || null,
+    });
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao cadastrar equipamento",
+        description: error.message,
+      });
+      return;
+    }
+
+    toast({
+      title: "Equipamento cadastrado com sucesso!",
+    });
+    setEquipmentForm({
+      equipamento: "",
+      numero_serie: "",
+      condicao: "NOVO",
+      observacoes: "",
+    });
+    refetchEquipment();
   };
 
   return (
@@ -329,10 +403,24 @@ export default function Clients() {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => setSelectedClient(client)}
+                      onClick={() => {
+                        setSelectedClient(client);
+                        setSelectedView('tickets');
+                      }}
                     >
                       <History className="h-4 w-4 mr-2" />
                       Histórico
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedClient(client);
+                        setSelectedView('equipment');
+                      }}
+                    >
+                      <Tool className="h-4 w-4 mr-2" />
+                      Equipamentos
                     </Button>
                     <Button 
                       variant="destructive" 
@@ -353,44 +441,158 @@ export default function Clients() {
         <SheetContent className="w-full sm:max-w-2xl">
           <SheetHeader>
             <SheetTitle>
-              Histórico de Tickets - {selectedClient?.razao_social}
+              {selectedView === 'tickets' ? 'Histórico de Tickets' : 'Equipamentos'} - {selectedClient?.razao_social}
             </SheetTitle>
+            <div className="flex space-x-2 mt-4">
+              <Button
+                variant={selectedView === 'tickets' ? 'default' : 'outline'}
+                onClick={() => setSelectedView('tickets')}
+              >
+                <History className="h-4 w-4 mr-2" />
+                Tickets
+              </Button>
+              <Button
+                variant={selectedView === 'equipment' ? 'default' : 'outline'}
+                onClick={() => setSelectedView('equipment')}
+              >
+                <Tool className="h-4 w-4 mr-2" />
+                Equipamentos
+              </Button>
+            </div>
           </SheetHeader>
-          <div className="mt-6">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Código</TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Data Agendada</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {clientTickets?.map((ticket) => (
-                  <TableRow key={ticket.id}>
-                    <TableCell>{ticket.codigo}</TableCell>
-                    <TableCell>{ticket.description}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(ticket.status)}>
-                        {statusOptions.find(s => s.value === ticket.status)?.label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(ticket.scheduled_for), "dd/MM/yyyy HH:mm")}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {clientTickets?.length === 0 && (
+
+          {selectedView === 'tickets' ? (
+            <div className="mt-6">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-4">
-                      Nenhum ticket encontrado para este cliente.
-                    </TableCell>
+                    <TableHead>Código</TableHead>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Data Agendada</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {clientTickets?.map((ticket) => (
+                    <TableRow key={ticket.id}>
+                      <TableCell>{ticket.codigo}</TableCell>
+                      <TableCell>{ticket.description}</TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(ticket.status)}>
+                          {statusOptions.find(s => s.value === ticket.status)?.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {format(new Date(ticket.scheduled_for), "dd/MM/yyyy HH:mm")}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {clientTickets?.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-4">
+                        Nenhum ticket encontrado para este cliente.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="mt-6 space-y-6">
+              <form onSubmit={handleEquipmentSubmit} className="space-y-4 border-b pb-6">
+                <div>
+                  <Label htmlFor="equipamento">Equipamento</Label>
+                  <Input
+                    id="equipamento"
+                    value={equipmentForm.equipamento}
+                    onChange={(e) => setEquipmentForm(prev => ({ ...prev, equipamento: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="numero_serie">Número de Série</Label>
+                  <Input
+                    id="numero_serie"
+                    value={equipmentForm.numero_serie}
+                    onChange={(e) => setEquipmentForm(prev => ({ ...prev, numero_serie: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label>Condição</Label>
+                  <RadioGroup
+                    value={equipmentForm.condicao}
+                    onValueChange={(value: "NOVO" | "USADO" | "DEFEITO") => 
+                      setEquipmentForm(prev => ({ ...prev, condicao: value }))
+                    }
+                    className="flex space-x-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="NOVO" id="novo" />
+                      <Label htmlFor="novo">Novo</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="USADO" id="usado" />
+                      <Label htmlFor="usado">Usado</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="DEFEITO" id="defeito" />
+                      <Label htmlFor="defeito">Defeito</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div>
+                  <Label htmlFor="observacoes">Observações</Label>
+                  <Textarea
+                    id="observacoes"
+                    value={equipmentForm.observacoes}
+                    onChange={(e) => setEquipmentForm(prev => ({ ...prev, observacoes: e.target.value }))}
+                  />
+                </div>
+                <Button type="submit" className="w-full">
+                  Cadastrar Equipamento
+                </Button>
+              </form>
+
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Código</TableHead>
+                    <TableHead>Equipamento</TableHead>
+                    <TableHead>Nº Série</TableHead>
+                    <TableHead>Condição</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {clientEquipment?.map((equipment) => (
+                    <TableRow key={equipment.id}>
+                      <TableCell>{equipment.codigo}</TableCell>
+                      <TableCell>{equipment.equipamento}</TableCell>
+                      <TableCell>{equipment.numero_serie}</TableCell>
+                      <TableCell>
+                        <Badge 
+                          className={
+                            equipment.condicao === 'NOVO' ? 'bg-green-500' :
+                            equipment.condicao === 'USADO' ? 'bg-yellow-500' :
+                            'bg-red-500'
+                          }
+                        >
+                          {equipment.condicao}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {clientEquipment?.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-4">
+                        Nenhum equipamento cadastrado para este cliente.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </SheetContent>
       </Sheet>
     </div>
