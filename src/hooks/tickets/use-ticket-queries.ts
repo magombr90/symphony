@@ -60,7 +60,12 @@ export function useTicketQueries(
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Ticket[];
+
+      // Converter os dados para o formato esperado
+      return (data || []).map(ticket => ({
+        ...ticket,
+        equipamentos: ticket.equipamentos as Ticket['equipamentos']
+      })) as Ticket[];
     },
   });
 
