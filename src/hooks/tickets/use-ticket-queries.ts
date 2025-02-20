@@ -113,7 +113,12 @@ export function useTicketQueries(
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data || [];
+
+      // Garantir que action_type está no formato correto
+      return (data || []).map(item => ({
+        ...item,
+        action_type: item.action_type as "STATUS_CHANGE" | "USER_ASSIGNMENT"
+      })) as TicketHistory[];
     },
   });
 

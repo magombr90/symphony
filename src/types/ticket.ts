@@ -45,7 +45,7 @@ export type TicketHistory = {
   created_by_user: {
     name: string;
   };
-  action_type: 'STATUS_CHANGE' | 'USER_ASSIGNMENT';
+  action_type: "STATUS_CHANGE" | "USER_ASSIGNMENT";
   previous_assigned_to: string | null;
   new_assigned_to: string | null;
   previous_assigned_to_user?: {
