@@ -1,3 +1,4 @@
+
 import { Home, Users, Ticket, LayoutDashboard, Box, User } from "lucide-react";
 import {
   Sidebar,
@@ -17,6 +18,8 @@ export default function AppSidebar() {
   const location = useLocation();
   const isMobile = useIsMobile();
   const { isAdmin } = useAuth();
+
+  console.log("AppSidebar isAdmin:", isAdmin); // Log para debug
 
   const menuItems = [
     {
@@ -39,11 +42,16 @@ export default function AppSidebar() {
       icon: Box,
       path: "/equipments",
     },
-    ...(isAdmin ? [{
-      title: "Usuários",
-      icon: User,
-      path: "/system-users",
-    }] : []),
+    ...(isAdmin 
+      ? [
+          {
+            title: "Usuários",
+            icon: User,
+            path: "/system-users",
+          }
+        ] 
+      : []
+    ),
   ];
 
   return (

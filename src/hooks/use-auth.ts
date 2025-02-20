@@ -15,11 +15,13 @@ export function useAuth() {
         .eq("id", user.id)
         .single();
 
+      console.log("Current user data:", data); // Log para debug
       return data;
     },
   });
 
   const isAdmin = currentUser?.role === "admin";
+  console.log("Is admin:", isAdmin); // Log para debug
 
   return {
     currentUser,
