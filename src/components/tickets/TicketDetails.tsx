@@ -69,15 +69,15 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Cliente</Label>
-              <p className="mt-1">{ticket.client.razao_social}</p>
+              <p className="mt-1 font-medium">{ticket.client.razao_social}</p>
             </div>
             <div>
               <Label>Responsável</Label>
-              <p className="mt-1">{ticket.assigned_user?.name || "Não atribuído"}</p>
+              <p className="mt-1 font-medium">{ticket.assigned_user?.name || "Não atribuído"}</p>
             </div>
             <div>
               <Label>Data Agendada</Label>
-              <p className="mt-1">
+              <p className="mt-1 font-medium">
                 {format(new Date(ticket.scheduled_for), "dd/MM/yyyy HH:mm")}
               </p>
             </div>
@@ -91,24 +91,42 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
 
           <div>
             <Label>Descrição</Label>
-            <p className="mt-1">{ticket.description}</p>
+            <p className="mt-1 text-gray-700">{ticket.description}</p>
           </div>
 
           {ticket.equipamentos && ticket.equipamentos.length > 0 && (
             <div>
-              <Label className="mb-2 block">Equipamentos</Label>
-              <div className="space-y-2">
-                {ticket.equipamentos.map((eq, index) => (
-                  <div key={index} className="border p-2 rounded">
-                    <p><strong>Código:</strong> {eq.codigo}</p>
-                    <p><strong>Equipamento:</strong> {eq.equipamento}</p>
-                    {eq.numero_serie && (
-                      <p><strong>Número de Série:</strong> {eq.numero_serie}</p>
-                    )}
-                    <p><strong>Condição:</strong> {eq.condicao}</p>
-                    {eq.observacoes && (
-                      <p><strong>Observações:</strong> {eq.observacoes}</p>
-                    )}
+              <Label className="block mb-3">Equipamentos Retirados</Label>
+              <div className="space-y-4">
+                {ticket.equipamentos.map((equip, index) => (
+                  <div 
+                    key={index} 
+                    className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                  >
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <span className="text-sm text-gray-500">Código</span>
+                        <p className="font-medium">{equip.codigo}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500">Equipamento</span>
+                        <p className="font-medium">{equip.equipamento}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500">Número de Série</span>
+                        <p className="font-medium">{equip.numero_serie || "-"}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500">Condição</span>
+                        <p className="font-medium">{equip.condicao}</p>
+                      </div>
+                      {equip.observacoes && (
+                        <div className="col-span-2">
+                          <span className="text-sm text-gray-500">Observações</span>
+                          <p className="font-medium">{equip.observacoes}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
