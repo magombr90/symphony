@@ -48,6 +48,7 @@ const roleOptions = [
 
 export default function SystemUsers() {
   const [open, setOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<SystemUser | null>(null);
   const { toast } = useToast();
   const [selectedRole, setSelectedRole] = useState("user");
 
@@ -63,40 +64,80 @@ export default function SystemUsers() {
     },
   });
 
+  const handleEdit = (user: SystemUser) => {
+    setEditingUser(user);
+    setSelectedRole(user.role);
+    setOpen(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
-    const newUser = {
+    const userData = {
       name: String(formData.get("name")),
       email: String(formData.get("email")),
       role: selectedRole,
-      password_hash: String(formData.get("password")), // Campo adicionado
+      active: formData.get("active") === "true",
     };
 
-    const { error } = await supabase.from("system_users").insert(newUser);
+    // Se tiver senha nova, inclui no objeto
+    const password = formData.get("password");
+    if (password && String(password).length > 0) {
+      Object.assign(userData, { password_hash: String(password) });
+    }
+
+    let error;
+    if (editingUser) {
+      // Atualização
+      ({ error } = await supabase
+        .from("system_users")
+        .update(userData)
+        .eq("id", editingUser.id));
+    } else {
+      // Criação
+      if (!password) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao criar usuário",
+          description: "Senha é obrigatória para novos usuários",
+        });
+        return;
+      }
+      ({ error } = await supabase.from("system_users").insert({
+        ...userData,
+        password_hash: String(password),
+      }));
+    }
 
     if (error) {
       toast({
         variant: "destructive",
-        title: "Erro ao criar usuário",
+        title: `Erro ao ${editingUser ? 'atualizar' : 'criar'} usuário`,
         description: error.message,
       });
       return;
     }
 
     toast({
-      title: "Usuário criado com sucesso!",
+      title: `Usuário ${editingUser ? 'atualizado' : 'criado'} com sucesso!`,
     });
     setOpen(false);
+    setEditingUser(null);
     refetch();
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setEditingUser(null);
+    setSelectedRole("user");
   };
 
   return (
     <div className="fade-in">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Usuários do Sistema</h1>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleClose}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
@@ -105,24 +146,39 @@ export default function SystemUsers() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Novo Usuário</DialogTitle>
+              <DialogTitle>
+                {editingUser ? "Editar Usuário" : "Novo Usuário"}
+              </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Label htmlFor="name">Nome</Label>
-                <Input id="name" name="name" required />
+                <Input 
+                  id="name" 
+                  name="name" 
+                  required 
+                  defaultValue={editingUser?.name || ""}
+                />
               </div>
               <div>
                 <Label htmlFor="email">E-mail</Label>
-                <Input id="email" name="email" type="email" required />
+                <Input 
+                  id="email" 
+                  name="email" 
+                  type="email" 
+                  required 
+                  defaultValue={editingUser?.email || ""}
+                />
               </div>
               <div>
-                <Label htmlFor="password">Senha</Label>
+                <Label htmlFor="password">
+                  {editingUser ? "Nova Senha (opcional)" : "Senha"}
+                </Label>
                 <Input 
                   id="password" 
                   name="password" 
                   type="password" 
-                  required
+                  required={!editingUser}
                   minLength={6}
                 />
               </div>
@@ -141,8 +197,25 @@ export default function SystemUsers() {
                   </SelectContent>
                 </Select>
               </div>
+              {editingUser && (
+                <div>
+                  <Label>Status</Label>
+                  <Select 
+                    defaultValue={editingUser.active ? "true" : "false"} 
+                    name="active"
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="true">Ativo</SelectItem>
+                      <SelectItem value="false">Inativo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <Button type="submit" className="w-full">
-                Salvar
+                {editingUser ? "Atualizar" : "Salvar"}
               </Button>
             </form>
           </DialogContent>
@@ -177,7 +250,11 @@ export default function SystemUsers() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEdit(user)}
+                    >
                       Editar
                     </Button>
                   </TableCell>
