@@ -52,11 +52,19 @@ export default function Tickets() {
   const handleReasonSubmit = async () => {
     if (!editingTicket) return;
     await updateTicketStatus(editingTicket.id, editingTicket.status, reason);
+    setShowReasonDialog(false);
+    setReason("");
+    setEditingTicket(null);
+    refetch();
   };
 
   const handleAssignSubmit = async () => {
     if (!editingTicket || !selectedUser) return;
     await handleAssignTicket(editingTicket.id, selectedUser, editingTicket.assigned_to);
+    setShowAssignDialog(false);
+    setSelectedUser(null);
+    setEditingTicket(null);
+    refetch();
   };
 
   return (

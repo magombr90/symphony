@@ -26,6 +26,8 @@ const statusOptions = [
 ];
 
 export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) {
+  if (!ticket) return null;
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "PENDENTE":
@@ -60,80 +62,98 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
       <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
         <SheetHeader>
           <SheetTitle>
-            Detalhes do Ticket - {ticket?.codigo}
+            Detalhes do Ticket - {ticket.codigo}
           </SheetTitle>
         </SheetHeader>
-        {ticket && (
-          <div className="mt-6 space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Cliente</Label>
-                <p className="mt-1">{ticket.client.razao_social}</p>
-              </div>
-              <div>
-                <Label>Responsável</Label>
-                <p className="mt-1">{ticket.assigned_user?.name}</p>
-              </div>
-              <div>
-                <Label>Data Agendada</Label>
-                <p className="mt-1">
-                  {format(new Date(ticket.scheduled_for), "dd/MM/yyyy HH:mm")}
-                </p>
-              </div>
-              <div>
-                <Label>Status Atual</Label>
-                <Badge className={`mt-1 ${getStatusColor(ticket.status)}`}>
-                  {statusOptions.find((s) => s.value === ticket.status)?.label}
-                </Badge>
-              </div>
-            </div>
-
+        <div className="mt-6 space-y-6">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Descrição</Label>
-              <p className="mt-1">{ticket.description}</p>
+              <Label>Cliente</Label>
+              <p className="mt-1">{ticket.client.razao_social}</p>
             </div>
-
-            <div className="flex justify-end">
-              <TicketProgress
-                ticket={ticket}
-                onSuccess={() => {
-                  onClose();
-                  // Aqui você deve atualizar a lista de tickets
-                }}
-              />
-            </div>
-
             <div>
-              <Label className="mb-2 block">Histórico</Label>
-              {history.length > 0 ? (
-                <div className="space-y-4">
-                  {history.map((item) => (
-                    <div key={item.id} className="border p-4 rounded-lg">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-medium">
-                            {getHistoryText(item)}
-                          </p>
-                          {item.reason && (
-                            <p className="mt-2 text-sm text-gray-600">
-                              Motivo: {item.reason}
-                            </p>
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          <p>{format(new Date(item.created_at), "dd/MM/yyyy HH:mm")}</p>
-                          <p className="text-right">por {item.created_by_user.name}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500">Nenhuma alteração registrada.</p>
-              )}
+              <Label>Responsável</Label>
+              <p className="mt-1">{ticket.assigned_user?.name || "Não atribuído"}</p>
+            </div>
+            <div>
+              <Label>Data Agendada</Label>
+              <p className="mt-1">
+                {format(new Date(ticket.scheduled_for), "dd/MM/yyyy HH:mm")}
+              </p>
+            </div>
+            <div>
+              <Label>Status Atual</Label>
+              <Badge className={`mt-1 ${getStatusColor(ticket.status)}`}>
+                {statusOptions.find((s) => s.value === ticket.status)?.label}
+              </Badge>
             </div>
           </div>
-        )}
+
+          <div>
+            <Label>Descrição</Label>
+            <p className="mt-1">{ticket.description}</p>
+          </div>
+
+          {ticket.equipamentos && ticket.equipamentos.length > 0 && (
+            <div>
+              <Label className="mb-2 block">Equipamentos</Label>
+              <div className="space-y-2">
+                {ticket.equipamentos.map((eq, index) => (
+                  <div key={index} className="border p-2 rounded">
+                    <p><strong>Código:</strong> {eq.codigo}</p>
+                    <p><strong>Equipamento:</strong> {eq.equipamento}</p>
+                    {eq.numero_serie && (
+                      <p><strong>Número de Série:</strong> {eq.numero_serie}</p>
+                    )}
+                    <p><strong>Condição:</strong> {eq.condicao}</p>
+                    {eq.observacoes && (
+                      <p><strong>Observações:</strong> {eq.observacoes}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end">
+            <TicketProgress
+              ticket={ticket}
+              onSuccess={() => {
+                onClose();
+              }}
+            />
+          </div>
+
+          <div>
+            <Label className="mb-2 block">Histórico</Label>
+            {history.length > 0 ? (
+              <div className="space-y-4">
+                {history.map((item) => (
+                  <div key={item.id} className="border p-4 rounded-lg">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium">
+                          {getHistoryText(item)}
+                        </p>
+                        {item.reason && (
+                          <p className="mt-2 text-sm text-gray-600">
+                            Motivo: {item.reason}
+                          </p>
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        <p>{format(new Date(item.created_at), "dd/MM/yyyy HH:mm")}</p>
+                        <p className="text-right">por {item.created_by_user.name}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">Nenhuma alteração registrada.</p>
+            )}
+          </div>
+        </div>
       </SheetContent>
     </Sheet>
   );
