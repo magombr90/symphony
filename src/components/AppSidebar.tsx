@@ -1,4 +1,3 @@
-
 import { Home, Users, Ticket, LayoutDashboard, Box, User } from "lucide-react";
 import {
   Sidebar,
@@ -12,38 +11,40 @@ import {
 } from "@/components/ui/sidebar";
 import { Link, useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-const menuItems = [
-  {
-    title: "Dashboard",
-    icon: LayoutDashboard,
-    path: "/",
-  },
-  {
-    title: "Clientes",
-    icon: Users,
-    path: "/clients",
-  },
-  {
-    title: "Tickets",
-    icon: Ticket,
-    path: "/tickets",
-  },
-  {
-    title: "Equipamentos",
-    icon: Box,
-    path: "/equipments",
-  },
-  {
-    title: "Usuários",
-    icon: User,
-    path: "/system-users",
-  },
-];
+import { useAuth } from "@/hooks/use-auth";
 
 export default function AppSidebar() {
   const location = useLocation();
   const isMobile = useIsMobile();
+  const { isAdmin } = useAuth();
+
+  const menuItems = [
+    {
+      title: "Dashboard",
+      icon: LayoutDashboard,
+      path: "/",
+    },
+    {
+      title: "Clientes",
+      icon: Users,
+      path: "/clients",
+    },
+    {
+      title: "Tickets",
+      icon: Ticket,
+      path: "/tickets",
+    },
+    {
+      title: "Equipamentos",
+      icon: Box,
+      path: "/equipments",
+    },
+    ...(isAdmin ? [{
+      title: "Usuários",
+      icon: User,
+      path: "/system-users",
+    }] : []),
+  ];
 
   return (
     <Sidebar className={isMobile ? "w-full h-full" : ""}>

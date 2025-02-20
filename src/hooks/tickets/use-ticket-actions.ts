@@ -2,9 +2,11 @@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SystemUser } from "@/types/ticket";
+import { useAuth } from "@/hooks/use-auth";
 
 export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch: () => void) {
   const { toast } = useToast();
+  const { isAdmin, currentUser } = useAuth();
 
   const handleFaturarTicket = async (ticketId: string) => {
     const { error } = await supabase
@@ -32,6 +34,24 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
 
   const updateTicketStatus = async (ticketId: string, newStatus: string, reasonText?: string) => {
     try {
+      // Verifica se o usuário já moveu o ticket (exceto para admins)
+      if (!isAdmin) {
+        const { data: canMove } = await supabase
+          .rpc('can_move_ticket', { 
+            ticket_id: ticketId, 
+            user_id: currentUser?.id 
+          });
+
+        if (!canMove) {
+          toast({
+            variant: "destructive",
+            title: "Não é possível mover o ticket",
+            description: "Você já moveu este ticket anteriormente.",
+          });
+          return false;
+        }
+      }
+
       const { error: updateError } = await supabase
         .from("tickets")
         .update({ status: newStatus })
@@ -43,7 +63,7 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
           title: "Erro ao atualizar status",
           description: updateError.message,
         });
-        return;
+        return false;
       }
 
       if (reasonText) {
@@ -51,7 +71,8 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
           ticket_id: ticketId,
           status: newStatus,
           reason: reasonText,
-          created_by: systemUsers?.[0]?.id,
+          created_by: currentUser?.id,
+          action_type: 'STATUS_CHANGE'
         };
 
         const { error: historyError } = await supabase
@@ -64,7 +85,7 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
             title: "Erro ao registrar histórico",
             description: historyError.message,
           });
-          return;
+          return false;
         }
       }
 

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Ticket, SystemUser, TicketHistory } from "@/types/ticket";
 import { startOfDay, endOfDay } from "date-fns";
 import { DateRange } from "react-day-picker";
+import { useAuth } from "@/hooks/use-auth";
 
 export function useTicketQueries(
   searchTerm: string,
@@ -11,6 +12,8 @@ export function useTicketQueries(
   dateFilter: DateRange | undefined,
   selectedTicketDetails: Ticket | null
 ) {
+  const { currentUser, isAdmin } = useAuth();
+
   const { data: tickets, refetch } = useQuery({
     queryKey: ["tickets", searchTerm, statusFilter, dateFilter],
     queryFn: async () => {
@@ -21,6 +24,11 @@ export function useTicketQueries(
           client:clients(id, razao_social),
           assigned_user:system_users!tickets_assigned_to_fkey(id, name)
         `);
+
+      // Filtrar tickets por usuário se não for admin
+      if (!isAdmin && currentUser) {
+        query = query.or(`assigned_to.eq.${currentUser.id},created_by.eq.${currentUser.id}`);
+      }
 
       if (searchTerm) {
         const searchPattern = `%${searchTerm}%`;
@@ -61,7 +69,6 @@ export function useTicketQueries(
       const { data, error } = await query;
       if (error) throw error;
 
-      // Converter os dados para o formato esperado
       return (data || []).map(ticket => ({
         ...ticket,
         equipamentos: ticket.equipamentos as Ticket['equipamentos']
