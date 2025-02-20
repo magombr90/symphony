@@ -1,4 +1,3 @@
-
 import { Home, Users, Ticket, LayoutDashboard, Box, User, UserCircle } from "lucide-react";
 import {
   Sidebar,
@@ -73,59 +72,49 @@ export default function AppSidebar() {
             </filter>
           </defs>
           
-          {/* Símbolo musical complexo */}
           <g transform="translate(30, 15)" filter="url(#glow)">
-            {/* Base da clave de sol */}
             <path
-              d="M20 45
-                 C 20 35, 40 35, 40 25
-                 C 40 15, 20 15, 20 25
-                 C 20 35, 35 40, 35 50
-                 C 35 60, 15 60, 15 50
-                 C 15 45, 20 45, 25 47"
+              d="M20 20 
+                L 40 20
+                L 40 35
+                L 20 35
+                L 20 50
+                L 40 50"
               stroke="url(#symbolGradient)"
-              strokeWidth="3"
+              strokeWidth="8"
               fill="none"
               strokeLinecap="round"
-            />
-            
-            {/* Ondas musicais decorativas */}
-            <path
-              d="M45 30
-                 Q 55 25, 65 30
-                 Q 75 35, 85 30
-                 Q 95 25, 105 30"
-              stroke="url(#symbolGradient)"
-              strokeWidth="2"
-              fill="none"
-              strokeLinecap="round"
-              opacity="0.6"
+              strokeLinejoin="round"
             />
             
             <path
-              d="M45 40
-                 Q 55 35, 65 40
-                 Q 75 45, 85 40
-                 Q 95 35, 105 40"
+              d="M45 20 
+                L 65 20
+                L 65 35
+                L 45 35
+                L 45 50
+                L 65 50"
               stroke="url(#symbolGradient)"
-              strokeWidth="2"
+              strokeWidth="8"
               fill="none"
               strokeLinecap="round"
-              opacity="0.4"
+              strokeLinejoin="round"
+              style={{ opacity: 0.3, transform: 'scaleX(-1)' }}
             />
           </g>
           
-          {/* Nome Symphony com estilo moderno */}
           <text
             x="160"
             y="50"
             textAnchor="middle"
             fill="url(#symbolGradient)"
             style={{
-              fontFamily: "'Dancing Script', cursive",
-              fontSize: "42px",
-              letterSpacing: "0.02em",
+              fontFamily: "'Inter', sans-serif",
+              fontSize: "32px",
+              fontWeight: "700",
+              letterSpacing: "0.2em",
               filter: "url(#glow)",
+              textTransform: "uppercase"
             }}
           >
             Symphony
