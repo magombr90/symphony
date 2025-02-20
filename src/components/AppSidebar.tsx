@@ -56,54 +56,76 @@ export default function AppSidebar() {
     <Sidebar className={isMobile ? "w-full h-full" : ""}>
       <div className="p-6">
         <svg
-          viewBox="0 0 240 60"
+          viewBox="0 0 280 80"
           className="w-full h-auto"
         >
           <defs>
-            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <linearGradient id="symbolGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" style={{ stopColor: "#9b87f5" }} />
-              <stop offset="100%" style={{ stopColor: "#9b87f5", stopOpacity: 0.7 }} />
+              <stop offset="100%" style={{ stopColor: "#7c64f3" }} />
             </linearGradient>
-            <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" style={{ stopColor: "#9b87f5", stopOpacity: 0.8 }} />
-              <stop offset="100%" style={{ stopColor: "#9b87f5", stopOpacity: 0.4 }} />
-            </linearGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
           </defs>
           
-          {/* Símbolo musical estilizado */}
-          <path
-            d="M40 30 
-               C 45 25, 50 15, 50 10
-               C 50 5, 45 5, 45 10
-               C 45 15, 45 25, 45 30
-               L 45 40
-               C 45 45, 35 45, 35 40
-               C 35 35, 40 35, 45 37"
-            stroke="url(#waveGradient)"
-            strokeWidth="2"
-            fill="none"
-            strokeLinecap="round"
-          />
+          {/* Símbolo musical complexo */}
+          <g transform="translate(30, 15)" filter="url(#glow)">
+            {/* Base da clave de sol */}
+            <path
+              d="M20 45
+                 C 20 35, 40 35, 40 25
+                 C 40 15, 20 15, 20 25
+                 C 20 35, 35 40, 35 50
+                 C 35 60, 15 60, 15 50
+                 C 15 45, 20 45, 25 47"
+              stroke="url(#symbolGradient)"
+              strokeWidth="3"
+              fill="none"
+              strokeLinecap="round"
+            />
+            
+            {/* Ondas musicais decorativas */}
+            <path
+              d="M45 30
+                 Q 55 25, 65 30
+                 Q 75 35, 85 30
+                 Q 95 25, 105 30"
+              stroke="url(#symbolGradient)"
+              strokeWidth="2"
+              fill="none"
+              strokeLinecap="round"
+              opacity="0.6"
+            />
+            
+            <path
+              d="M45 40
+                 Q 55 35, 65 40
+                 Q 75 45, 85 40
+                 Q 95 35, 105 40"
+              stroke="url(#symbolGradient)"
+              strokeWidth="2"
+              fill="none"
+              strokeLinecap="round"
+              opacity="0.4"
+            />
+          </g>
           
-          {/* Ondas sonoras estilizadas */}
-          <path
-            d="M60 30 Q 70 30, 80 25 Q 90 20, 100 25 Q 110 30, 120 25"
-            stroke="url(#waveGradient)"
-            strokeWidth="1.5"
-            fill="none"
-            strokeLinecap="round"
-          />
-          
-          {/* Nome Symphony */}
+          {/* Nome Symphony com estilo moderno */}
           <text
-            x="140"
-            y="35"
+            x="160"
+            y="50"
             textAnchor="middle"
-            className="fill-primary"
+            fill="url(#symbolGradient)"
             style={{
               fontFamily: "'Dancing Script', cursive",
-              fontSize: "32px",
-              letterSpacing: "0.05em",
+              fontSize: "42px",
+              letterSpacing: "0.02em",
+              filter: "url(#glow)",
             }}
           >
             Symphony
