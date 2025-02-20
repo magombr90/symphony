@@ -81,7 +81,7 @@ export function useTicketQueries(
     queryFn: async () => {
       const { data, error } = await supabase.from("clients").select("*");
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 
@@ -93,7 +93,7 @@ export function useTicketQueries(
         .select("*")
         .eq("active", true);
       if (error) throw error;
-      return data as SystemUser[];
+      return data || [];
     },
   });
 
@@ -113,7 +113,7 @@ export function useTicketQueries(
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as TicketHistory[];
+      return data || [];
     },
   });
 
