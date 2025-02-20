@@ -1,3 +1,4 @@
+
 import { Home, Users, Ticket, LayoutDashboard, Box, User, UserCircle } from "lucide-react";
 import {
   Sidebar,
@@ -53,44 +54,6 @@ export default function AppSidebar() {
 
   return (
     <Sidebar className={isMobile ? "w-full h-full" : ""}>
-      <div className="p-6">
-        <svg
-          viewBox="0 0 280 80"
-          className="w-full h-auto"
-        >
-          <defs>
-            <linearGradient id="symbolGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style={{ stopColor: "#9b87f5" }} />
-              <stop offset="100%" style={{ stopColor: "#7c64f3" }} />
-            </linearGradient>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
-              <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-          </defs>
-          
-          <text
-            x="140"
-            y="50"
-            textAnchor="middle"
-            fill="url(#symbolGradient)"
-            style={{
-              fontFamily: "'Inter', sans-serif",
-              fontSize: "42px",
-              fontWeight: "700",
-              letterSpacing: "0.1em",
-              filter: "url(#glow)",
-              textTransform: "uppercase"
-            }}
-          >
-            Symphony
-          </text>
-        </svg>
-      </div>
-      
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
