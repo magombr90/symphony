@@ -5,11 +5,22 @@ import { TicketsTable } from "@/components/tickets/TicketsTable";
 import { TicketStats } from "@/components/tickets/TicketStats";
 import { useTickets } from "@/hooks/use-tickets";
 import { Ticket } from "@/types/ticket";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { CreateTicketForm } from "@/components/tickets/CreateTicketForm";
 
 export default function Dashboard() {
-  const { tickets } = useTickets();
+  const { tickets, clients, systemUsers, refetch } = useTickets();
   const [filterUser, setFilterUser] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
 
   // Aplicar filtros aos tickets
   const filteredTickets = tickets?.filter(ticket => {
@@ -79,8 +90,29 @@ export default function Dashboard() {
 
   return (
     <div className="fade-in space-y-8">
-      <div>
+      <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Dashboard</h1>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Ticket
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Novo Ticket</DialogTitle>
+            </DialogHeader>
+            <CreateTicketForm
+              clients={clients || []}
+              systemUsers={systemUsers || []}
+              onSuccess={() => {
+                setOpen(false);
+                refetch();
+              }}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid gap-4">
