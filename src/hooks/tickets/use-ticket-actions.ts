@@ -35,11 +35,11 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
   const updateTicketStatus = async (ticketId: string, newStatus: string, reasonText?: string) => {
     try {
       // Verifica se o usuário já moveu o ticket (exceto para admins)
-      if (!isAdmin) {
+      if (!isAdmin && currentUser?.id) {
         const { data: canMove } = await supabase
           .rpc('can_move_ticket', { 
             ticket_id: ticketId, 
-            user_id: currentUser?.id 
+            user_id: currentUser.id 
           });
 
         if (!canMove) {
@@ -66,12 +66,12 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
         return false;
       }
 
-      if (reasonText) {
+      if (reasonText && currentUser?.id) {
         const historyData = {
           ticket_id: ticketId,
           status: newStatus,
           reason: reasonText,
-          created_by: currentUser?.id,
+          created_by: currentUser.id,
           action_type: 'STATUS_CHANGE'
         };
 
@@ -120,20 +120,22 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
 
       if (updateError) throw updateError;
 
-      const historyData = {
-        ticket_id: ticketId,
-        action_type: 'USER_ASSIGNMENT',
-        status: ticket.status, // Include the current ticket status
-        previous_assigned_to: currentAssignedTo,
-        new_assigned_to: newUserId,
-        created_by: systemUsers?.[0]?.id,
-      };
+      if (currentUser?.id) {
+        const historyData = {
+          ticket_id: ticketId,
+          action_type: 'USER_ASSIGNMENT',
+          status: ticket?.status,
+          previous_assigned_to: currentAssignedTo,
+          new_assigned_to: newUserId,
+          created_by: currentUser.id,
+        };
 
-      const { error: historyError } = await supabase
-        .from("ticket_history")
-        .insert([historyData]);
+        const { error: historyError } = await supabase
+          .from("ticket_history")
+          .insert([historyData]);
 
-      if (historyError) throw historyError;
+        if (historyError) throw historyError;
+      }
 
       toast({
         title: "Ticket reatribuído com sucesso!",

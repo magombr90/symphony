@@ -316,7 +316,13 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      can_move_ticket: {
+        Args: {
+          ticket_id: string
+          user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       equipment_condition: "NOVO" | "USADO" | "DEFEITO"
