@@ -28,6 +28,9 @@ const statusOptions = [
 export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) {
   if (!ticket) return null;
 
+  console.log("Ticket details:", ticket);
+  console.log("Equipamentos:", ticket.equipamentos);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "PENDENTE":
@@ -94,9 +97,9 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
             <p className="mt-1 text-gray-700">{ticket.description}</p>
           </div>
 
-          {ticket.equipamentos && ticket.equipamentos.length > 0 && (
-            <div>
-              <Label className="block mb-3">Equipamentos Retirados</Label>
+          <div>
+            <Label className="block mb-3">Equipamentos Retirados</Label>
+            {ticket.equipamentos && ticket.equipamentos.length > 0 ? (
               <div className="space-y-4">
                 {ticket.equipamentos.map((equip, index) => (
                   <div 
@@ -130,8 +133,10 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="text-sm text-gray-500">Nenhum equipamento registrado.</p>
+            )}
+          </div>
 
           <div className="flex justify-end">
             <TicketProgress
