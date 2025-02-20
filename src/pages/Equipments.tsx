@@ -66,7 +66,7 @@ export default function Equipments() {
         .select(`
           *,
           client:clients(razao_social),
-          ticket:tickets(
+          ticket:tickets!equipamentos_ticket_id_fkey(
             id,
             codigo,
             status,
@@ -80,7 +80,7 @@ export default function Equipments() {
             faturado,
             faturado_at,
             client:clients(razao_social),
-            assigned_user:system_users(name)
+            assigned_user:system_users!tickets_assigned_to_fkey(name)
           )
         `);
 
