@@ -1,3 +1,4 @@
+
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -8,7 +9,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Ticket, TicketHistory } from "@/types/ticket";
-import { TicketProgress } from "@/components/ui/ticket-progress";
+import { TicketProgress } from "./TicketProgress";
 
 interface TicketDetailsProps {
   ticket: Ticket | null;

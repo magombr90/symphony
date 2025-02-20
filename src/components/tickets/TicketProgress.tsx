@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { SystemUser } from "@/types/ticket";
 
 interface TicketProgressProps {
   ticket: {
@@ -25,15 +27,27 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
   const [progress, setProgress] = useState("");
   const { toast } = useToast();
 
+  const { data: currentUser } = useQuery({
+    queryKey: ["system-users"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("system_users")
+        .select("*")
+        .limit(1);
+      if (error) throw error;
+      return data[0] as SystemUser;
+    },
+  });
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!ticket) return;
+    if (!ticket || !currentUser) return;
 
     const historyData = {
       ticket_id: ticket.id,
       status: "EM_ANDAMENTO",
       reason: progress,
-      created_by: systemUsers?.[0]?.id, // Temporário, deve vir do contexto de autenticação
+      created_by: currentUser.id,
     };
 
     const { error: historyError } = await supabase
