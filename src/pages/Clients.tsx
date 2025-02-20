@@ -157,6 +157,7 @@ export default function Clients() {
     queryKey: ["client-equipment", selectedClient?.id],
     enabled: !!selectedClient && selectedView === 'equipment',
     queryFn: async () => {
+      console.log("Buscando equipamentos para cliente:", selectedClient?.id);
       const { data, error } = await supabase
         .from("equipamentos")
         .select(`
@@ -175,6 +176,7 @@ export default function Clients() {
         throw error;
       }
 
+      console.log("Equipamentos encontrados:", data);
       return data as Equipment[];
     },
   });
@@ -573,27 +575,30 @@ export default function Clients() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {clientEquipment?.map((equipment) => (
-                    <TableRow key={equipment.id}>
-                      <TableCell>{equipment.codigo}</TableCell>
-                      <TableCell>{equipment.equipamento}</TableCell>
-                      <TableCell>{equipment.numero_serie}</TableCell>
-                      <TableCell>
-                        <Badge 
-                          className={
-                            equipment.condicao === 'NOVO' ? 'bg-green-500' :
-                            equipment.condicao === 'USADO' ? 'bg-yellow-500' :
-                            'bg-red-500'
-                          }
-                        >
-                          {equipment.condicao}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {equipment.ticket?.codigo ? equipment.ticket.codigo.split('-')[1] : '-'}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {clientEquipment?.map((equipment) => {
+                    console.log("Dados do equipamento:", equipment);
+                    return (
+                      <TableRow key={equipment.id}>
+                        <TableCell>{equipment.codigo}</TableCell>
+                        <TableCell>{equipment.equipamento}</TableCell>
+                        <TableCell>{equipment.numero_serie}</TableCell>
+                        <TableCell>
+                          <Badge 
+                            className={
+                              equipment.condicao === 'NOVO' ? 'bg-green-500' :
+                              equipment.condicao === 'USADO' ? 'bg-yellow-500' :
+                              'bg-red-500'
+                            }
+                          >
+                            {equipment.condicao}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {equipment.ticket?.codigo ? equipment.ticket.codigo.split('-')[1] : '-'}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                   {clientEquipment?.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-4">
