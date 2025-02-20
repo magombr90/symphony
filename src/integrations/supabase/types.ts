@@ -91,6 +91,13 @@ export type Database = {
             referencedRelation: "tickets"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "equipamentos_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets_with_equipment"
+            referencedColumns: ["id"]
+          },
         ]
       }
       system_users: {
@@ -189,6 +196,13 @@ export type Database = {
             referencedRelation: "tickets"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "ticket_history_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets_with_equipment"
+            referencedColumns: ["id"]
+          },
         ]
       }
       tickets: {
@@ -260,7 +274,46 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      tickets_with_equipment: {
+        Row: {
+          assigned_to: string | null
+          client_id: string | null
+          codigo: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          equipamentos: Json | null
+          faturado: boolean | null
+          faturado_at: string | null
+          id: string | null
+          scheduled_for: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "system_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "system_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       [_ in never]: never

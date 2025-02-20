@@ -15,7 +15,7 @@ export function useTicketQueries(
     queryKey: ["tickets", searchTerm, statusFilter, dateFilter],
     queryFn: async () => {
       let query = supabase
-        .from("tickets")
+        .from("tickets_with_equipment")
         .select(`
           *,
           client:clients(id, razao_social),

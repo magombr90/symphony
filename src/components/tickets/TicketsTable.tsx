@@ -21,28 +21,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { UserPlus, FileText } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import { TicketPDF } from "./TicketPDF";
-
-type Ticket = {
-  id: string;
-  codigo: string;
-  status: string;
-  description: string;
-  client_id: string;
-  scheduled_for: string;
-  client: {
-    razao_social: string;
-  };
-  assigned_user?: {
-    name: string | null;
-  } | null;
-  equipamentos?: Array<{
-    codigo: string;
-    equipamento: string;
-    numero_serie: string | null;
-    condicao: string;
-    observacoes: string | null;
-  }>;
-};
+import { Ticket } from "@/types/ticket";
 
 interface TicketsTableProps {
   tickets: Ticket[];
