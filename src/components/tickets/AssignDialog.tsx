@@ -29,11 +29,14 @@ export function AssignDialog({
   open,
   onOpenChange,
   ticket,
-  users,
+  users = [], // Set default empty array
   selectedUser,
   onUserChange,
   onSubmit,
 }: AssignDialogProps) {
+  // Ensure users is always an array
+  const safeUsers = Array.isArray(users) ? users : [];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -50,7 +53,7 @@ export function AssignDialog({
                 <SelectValue placeholder="Selecione um usuário" />
               </SelectTrigger>
               <SelectContent>
-                {users.map((user) => (
+                {safeUsers.map((user) => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.name}
                   </SelectItem>
