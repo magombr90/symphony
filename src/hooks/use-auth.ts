@@ -18,10 +18,13 @@ export function useAuth() {
       console.log("Current user data:", data); // Log para debug
       return data;
     },
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    refetchOnWindowFocus: false,
   });
 
-  const isAdmin = currentUser?.role === "admin";
-  console.log("Is admin:", isAdmin); // Log para debug
+  // Verificar explicitamente se o usuário tem role admin
+  const isAdmin = Boolean(currentUser?.role === "admin");
+  console.log("Is admin:", isAdmin, "User role:", currentUser?.role); // Log para debug
 
   return {
     currentUser,
