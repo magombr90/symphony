@@ -72,7 +72,7 @@ export default function Equipments() {
         .select(`
           *,
           client:clients(razao_social),
-          ticket:tickets(
+          ticket:tickets!equipamentos_ticket_id_fkey(
             id,
             codigo,
             status,
