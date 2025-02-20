@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface AddEquipmentDialogProps {
   clientId: string;
-  ticketId?: string; // Opcional para manter compatibilidade com outros usos
+  ticketId?: string;
   onSuccess: () => void;
 }
 
@@ -33,15 +33,20 @@ export function AddEquipmentDialog({ clientId, ticketId, onSuccess }: AddEquipme
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const { error } = await supabase.from("equipamentos").insert([{
+    // Adiciona o ticket_id ao objeto de dados
+    const equipmentData = {
       client_id: clientId,
       equipamento: equipmentForm.equipamento,
       numero_serie: equipmentForm.numero_serie || null,
       condicao: equipmentForm.condicao,
       observacoes: equipmentForm.observacoes || null,
       codigo: 'TEMP', // Será substituído pelo trigger
-      ticket_id: ticketId || null, // Adiciona a referência ao ticket quando disponível
-    }]);
+      ticket_id: ticketId, // Garante que o ticket_id seja incluído
+    };
+
+    const { error } = await supabase
+      .from("equipamentos")
+      .insert([equipmentData]);
 
     if (error) {
       toast({
@@ -93,7 +98,6 @@ export function AddEquipmentDialog({ clientId, ticketId, onSuccess }: AddEquipme
               id="numero_serie"
               value={equipmentForm.numero_serie}
               onChange={(e) => setEquipmentForm(prev => ({ ...prev, numero_serie: e.target.value }))}
-              required
             />
           </div>
           <div>
