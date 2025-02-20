@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -116,7 +115,6 @@ export default function Equipments() {
     },
   });
 
-  // Consulta do histórico do ticket quando um ticket é selecionado
   const { data: ticketHistory } = useQuery({
     queryKey: ["ticket-history", selectedTicket?.id],
     enabled: !!selectedTicket?.id,
@@ -162,7 +160,7 @@ export default function Equipments() {
                 <TableHead>Cliente</TableHead>
                 <TableHead>Nº Ticket</TableHead>
                 <TableHead>Condição</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
+                <TableHead className="w-[50px]">Detalhes</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -187,16 +185,15 @@ export default function Equipments() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {equipment.ticket && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setSelectedTicket(equipment.ticket)}
-                        className="hover:bg-gray-100"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setSelectedTicket(equipment.ticket)}
+                      className="hover:bg-gray-100"
+                      disabled={!equipment.ticket}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
