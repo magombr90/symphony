@@ -188,9 +188,17 @@ export default function Equipments() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => setSelectedTicket(equipment.ticket)}
+                      onClick={() => {
+                        if (!equipment.ticket) {
+                          toast({
+                            title: "Sem ticket associado",
+                            description: "Este equipamento não está associado a nenhum ticket.",
+                          });
+                          return;
+                        }
+                        setSelectedTicket(equipment.ticket);
+                      }}
                       className="hover:bg-gray-100"
-                      disabled={!equipment.ticket}
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
