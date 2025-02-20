@@ -5,13 +5,35 @@ import AppSidebar from "./AppSidebar";
 import { ThemeToggle } from "./ThemeToggle";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "./ui/button";
-import { Menu } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetContent } from "./ui/sheet";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "./ui/use-toast";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate("/auth");
+      toast({
+        title: "Logout realizado com sucesso!",
+        description: "Até logo!",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao fazer logout",
+        description: error.message || "Por favor, tente novamente.",
+      });
+    }
+  };
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -40,7 +62,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
           <main className="flex-1 overflow-hidden">
             <div className="container mx-auto p-6">
-              <div className="flex justify-end mb-4">
+              <div className="flex justify-end items-center gap-4 mb-4">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleLogout}
+                  title="Sair"
+                >
+                  <LogOut className="h-5 w-5" />
+                </Button>
                 <ThemeToggle />
               </div>
               {children}
