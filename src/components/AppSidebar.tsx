@@ -1,4 +1,3 @@
-
 import { Home, Users, Ticket, LayoutDashboard, Box, User, UserCircle } from "lucide-react";
 import {
   Sidebar,
@@ -65,7 +64,7 @@ export default function AppSidebar() {
               <stop offset="100%" style={{ stopColor: "#7c64f3" }} />
             </linearGradient>
             <filter id="glow">
-              <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+              <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
               <feMerge>
                 <feMergeNode in="coloredBlur"/>
                 <feMergeNode in="SourceGraphic"/>
@@ -73,73 +72,16 @@ export default function AppSidebar() {
             </filter>
           </defs>
           
-          {/* Símbolo S robótico */}
-          <g transform="translate(20, 15)" filter="url(#glow)">
-            {/* Camada base do S */}
-            <path
-              d="M25 20 
-                 h 20 
-                 v 5 
-                 h -15 
-                 v 15 
-                 h 15 
-                 v 5 
-                 h -20 
-                 v -5 
-                 h 15 
-                 v -15 
-                 h -15 
-                 z"
-              fill="url(#symbolGradient)"
-              opacity="0.2"
-            />
-            
-            {/* Linhas geométricas do S */}
-            <path
-              d="M20 20 
-                 h 25 
-                 v 10 
-                 h -20 
-                 v 10 
-                 h 20 
-                 v 10 
-                 h -25"
-              stroke="url(#symbolGradient)"
-              strokeWidth="3"
-              fill="none"
-              strokeLinecap="square"
-              strokeLinejoin="round"
-            />
-            
-            {/* Detalhes tecnológicos */}
-            <path
-              d="M15 15 v 5 
-                 M15 35 v 5
-                 M45 15 v 5
-                 M45 35 v 5"
-              stroke="url(#symbolGradient)"
-              strokeWidth="2"
-              opacity="0.6"
-            />
-            
-            {/* Pontos decorativos */}
-            <circle cx="15" cy="15" r="2" fill="url(#symbolGradient)" />
-            <circle cx="45" cy="15" r="2" fill="url(#symbolGradient)" />
-            <circle cx="15" cy="40" r="2" fill="url(#symbolGradient)" />
-            <circle cx="45" cy="40" r="2" fill="url(#symbolGradient)" />
-          </g>
-          
-          {/* Nome Symphony */}
           <text
-            x="160"
+            x="140"
             y="50"
             textAnchor="middle"
             fill="url(#symbolGradient)"
             style={{
               fontFamily: "'Inter', sans-serif",
-              fontSize: "32px",
+              fontSize: "42px",
               fontWeight: "700",
-              letterSpacing: "0.2em",
+              letterSpacing: "0.1em",
               filter: "url(#glow)",
               textTransform: "uppercase"
             }}
