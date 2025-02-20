@@ -71,6 +71,7 @@ export default function SystemUsers() {
       name: String(formData.get("name")),
       email: String(formData.get("email")),
       role: selectedRole,
+      password_hash: String(formData.get("password")), // Campo adicionado
     };
 
     const { error } = await supabase.from("system_users").insert(newUser);
@@ -114,6 +115,16 @@ export default function SystemUsers() {
               <div>
                 <Label htmlFor="email">E-mail</Label>
                 <Input id="email" name="email" type="email" required />
+              </div>
+              <div>
+                <Label htmlFor="password">Senha</Label>
+                <Input 
+                  id="password" 
+                  name="password" 
+                  type="password" 
+                  required
+                  minLength={6}
+                />
               </div>
               <div>
                 <Label>Função</Label>
