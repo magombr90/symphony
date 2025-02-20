@@ -16,13 +16,15 @@ import {
 } from "@/components/ui/dialog";
 import { CreateTicketForm } from "@/components/tickets/CreateTicketForm";
 import { AssignDialog } from "@/components/tickets/AssignDialog";
+import { TicketDetails } from "@/components/tickets/TicketDetails";
 import { startOfDay, endOfDay, parseISO } from "date-fns";
 
 export default function Dashboard() {
   const { 
     tickets, 
     clients, 
-    systemUsers, 
+    systemUsers,
+    ticketHistory,
     refetch,
     showAssignDialog,
     setShowAssignDialog,
@@ -34,6 +36,7 @@ export default function Dashboard() {
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
+  const [selectedTicketDetails, setSelectedTicketDetails] = useState<Ticket | null>(null);
 
   const today = new Date();
   const dayStart = startOfDay(today);
@@ -178,7 +181,7 @@ export default function Dashboard() {
             <TicketsTable 
               tickets={recentTickets} 
               onStatusChange={() => {}} 
-              onViewDetails={() => {}}
+              onViewDetails={(ticket: Ticket) => setSelectedTicketDetails(ticket)}
               onAssign={(ticket: Ticket) => {
                 setEditingTicket(ticket);
                 setShowAssignDialog(true);
@@ -196,6 +199,12 @@ export default function Dashboard() {
         selectedUser={selectedUser}
         onUserChange={setSelectedUser}
         onSubmit={handleAssignSubmit}
+      />
+
+      <TicketDetails
+        ticket={selectedTicketDetails}
+        history={ticketHistory || []}
+        onClose={() => setSelectedTicketDetails(null)}
       />
     </div>
   );

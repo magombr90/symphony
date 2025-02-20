@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { UserPlus, FileText } from "lucide-react";
+import { UserPlus, FileText, Eye } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import { TicketPDF } from "./TicketPDF";
 import { Ticket } from "@/types/ticket";
@@ -111,10 +111,11 @@ export function TicketsTable({
                   <div className="flex space-x-2">
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="icon"
                       onClick={() => onViewDetails(ticket)}
+                      title="Detalhes"
                     >
-                      Detalhes
+                      <Eye className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="outline"
