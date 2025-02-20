@@ -68,11 +68,9 @@ export default function AppSidebar() {
             textAnchor="middle"
             className="fill-primary"
             style={{
-              fontFamily: "system-ui, -apple-system, sans-serif",
-              fontSize: "24px",
-              fontWeight: "300",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase"
+              fontFamily: "'Dancing Script', cursive",
+              fontSize: "32px",
+              letterSpacing: "0.05em",
             }}
           >
             Symphony
