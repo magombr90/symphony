@@ -22,6 +22,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10,
+    textAlign: 'center',
+  },
+  clientInfo: {
+    marginBottom: 20,
+    padding: 10,
+    backgroundColor: '#f8f8f8',
   },
   section: {
     marginBottom: 15,
@@ -30,6 +36,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     marginBottom: 5,
+    backgroundColor: '#e5e5e5',
+    padding: 5,
   },
   row: {
     flexDirection: "row",
@@ -48,6 +56,8 @@ const styles = StyleSheet.create({
     marginTop: 10,
     padding: 10,
     backgroundColor: "#f5f5f5",
+    borderBottom: 1,
+    borderColor: '#e0e0e0',
   },
 });
 
@@ -70,16 +80,19 @@ export function TicketPDF({ ticket }: TicketPDFProps) {
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
-          <Text style={styles.title}>Formulário de Atendimento</Text>
-          <Text>Nº {ticket.codigo}</Text>
+          <Text style={styles.title}>Formulário de Atendimento - Nº {ticket.codigo}</Text>
+        </View>
+
+        <View style={styles.clientInfo}>
+          <Text style={styles.sectionTitle}>Dados do Cliente</Text>
+          <View style={styles.row}>
+            <Text style={styles.label}>Razão Social:</Text>
+            <Text style={styles.value}>{ticket.client.razao_social}</Text>
+          </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Informações do Ticket</Text>
-          <View style={styles.row}>
-            <Text style={styles.label}>Cliente:</Text>
-            <Text style={styles.value}>{ticket.client.razao_social}</Text>
-          </View>
+          <Text style={styles.sectionTitle}>Dados do Atendimento</Text>
           <View style={styles.row}>
             <Text style={styles.label}>Status:</Text>
             <Text style={styles.value}>{ticket.status}</Text>
@@ -92,16 +105,15 @@ export function TicketPDF({ ticket }: TicketPDFProps) {
             <Text style={styles.label}>Responsável:</Text>
             <Text style={styles.value}>{ticket.assigned_user?.name || "Não atribuído"}</Text>
           </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Descrição</Text>
-          <Text style={styles.value}>{ticket.description}</Text>
+          <View style={styles.row}>
+            <Text style={styles.label}>Descrição:</Text>
+            <Text style={styles.value}>{ticket.description}</Text>
+          </View>
         </View>
 
         {ticket.equipamentos && ticket.equipamentos.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Equipamentos</Text>
+            <Text style={styles.sectionTitle}>Equipamentos Retirados</Text>
             {ticket.equipamentos.map((equip, index) => (
               <View key={index} style={styles.equipment}>
                 <View style={styles.row}>
