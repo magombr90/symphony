@@ -1,5 +1,5 @@
 
-import { Home, Users, Ticket, LayoutDashboard, Box } from "lucide-react";
+import { Home, Users, Ticket, LayoutDashboard, Box, User } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -32,6 +32,11 @@ const menuItems = [
     title: "Equipamentos",
     icon: Box,
     path: "/equipments",
+  },
+  {
+    title: "Usuários",
+    icon: User,
+    path: "/system-users",
   },
 ];
 
