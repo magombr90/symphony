@@ -20,15 +20,26 @@ export default function Auth() {
     try {
       setLoading(true);
       
-      // Tentar fazer login
+      // Primeiro, verificar se o usuário existe na tabela system_users
+      const { data: systemUser, error: systemUserError } = await supabase
+        .from("system_users")
+        .select("*")
+        .eq("email", email)
+        .single();
+
+      if (systemUserError || !systemUser) {
+        throw new Error("Usuário não encontrado");
+      }
+
+      // Se encontrou o usuário, tenta fazer login
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: systemUser.email,
         password,
       });
 
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
-          throw new Error("Email ou senha incorretos");
+          throw new Error("Senha incorreta");
         }
         throw error;
       }
@@ -37,23 +48,13 @@ export default function Auth() {
         throw new Error("Erro ao fazer login");
       }
 
-      // Verificar se o usuário existe na tabela system_users
-      const { data: systemUser, error: systemUserError } = await supabase
-        .from("system_users")
-        .select("*")
-        .eq("id", data.user.id)
-        .single();
-
-      if (systemUserError || !systemUser) {
-        throw new Error("Usuário não encontrado no sistema");
-      }
-
       navigate("/");
       toast({
         title: "Login realizado com sucesso!",
-        description: "Bem-vindo ao sistema.",
+        description: `Bem-vindo, ${systemUser.name}!`,
       });
     } catch (error: any) {
+      console.error("Erro de login:", error);
       toast({
         variant: "destructive",
         title: "Erro ao fazer login",
