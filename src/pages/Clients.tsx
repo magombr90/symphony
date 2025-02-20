@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, History, Tool, X } from "lucide-react";
+import { Plus, History, Wrench } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -278,13 +277,13 @@ export default function Clients() {
     e.preventDefault();
     if (!selectedClient) return;
 
-    const { error } = await supabase.from("equipamentos").insert({
+    const { error } = await supabase.from("equipamentos").insert([{
       client_id: selectedClient.id,
       equipamento: equipmentForm.equipamento,
-      numero_serie: equipmentForm.numero_serie,
+      numero_serie: equipmentForm.numero_serie || null,
       condicao: equipmentForm.condicao,
       observacoes: equipmentForm.observacoes || null,
-    });
+    }]);
 
     if (error) {
       toast({
@@ -419,7 +418,7 @@ export default function Clients() {
                         setSelectedView('equipment');
                       }}
                     >
-                      <Tool className="h-4 w-4 mr-2" />
+                      <Wrench className="h-4 w-4 mr-2" />
                       Equipamentos
                     </Button>
                     <Button 
@@ -455,7 +454,7 @@ export default function Clients() {
                 variant={selectedView === 'equipment' ? 'default' : 'outline'}
                 onClick={() => setSelectedView('equipment')}
               >
-                <Tool className="h-4 w-4 mr-2" />
+                <Wrench className="h-4 w-4 mr-2" />
                 Equipamentos
               </Button>
             </div>
