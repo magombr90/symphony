@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,13 +48,6 @@ type Equipment = {
     assigned_user?: {
       name: string | null;
     } | null;
-    equipamentos?: Array<{
-      codigo: string;
-      equipamento: string;
-      numero_serie: string | null;
-      condicao: string;
-      observacoes: string | null;
-    }>;
   } | null;
 };
 
@@ -72,7 +66,7 @@ export default function Equipments() {
         .select(`
           *,
           client:clients(razao_social),
-          ticket:tickets!equipamentos_ticket_id_fkey(
+          ticket:tickets(
             id,
             codigo,
             status,
@@ -86,7 +80,7 @@ export default function Equipments() {
             faturado,
             faturado_at,
             client:clients(razao_social),
-            assigned_user:system_users!tickets_assigned_to_fkey(name)
+            assigned_user:system_users(name)
           )
         `);
 
@@ -110,8 +104,14 @@ export default function Equipments() {
         throw error;
       }
 
-      console.log("Dados retornados:", data);
-      return data as Equipment[];
+      // Ajuste para garantir que pegamos apenas o primeiro ticket (caso exista)
+      const equipmentsWithSingleTicket = data?.map(equipment => ({
+        ...equipment,
+        ticket: equipment.ticket ? equipment.ticket[0] : null
+      }));
+
+      console.log("Dados processados:", equipmentsWithSingleTicket);
+      return equipmentsWithSingleTicket as Equipment[];
     },
   });
 
