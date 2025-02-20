@@ -569,7 +569,7 @@ export default function Clients() {
                     <TableHead>Equipamento</TableHead>
                     <TableHead>Nº Série</TableHead>
                     <TableHead>Condição</TableHead>
-                    <TableHead>Ticket</TableHead>
+                    <TableHead>Nº Ticket</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -590,7 +590,7 @@ export default function Clients() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {equipment.ticket?.codigo || '-'}
+                        {equipment.ticket?.codigo ? equipment.ticket.codigo.split('-')[1] : '-'}
                       </TableCell>
                     </TableRow>
                   ))}
