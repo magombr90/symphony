@@ -17,6 +17,11 @@ export function useTicketQueries(
   const { data: tickets, refetch } = useQuery({
     queryKey: ["tickets", searchTerm, statusFilter, dateFilter],
     queryFn: async () => {
+      const { data: equipmentData } = await supabase
+        .from("equipamentos")
+        .select("*")
+        .order("created_at", { ascending: false });
+
       let query = supabase
         .from("tickets_with_equipment")
         .select(`
@@ -69,10 +74,20 @@ export function useTicketQueries(
       const { data, error } = await query;
       if (error) throw error;
 
-      return (data || []).map(ticket => ({
-        ...ticket,
-        equipamentos: ticket.equipamentos as Ticket['equipamentos']
-      })) as Ticket[];
+      // Map equipment data to tickets
+      return (data || []).map(ticket => {
+        const ticketEquipments = equipmentData?.filter(eq => eq.ticket_id === ticket.id) || [];
+        return {
+          ...ticket,
+          equipamentos: ticketEquipments.map(eq => ({
+            codigo: eq.codigo,
+            equipamento: eq.equipamento,
+            numero_serie: eq.numero_serie,
+            condicao: eq.condicao,
+            observacoes: eq.observacoes
+          }))
+        };
+      }) as Ticket[];
     },
   });
 
@@ -114,7 +129,6 @@ export function useTicketQueries(
 
       if (error) throw error;
 
-      // Garantir que action_type está no formato correto
       return (data || []).map(item => ({
         ...item,
         action_type: item.action_type as "STATUS_CHANGE" | "USER_ASSIGNMENT"
