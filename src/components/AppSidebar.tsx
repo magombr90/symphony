@@ -1,5 +1,5 @@
 
-import { Home, Users, Ticket, LayoutDashboard, Box, User } from "lucide-react";
+import { Home, Users, Ticket, LayoutDashboard, Box, User, UserCircle } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -17,9 +17,7 @@ import { useAuth } from "@/hooks/use-auth";
 export default function AppSidebar() {
   const location = useLocation();
   const isMobile = useIsMobile();
-  const { isAdmin } = useAuth();
-
-  console.log("AppSidebar isAdmin:", isAdmin); // Log para debug
+  const { isAdmin, currentUser } = useAuth();
 
   const menuItems = [
     {
@@ -106,6 +104,25 @@ export default function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Usuário</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  className={location.pathname === "/profile" ? "bg-accent" : ""}
+                  asChild
+                >
+                  <Link to="/profile" className="flex items-center gap-3">
+                    <UserCircle className="h-5 w-5" />
+                    <span>{currentUser?.name || "Meu Perfil"}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

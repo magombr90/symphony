@@ -9,6 +9,7 @@ import Tickets from "./pages/Tickets";
 import SystemUsers from "./pages/SystemUsers";
 import Dashboard from "./pages/Dashboard";
 import Equipments from "./pages/Equipments";
+import UserProfile from "./pages/UserProfile";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ function App() {
             <Route path="/tickets" element={<Tickets />} />
             <Route path="/system-users" element={<SystemUsers />} />
             <Route path="/equipments" element={<Equipments />} />
+            <Route path="/profile" element={<UserProfile />} />
           </Routes>
         </AppLayout>
         <Toaster />
