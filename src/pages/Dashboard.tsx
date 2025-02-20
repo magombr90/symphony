@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { CreateTicketForm } from "@/components/tickets/CreateTicketForm";
 import { AssignDialog } from "@/components/tickets/AssignDialog";
+import { startOfDay, endOfDay, parseISO } from "date-fns";
 
 export default function Dashboard() {
   const { 
@@ -33,6 +34,10 @@ export default function Dashboard() {
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
+
+  const today = new Date();
+  const dayStart = startOfDay(today);
+  const dayEnd = endOfDay(today);
 
   // Aplicar filtros aos tickets
   const filteredTickets = tickets?.filter(ticket => {
@@ -56,6 +61,9 @@ export default function Dashboard() {
   const userStats = tickets?.reduce((acc: any[], ticket: Ticket) => {
     if (!ticket.assigned_to || !ticket.assigned_user) return acc;
     
+    const ticketDate = parseISO(ticket.created_at);
+    const isToday = ticketDate >= dayStart && ticketDate <= dayEnd;
+    
     const existingUser = acc.find(u => u.user.id === ticket.assigned_to);
     if (existingUser) {
       existingUser.total += 1;
@@ -67,10 +75,10 @@ export default function Dashboard() {
           existingUser.inProgress += 1;
           break;
         case 'CONCLUIDO':
-          existingUser.completed += 1;
+          if (isToday) existingUser.completed += 1;
           break;
         case 'CANCELADO':
-          existingUser.canceled += 1;
+          if (isToday) existingUser.canceled += 1;
           break;
       }
     } else {
@@ -82,8 +90,8 @@ export default function Dashboard() {
         total: 1,
         pending: ticket.status === 'PENDENTE' ? 1 : 0,
         inProgress: ticket.status === 'EM_ANDAMENTO' ? 1 : 0,
-        completed: ticket.status === 'CONCLUIDO' ? 1 : 0,
-        canceled: ticket.status === 'CANCELADO' ? 1 : 0,
+        completed: ticket.status === 'CONCLUIDO' && isToday ? 1 : 0,
+        canceled: ticket.status === 'CANCELADO' && isToday ? 1 : 0,
       });
     }
     return acc;
@@ -95,10 +103,20 @@ export default function Dashboard() {
     { status: 'EM_ANDAMENTO', label: 'Em Andamento', count: 0 },
     { status: 'CONCLUIDO', label: 'Concluído', count: 0 },
     { status: 'CANCELADO', label: 'Cancelado', count: 0 },
-  ].map(statusItem => ({
-    ...statusItem,
-    count: tickets?.filter(t => t.status === statusItem.status).length || 0,
-  }));
+  ].map(statusItem => {
+    const isFinishedStatus = statusItem.status === 'CONCLUIDO' || statusItem.status === 'CANCELADO';
+    
+    return {
+      ...statusItem,
+      count: tickets?.filter(t => {
+        if (isFinishedStatus) {
+          const ticketDate = parseISO(t.created_at);
+          return t.status === statusItem.status && ticketDate >= dayStart && ticketDate <= dayEnd;
+        }
+        return t.status === statusItem.status;
+      }).length || 0,
+    };
+  });
 
   const handleAssignSubmit = async () => {
     if (!editingTicket || !selectedUser) return;
