@@ -27,7 +27,7 @@ const statusOptions = [
   { value: "CANCELADO", label: "Cancelado" },
 ];
 
-export function CreateTicketForm({ clients, systemUsers, onSuccess }: CreateTicketFormProps) {
+export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: CreateTicketFormProps) {
   const [selectedStatus, setSelectedStatus] = useState("PENDENTE");
   const [selectedClient, setSelectedClient] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
@@ -85,7 +85,7 @@ export function CreateTicketForm({ clients, systemUsers, onSuccess }: CreateTick
             <SelectValue placeholder="Selecione um cliente" />
           </SelectTrigger>
           <SelectContent>
-            {clients?.map((client) => (
+            {(clients || []).map((client) => (
               <SelectItem key={client.id} value={client.id}>
                 {client.razao_social}
               </SelectItem>
@@ -120,7 +120,7 @@ export function CreateTicketForm({ clients, systemUsers, onSuccess }: CreateTick
             <SelectValue placeholder="Selecione um responsável" />
           </SelectTrigger>
           <SelectContent>
-            {systemUsers?.map((user) => (
+            {(systemUsers || []).map((user) => (
               <SelectItem key={user.id} value={user.id}>
                 {user.name}
               </SelectItem>
