@@ -38,8 +38,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </>
           )}
 
-          <main className="flex-1 overflow-hidden">
-            <div className="container mx-auto p-6">
+          <main className="flex-1 overflow-auto">
+            <div className="container mx-auto p-6 max-w-[1600px]">
               <div className="flex justify-end mb-4">
                 <ThemeToggle />
               </div>
