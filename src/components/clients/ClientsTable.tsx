@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Eye, Pencil } from "lucide-react";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { Client } from "@/types/client";
 
 interface ClientsTableProps {
@@ -39,30 +39,33 @@ export function ClientsTable({ clients, onView, onEdit, onDelete }: ClientsTable
             <TableCell>{client.telefone}</TableCell>
             <TableCell>{client.email}</TableCell>
             <TableCell>{client.cep}</TableCell>
-            <TableCell className="space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => onView(client)}
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                Detalhes
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => onEdit(client)}
-              >
-                <Pencil className="h-4 w-4 mr-2" />
-                Editar
-              </Button>
-              <Button 
-                variant="destructive" 
-                size="sm"
-                onClick={() => onDelete(client.id)}
-              >
-                Excluir
-              </Button>
+            <TableCell>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={() => onView(client)}
+                  title="Detalhes"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={() => onEdit(client)}
+                  title="Editar"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  size="icon"
+                  onClick={() => onDelete(client.id)}
+                  title="Excluir"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </TableCell>
           </TableRow>
         ))}

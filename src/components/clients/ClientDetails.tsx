@@ -40,13 +40,16 @@ export function ClientDetails({ client, onEdit }: ClientDetailsProps) {
         <Label className="text-muted-foreground">Observações</Label>
         <p className="text-lg whitespace-pre-wrap">{client.observacoes || "-"}</p>
       </div>
-      <Button 
-        className="w-full mt-6" 
-        onClick={() => onEdit(client)}
-      >
-        <Pencil className="h-4 w-4 mr-2" />
-        Editar
-      </Button>
+      <div className="flex justify-end gap-2 mt-6">
+        <Button 
+          variant="outline"
+          size="icon"
+          onClick={() => onEdit(client)}
+          title="Editar"
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }
