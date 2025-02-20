@@ -11,6 +11,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Link, useLocation } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const menuItems = [
   {
@@ -42,9 +43,10 @@ const menuItems = [
 
 export default function AppSidebar() {
   const location = useLocation();
+  const isMobile = useIsMobile();
 
   return (
-    <Sidebar>
+    <Sidebar className={isMobile ? "w-full h-full" : ""}>
       <div className="p-6">
         <svg
           viewBox="0 0 200 40"
