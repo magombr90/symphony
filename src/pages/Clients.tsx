@@ -56,10 +56,11 @@ type Equipment = {
   id: string;
   codigo: string;
   equipamento: string;
-  numero_serie: string;
+  numero_serie: string | null;
   condicao: 'NOVO' | 'USADO' | 'DEFEITO';
   observacoes: string | null;
   created_at: string;
+  client_id: string | null;
 };
 
 const statusOptions = [
@@ -283,6 +284,7 @@ export default function Clients() {
       numero_serie: equipmentForm.numero_serie || null,
       condicao: equipmentForm.condicao,
       observacoes: equipmentForm.observacoes || null,
+      codigo: 'TEMP',
     }]);
 
     if (error) {
