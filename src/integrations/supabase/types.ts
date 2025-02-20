@@ -11,29 +11,35 @@ export type Database = {
     Tables: {
       clients: {
         Row: {
+          cep: string | null
           cnpj: string
           created_at: string
           email: string | null
           endereco: string | null
           id: string
+          observacoes: string | null
           razao_social: string
           telefone: string | null
         }
         Insert: {
+          cep?: string | null
           cnpj: string
           created_at?: string
           email?: string | null
           endereco?: string | null
           id?: string
+          observacoes?: string | null
           razao_social: string
           telefone?: string | null
         }
         Update: {
+          cep?: string | null
           cnpj?: string
           created_at?: string
           email?: string | null
           endereco?: string | null
           id?: string
+          observacoes?: string | null
           razao_social?: string
           telefone?: string | null
         }
