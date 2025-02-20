@@ -61,6 +61,10 @@ type Equipment = {
   observacoes: string | null;
   created_at: string;
   client_id: string | null;
+  ticket_id: string | null;
+  ticket: {
+    codigo: string;
+  } | null;
 };
 
 const statusOptions = [
@@ -155,7 +159,10 @@ export default function Clients() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("equipamentos")
-        .select("*")
+        .select(`
+          *,
+          ticket:tickets(codigo)
+        `)
         .eq("client_id", selectedClient?.id)
         .order("created_at", { ascending: false });
 
@@ -562,6 +569,7 @@ export default function Clients() {
                     <TableHead>Equipamento</TableHead>
                     <TableHead>Nº Série</TableHead>
                     <TableHead>Condição</TableHead>
+                    <TableHead>Ticket</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -581,11 +589,14 @@ export default function Clients() {
                           {equipment.condicao}
                         </Badge>
                       </TableCell>
+                      <TableCell>
+                        {equipment.ticket?.codigo || '-'}
+                      </TableCell>
                     </TableRow>
                   ))}
                   {clientEquipment?.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-4">
+                      <TableCell colSpan={5} className="text-center py-4">
                         Nenhum equipamento cadastrado para este cliente.
                       </TableCell>
                     </TableRow>
