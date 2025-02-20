@@ -1,14 +1,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
 
 export function useAuth() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  
-  const { data: currentUser, isLoading } = useQuery({
+  const { data: currentUser } = useQuery({
     queryKey: ["current-user"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -20,23 +15,19 @@ export function useAuth() {
         .eq("id", user.id)
         .single();
 
+      console.log("Current user data:", data); // Log para debug
       return data;
     },
     staleTime: 1000 * 60 * 5, // 5 minutos
     refetchOnWindowFocus: false,
   });
 
-  useEffect(() => {
-    if (!isLoading && !currentUser && location.pathname !== "/auth") {
-      navigate("/auth");
-    }
-  }, [currentUser, isLoading, navigate, location]);
-
+  // Verificar explicitamente se o usuário tem role admin
   const isAdmin = Boolean(currentUser?.role === "admin");
+  console.log("Is admin:", isAdmin, "User role:", currentUser?.role); // Log para debug
 
   return {
     currentUser,
     isAdmin,
-    isLoading,
   };
 }

@@ -5,43 +5,13 @@ import AppSidebar from "./AppSidebar";
 import { ThemeToggle } from "./ThemeToggle";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "./ui/button";
-import { LogOut, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetContent } from "./ui/sheet";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate, Outlet } from "react-router-dom";
-import { useToast } from "./ui/use-toast";
-import { useAuth } from "@/hooks/use-auth";
 
-export default function AppLayout() {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { currentUser, isLoading } = useAuth();
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      navigate("/auth");
-      toast({
-        title: "Logout realizado com sucesso!",
-        description: "Até logo!",
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao fazer logout",
-        description: error.message || "Por favor, tente novamente.",
-      });
-    }
-  };
-
-  // Se não estiver carregando e não houver usuário, redireciona para /auth
-  if (!isLoading && !currentUser) {
-    navigate("/auth");
-    return null;
-  }
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -70,18 +40,10 @@ export default function AppLayout() {
 
           <main className="flex-1 overflow-hidden">
             <div className="container mx-auto p-6">
-              <div className="flex justify-end items-center gap-4 mb-4">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleLogout}
-                  title="Sair"
-                >
-                  <LogOut className="h-5 w-5" />
-                </Button>
+              <div className="flex justify-end mb-4">
                 <ThemeToggle />
               </div>
-              <Outlet />
+              {children}
             </div>
           </main>
         </div>
