@@ -84,7 +84,7 @@ export default function Tickets() {
             </DialogHeader>
             <CreateTicketForm
               clients={clients || []}
-              systemUsers={systemUsers || []}
+              systemUsers={Array.isArray(systemUsers) ? systemUsers : []}
               onSuccess={() => {
                 setOpen(false);
                 refetch();
@@ -129,7 +129,7 @@ export default function Tickets() {
         open={showAssignDialog}
         onOpenChange={setShowAssignDialog}
         ticket={editingTicket}
-        users={systemUsers || []}
+        users={Array.isArray(systemUsers) ? systemUsers : []}
         selectedUser={selectedUser}
         onUserChange={setSelectedUser}
         onSubmit={handleAssignSubmit}
