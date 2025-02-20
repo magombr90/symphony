@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AddEquipmentDialog } from "./AddEquipmentDialog";
 
 interface CreateTicketFormProps {
   clients: Array<{ id: string; razao_social: string }>;
@@ -88,6 +89,21 @@ export function CreateTicketForm({ clients, systemUsers, onSuccess }: CreateTick
           </SelectContent>
         </Select>
       </div>
+
+      {selectedClient && (
+        <div>
+          <AddEquipmentDialog 
+            clientId={selectedClient} 
+            onSuccess={() => {
+              toast({
+                title: "Equipamento adicionado com sucesso!",
+                description: "O equipamento foi vinculado ao cliente.",
+              });
+            }}
+          />
+        </div>
+      )}
+
       <div>
         <Label>Responsável</Label>
         <Select

@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -9,6 +8,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Ticket, TicketHistory } from "@/types/ticket";
+import { TicketProgress } from "@/components/ui/ticket-progress";
 
 interface TicketDetailsProps {
   ticket: Ticket | null;
@@ -90,6 +90,16 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
             <div>
               <Label>Descrição</Label>
               <p className="mt-1">{ticket.description}</p>
+            </div>
+
+            <div className="flex justify-end">
+              <TicketProgress
+                ticket={ticket}
+                onSuccess={() => {
+                  onClose();
+                  // Aqui você deve atualizar a lista de tickets
+                }}
+              />
             </div>
 
             <div>
