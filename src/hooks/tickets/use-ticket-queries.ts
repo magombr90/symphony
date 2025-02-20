@@ -105,7 +105,9 @@ export function useTicketQueries(
         .from("ticket_history")
         .select(`
           *,
-          created_by_user:system_users!ticket_history_created_by_fkey(name)
+          created_by_user:system_users!ticket_history_created_by_fkey(name),
+          previous_assigned_to_user:system_users!fk_previous_assigned_to(name),
+          new_assigned_to_user:system_users!fk_new_assigned_to(name)
         `)
         .eq("ticket_id", selectedTicketDetails?.id)
         .order("created_at", { ascending: false });
