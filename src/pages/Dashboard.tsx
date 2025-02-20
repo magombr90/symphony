@@ -15,12 +15,24 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { CreateTicketForm } from "@/components/tickets/CreateTicketForm";
+import { AssignDialog } from "@/components/tickets/AssignDialog";
 
 export default function Dashboard() {
-  const { tickets, clients, systemUsers, refetch } = useTickets();
+  const { 
+    tickets, 
+    clients, 
+    systemUsers, 
+    refetch,
+    showAssignDialog,
+    setShowAssignDialog,
+    selectedUser,
+    setSelectedUser,
+    handleAssignTicket,
+  } = useTickets();
   const [filterUser, setFilterUser] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
 
   // Aplicar filtros aos tickets
   const filteredTickets = tickets?.filter(ticket => {
@@ -88,6 +100,16 @@ export default function Dashboard() {
     count: tickets?.filter(t => t.status === statusItem.status).length || 0,
   }));
 
+  const handleAssignSubmit = async () => {
+    if (!editingTicket || !selectedUser) return;
+    const success = await handleAssignTicket(editingTicket.id, selectedUser, editingTicket.assigned_to);
+    if (success) {
+      setShowAssignDialog(false);
+      setEditingTicket(null);
+      setSelectedUser(null);
+    }
+  };
+
   return (
     <div className="fade-in space-y-8">
       <div className="flex justify-between items-center">
@@ -139,11 +161,24 @@ export default function Dashboard() {
               tickets={recentTickets} 
               onStatusChange={() => {}} 
               onViewDetails={() => {}}
-              onAssign={() => {}}
+              onAssign={(ticket: Ticket) => {
+                setEditingTicket(ticket);
+                setShowAssignDialog(true);
+              }}
             />
           </div>
         </Card>
       </div>
+
+      <AssignDialog
+        open={showAssignDialog}
+        onOpenChange={setShowAssignDialog}
+        ticket={editingTicket}
+        users={systemUsers || []}
+        selectedUser={selectedUser}
+        onUserChange={setSelectedUser}
+        onSubmit={handleAssignSubmit}
+      />
     </div>
   );
 }
