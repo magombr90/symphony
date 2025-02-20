@@ -16,10 +16,11 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface AddEquipmentDialogProps {
   clientId: string;
+  ticketId?: string; // Opcional para manter compatibilidade com outros usos
   onSuccess: () => void;
 }
 
-export function AddEquipmentDialog({ clientId, onSuccess }: AddEquipmentDialogProps) {
+export function AddEquipmentDialog({ clientId, ticketId, onSuccess }: AddEquipmentDialogProps) {
   const [open, setOpen] = useState(false);
   const [equipmentForm, setEquipmentForm] = useState({
     equipamento: "",
@@ -39,6 +40,7 @@ export function AddEquipmentDialog({ clientId, onSuccess }: AddEquipmentDialogPr
       condicao: equipmentForm.condicao,
       observacoes: equipmentForm.observacoes || null,
       codigo: 'TEMP', // Será substituído pelo trigger
+      ticket_id: ticketId || null, // Adiciona a referência ao ticket quando disponível
     }]);
 
     if (error) {

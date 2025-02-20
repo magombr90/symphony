@@ -31,6 +31,7 @@ export function CreateTicketForm({ clients, systemUsers, onSuccess }: CreateTick
   const [selectedStatus, setSelectedStatus] = useState("PENDENTE");
   const [selectedClient, setSelectedClient] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
+  const [newTicketId, setNewTicketId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -49,9 +50,11 @@ export function CreateTicketForm({ clients, systemUsers, onSuccess }: CreateTick
       codigo: "TEMP", // Valor temporário que será substituído pelo trigger generate_ticket_code
     };
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("tickets")
-      .insert(newTicket);
+      .insert(newTicket)
+      .select()
+      .single();
 
     if (error) {
       toast({
@@ -62,6 +65,7 @@ export function CreateTicketForm({ clients, systemUsers, onSuccess }: CreateTick
       return;
     }
 
+    setNewTicketId(data.id);
     toast({
       title: "Ticket criado com sucesso!",
     });
@@ -93,11 +97,12 @@ export function CreateTicketForm({ clients, systemUsers, onSuccess }: CreateTick
       {selectedClient && (
         <div>
           <AddEquipmentDialog 
-            clientId={selectedClient} 
+            clientId={selectedClient}
+            ticketId={newTicketId || undefined}
             onSuccess={() => {
               toast({
                 title: "Equipamento adicionado com sucesso!",
-                description: "O equipamento foi vinculado ao cliente.",
+                description: "O equipamento foi vinculado ao cliente e ao ticket.",
               });
             }}
           />
