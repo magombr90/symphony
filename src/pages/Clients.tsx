@@ -162,7 +162,7 @@ export default function Clients() {
         .from("equipamentos")
         .select(`
           *,
-          ticket:tickets(codigo)
+          ticket:tickets!inner(codigo)
         `)
         .eq("client_id", selectedClient?.id)
         .order("created_at", { ascending: false });
