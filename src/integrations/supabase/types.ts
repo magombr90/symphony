@@ -49,6 +49,7 @@ export type Database = {
           id: string
           numero_serie: string | null
           observacoes: string | null
+          ticket_id: string | null
           updated_at: string
         }
         Insert: {
@@ -60,6 +61,7 @@ export type Database = {
           id?: string
           numero_serie?: string | null
           observacoes?: string | null
+          ticket_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -71,6 +73,7 @@ export type Database = {
           id?: string
           numero_serie?: string | null
           observacoes?: string | null
+          ticket_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -79,6 +82,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "equipamentos_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
             referencedColumns: ["id"]
           },
         ]
