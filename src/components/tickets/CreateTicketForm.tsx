@@ -38,7 +38,38 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
-    const scheduledFor = new Date(String(formData.get("scheduled_for")));
+    const scheduledForValue = formData.get("scheduled_for");
+    
+    if (!scheduledForValue) {
+      toast({
+        variant: "destructive",
+        title: "Data inválida",
+        description: "Por favor, selecione uma data válida para o agendamento.",
+      });
+      return;
+    }
+
+    const scheduledFor = new Date(String(scheduledForValue));
+
+    // Verifica se a data é válida
+    if (isNaN(scheduledFor.getTime())) {
+      toast({
+        variant: "destructive",
+        title: "Data inválida",
+        description: "Por favor, selecione uma data válida para o agendamento.",
+      });
+      return;
+    }
+
+    // Verifica se a data não é no passado
+    if (scheduledFor < new Date()) {
+      toast({
+        variant: "destructive",
+        title: "Data inválida",
+        description: "A data de agendamento não pode ser no passado.",
+      });
+      return;
+    }
     
     const newTicket = {
       description: String(formData.get("description")),
@@ -70,6 +101,12 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
       title: "Ticket criado com sucesso!",
     });
     onSuccess();
+  };
+
+  // Formata a data mínima para o campo datetime-local (data atual)
+  const getMinDateTime = () => {
+    const now = new Date();
+    return now.toISOString().slice(0, 16); // Formato YYYY-MM-DDTHH:mm
   };
 
   return (
@@ -157,6 +194,7 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
           id="scheduled_for"
           name="scheduled_for"
           type="datetime-local"
+          min={getMinDateTime()}
           required
         />
       </div>
