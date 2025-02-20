@@ -38,12 +38,15 @@ export default function Equipments() {
   const { data: equipments } = useQuery({
     queryKey: ["equipments", searchTerm],
     queryFn: async () => {
+      // Primeiro, vamos logar a consulta para debug
+      console.log("Iniciando consulta de equipamentos");
+
       let query = supabase
         .from("equipamentos")
         .select(`
           *,
           client:clients(razao_social),
-          ticket:tickets!equipamentos_ticket_id_fkey(codigo)
+          ticket:tickets(codigo)
         `);
 
       if (searchTerm) {
@@ -57,6 +60,7 @@ export default function Equipments() {
       const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) {
+        console.error("Erro na consulta:", error);
         toast({
           variant: "destructive",
           title: "Erro ao carregar equipamentos",
@@ -64,6 +68,9 @@ export default function Equipments() {
         });
         throw error;
       }
+
+      // Log dos dados retornados para debug
+      console.log("Dados retornados:", data);
 
       return data as Equipment[];
     },
@@ -97,28 +104,32 @@ export default function Equipments() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {equipments?.map((equipment) => (
-                <TableRow key={equipment.id}>
-                  <TableCell>{equipment.codigo}</TableCell>
-                  <TableCell>{equipment.equipamento}</TableCell>
-                  <TableCell>{equipment.numero_serie || "-"}</TableCell>
-                  <TableCell>{equipment.client.razao_social}</TableCell>
-                  <TableCell>
-                    {equipment.ticket?.codigo || "-"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge 
-                      className={
-                        equipment.condicao === 'NOVO' ? 'bg-green-500' :
-                        equipment.condicao === 'USADO' ? 'bg-yellow-500' :
-                        'bg-red-500'
-                      }
-                    >
-                      {equipment.condicao}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {equipments?.map((equipment) => {
+                // Log para debug de cada equipamento
+                console.log("Renderizando equipamento:", equipment);
+                return (
+                  <TableRow key={equipment.id}>
+                    <TableCell>{equipment.codigo}</TableCell>
+                    <TableCell>{equipment.equipamento}</TableCell>
+                    <TableCell>{equipment.numero_serie || "-"}</TableCell>
+                    <TableCell>{equipment.client.razao_social}</TableCell>
+                    <TableCell>
+                      {equipment.ticket?.codigo || "-"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        className={
+                          equipment.condicao === 'NOVO' ? 'bg-green-500' :
+                          equipment.condicao === 'USADO' ? 'bg-yellow-500' :
+                          'bg-red-500'
+                        }
+                      >
+                        {equipment.condicao}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
               {!equipments?.length && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-4">
