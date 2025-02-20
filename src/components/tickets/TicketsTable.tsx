@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { UserPlus, FileText, Eye } from "lucide-react";
+import { UserPlus, FileText, Eye, Flag } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import { TicketPDF } from "./TicketPDF";
 import { Ticket } from "@/types/ticket";
@@ -137,8 +137,8 @@ export function TicketsTable({
                       value={ticket.status}
                       onValueChange={(value) => onStatusChange(ticket.id, value)}
                     >
-                      <SelectTrigger className="w-32">
-                        <SelectValue>Alterar Status</SelectValue>
+                      <SelectTrigger className="w-[42px] px-2">
+                        <Flag className="h-4 w-4" />
                       </SelectTrigger>
                       <SelectContent>
                         {statusOptions.map((status) => (
