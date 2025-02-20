@@ -43,7 +43,7 @@ export default function Equipments() {
         .select(`
           *,
           client:clients(razao_social),
-          ticket:tickets(codigo)
+          ticket:tickets!equipamentos_ticket_id_fkey(codigo)
         `);
 
       if (searchTerm) {
