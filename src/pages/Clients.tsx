@@ -256,7 +256,13 @@ export default function Clients() {
         </SheetContent>
       </Sheet>
 
-      <Dialog open={isEditing} onOpenChange={(open) => !open && setIsEditing(false)}>
+      <Dialog open={isEditing} onOpenChange={(open) => {
+        if (!open) {
+          setIsEditing(false);
+          setSelectedClient(null);
+          setFormData(initialFormData);
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Cliente</DialogTitle>
