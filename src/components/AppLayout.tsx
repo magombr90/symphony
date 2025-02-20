@@ -9,14 +9,16 @@ import { LogOut, Menu } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetContent } from "./ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Outlet } from "react-router-dom";
 import { useToast } from "./ui/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default function AppLayout() {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { currentUser, isLoading } = useAuth();
 
   const handleLogout = async () => {
     try {
@@ -34,6 +36,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       });
     }
   };
+
+  // Se não estiver carregando e não houver usuário, redireciona para /auth
+  if (!isLoading && !currentUser) {
+    navigate("/auth");
+    return null;
+  }
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -73,7 +81,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </Button>
                 <ThemeToggle />
               </div>
-              {children}
+              <Outlet />
             </div>
           </main>
         </div>

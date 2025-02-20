@@ -9,6 +9,7 @@ import Tickets from "./pages/Tickets";
 import SystemUsers from "./pages/SystemUsers";
 import Dashboard from "./pages/Dashboard";
 import Equipments from "./pages/Equipments";
+import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
 
@@ -16,15 +17,16 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AppLayout>
-          <Routes>
+        <Routes>
+          <Route path="/auth" element={<Auth />} />
+          <Route element={<AppLayout>}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/clients" element={<Clients />} />
             <Route path="/tickets" element={<Tickets />} />
             <Route path="/system-users" element={<SystemUsers />} />
             <Route path="/equipments" element={<Equipments />} />
-          </Routes>
-        </AppLayout>
+          </Route>
+        </Routes>
         <Toaster />
       </BrowserRouter>
     </QueryClientProvider>
