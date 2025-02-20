@@ -19,12 +19,34 @@ export default function Auth() {
     e.preventDefault();
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
+      
+      // Tentar fazer login
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes("Invalid login credentials")) {
+          throw new Error("Email ou senha incorretos");
+        }
+        throw error;
+      }
+
+      if (!data?.user) {
+        throw new Error("Erro ao fazer login");
+      }
+
+      // Verificar se o usuário existe na tabela system_users
+      const { data: systemUser, error: systemUserError } = await supabase
+        .from("system_users")
+        .select("*")
+        .eq("id", data.user.id)
+        .single();
+
+      if (systemUserError || !systemUser) {
+        throw new Error("Usuário não encontrado no sistema");
+      }
 
       navigate("/");
       toast({
