@@ -10,6 +10,14 @@ import {
 } from "@/components/ui/sheet";
 import { Ticket, TicketHistory } from "@/types/ticket";
 import { TicketProgress } from "./TicketProgress";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface TicketDetailsProps {
   ticket: Ticket | null;
@@ -27,9 +35,6 @@ const statusOptions = [
 
 export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) {
   if (!ticket) return null;
-
-  console.log("Ticket details:", ticket);
-  console.log("Equipamentos:", ticket.equipamentos);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -100,38 +105,29 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
           <div>
             <Label className="block mb-3">Equipamentos Retirados</Label>
             {ticket.equipamentos && ticket.equipamentos.length > 0 ? (
-              <div className="space-y-4">
-                {ticket.equipamentos.map((equip, index) => (
-                  <div 
-                    key={index} 
-                    className="border border-gray-200 rounded-lg p-4 bg-gray-50"
-                  >
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <span className="text-sm text-gray-500">Código</span>
-                        <p className="font-medium">{equip.codigo}</p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-500">Equipamento</span>
-                        <p className="font-medium">{equip.equipamento}</p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-500">Número de Série</span>
-                        <p className="font-medium">{equip.numero_serie || "-"}</p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-500">Condição</span>
-                        <p className="font-medium">{equip.condicao}</p>
-                      </div>
-                      {equip.observacoes && (
-                        <div className="col-span-2">
-                          <span className="text-sm text-gray-500">Observações</span>
-                          <p className="font-medium">{equip.observacoes}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Código</TableHead>
+                      <TableHead>Equipamento</TableHead>
+                      <TableHead>Nº de Série</TableHead>
+                      <TableHead>Condição</TableHead>
+                      <TableHead>Observações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {ticket.equipamentos.map((equip, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{equip.codigo}</TableCell>
+                        <TableCell>{equip.equipamento}</TableCell>
+                        <TableCell>{equip.numero_serie || "-"}</TableCell>
+                        <TableCell>{equip.condicao}</TableCell>
+                        <TableCell>{equip.observacoes || "-"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             ) : (
               <p className="text-sm text-gray-500">Nenhum equipamento registrado.</p>
