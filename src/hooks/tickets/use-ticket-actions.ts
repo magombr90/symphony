@@ -84,8 +84,14 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
     }
   };
 
-  const handleAssignTicket = async (ticketId: string, newUserId: string, currentAssignedTo: string | null) => {
+  const handleAssignTicket = async (ticketId: string, newUserId: string, currentAssignedTo: string | null = null) => {
     try {
+      const { data: ticket } = await supabase
+        .from("tickets")
+        .select("status")
+        .eq("id", ticketId)
+        .single();
+
       const { error: updateError } = await supabase
         .from("tickets")
         .update({ assigned_to: newUserId })
@@ -96,6 +102,7 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
       const historyData = {
         ticket_id: ticketId,
         action_type: 'USER_ASSIGNMENT',
+        status: ticket.status, // Include the current ticket status
         previous_assigned_to: currentAssignedTo,
         new_assigned_to: newUserId,
         created_by: systemUsers?.[0]?.id,

@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, UserPlus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useTickets } from "@/hooks/use-tickets";
 import { TicketsTable } from "@/components/tickets/TicketsTable";
 import { TicketDetails } from "@/components/tickets/TicketDetails";
@@ -20,7 +20,7 @@ import { Ticket } from "@/types/ticket";
 
 export default function Tickets() {
   const [open, setOpen] = useState(false);
-  const [editingTicket, setEditingTicket] = useState<Ticket | null>(null); // Adicionando o estado que faltava
+  const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
   
   const {
     tickets,
@@ -56,7 +56,7 @@ export default function Tickets() {
 
   const handleAssignSubmit = async () => {
     if (!editingTicket || !selectedUser) return;
-    await handleAssignTicket(editingTicket.id, selectedUser);
+    await handleAssignTicket(editingTicket.id, selectedUser, editingTicket.assigned_to);
   };
 
   return (
