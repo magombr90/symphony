@@ -18,7 +18,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { UserPlus } from "lucide-react";
+import { UserPlus, FileText } from "lucide-react";
+import { pdf } from "@react-pdf/renderer";
+import { TicketPDF } from "./TicketPDF";
 
 type Ticket = {
   id: string;
@@ -33,6 +35,13 @@ type Ticket = {
   assigned_user?: {
     name: string | null;
   } | null;
+  equipamentos?: Array<{
+    codigo: string;
+    equipamento: string;
+    numero_serie: string | null;
+    condicao: string;
+    observacoes: string | null;
+  }>;
 };
 
 interface TicketsTableProps {
@@ -70,6 +79,22 @@ export function TicketsTable({
         return "bg-green-700";
       default:
         return "bg-gray-500";
+    }
+  };
+
+  const handleGeneratePDF = async (ticket: Ticket) => {
+    try {
+      const blob = await pdf(<TicketPDF ticket={ticket} />).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `ticket-${ticket.codigo}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
     }
   };
 
@@ -119,6 +144,14 @@ export function TicketsTable({
                       title="Reatribuir ticket"
                     >
                       <UserPlus className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleGeneratePDF(ticket)}
+                      title="Gerar PDF"
+                    >
+                      <FileText className="h-4 w-4" />
                     </Button>
                     <Select
                       value={ticket.status}

@@ -26,6 +26,13 @@ export type Ticket = {
   } | null;
   faturado: boolean;
   faturado_at: string | null;
+  equipamentos?: Array<{
+    codigo: string;
+    equipamento: string;
+    numero_serie: string | null;
+    condicao: string;
+    observacoes: string | null;
+  }>;
 };
 
 export type TicketHistory = {
