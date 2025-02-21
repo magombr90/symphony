@@ -150,19 +150,19 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
                 {history.map((item) => (
                   <div key={item.id} className="border p-4 rounded-lg">
                     <div className="flex justify-between items-start">
-                      <div>
+                      <div className="flex-1">
                         <p className="font-medium">
                           {getHistoryText(item)}
                         </p>
                         {item.reason && (
-                          <p className="mt-2 text-sm text-gray-600">
-                            Motivo: {item.reason}
+                          <p className="mt-2 text-sm text-gray-600 whitespace-pre-wrap">
+                            <span className="font-medium">Motivo:</span> {item.reason}
                           </p>
                         )}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-gray-500 text-right ml-4">
                         <p>{format(new Date(item.created_at), "dd/MM/yyyy HH:mm")}</p>
-                        <p className="text-right">por {item.created_by_user.name}</p>
+                        <p>por {item.created_by_user.name}</p>
                       </div>
                     </div>
                   </div>
