@@ -27,6 +27,13 @@ export function ReasonDialog({
   onReasonChange,
   onSubmit,
 }: ReasonDialogProps) {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (reason.trim()) {
+      onSubmit();
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -37,7 +44,7 @@ export function ReasonDialog({
               : "Motivo da Conclusão"}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label>Motivo</Label>
             <Textarea
@@ -48,13 +55,13 @@ export function ReasonDialog({
             />
           </div>
           <Button
-            onClick={onSubmit}
+            type="submit"
             className="w-full"
             disabled={!reason.trim()}
           >
             Salvar
           </Button>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
