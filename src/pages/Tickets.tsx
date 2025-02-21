@@ -45,18 +45,9 @@ export default function Tickets() {
     setSelectedUser,
     handleStatusChange,
     handleAssignTicket,
-    updateTicketStatus,
+    handleReasonSubmit,
     refetch,
   } = useTickets();
-
-  const handleReasonSubmit = async () => {
-    if (!editingTicket) return;
-    await updateTicketStatus(editingTicket.id, editingTicket.status, reason);
-    setShowReasonDialog(false);
-    setReason("");
-    setEditingTicket(null);
-    refetch();
-  };
 
   const handleAssignSubmit = async () => {
     if (!editingTicket || !selectedUser) return;

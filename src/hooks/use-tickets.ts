@@ -43,6 +43,17 @@ export function useTickets() {
     await updateTicketStatus(ticketId, newStatus);
   };
 
+  const handleReasonSubmit = async () => {
+    if (!editingTicket) return;
+    
+    const success = await updateTicketStatus(editingTicket.id, editingTicket.status, reason);
+    if (success) {
+      setShowReasonDialog(false);
+      setReason("");
+      setEditingTicket(null);
+    }
+  };
+
   return {
     tickets,
     clients,
@@ -68,6 +79,7 @@ export function useTickets() {
     handleStatusChange,
     handleAssignTicket,
     updateTicketStatus,
+    handleReasonSubmit,
     refetch,
   };
 }
