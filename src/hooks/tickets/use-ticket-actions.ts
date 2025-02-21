@@ -70,14 +70,14 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
         return false;
       }
 
-      // Se há um motivo e um usuário atual, registra no histórico
-      if (reasonText && currentUser?.id) {
+      // Registrar o histórico independentemente do motivo
+      if (currentUser?.id) {
         console.log("Registrando histórico com motivo:", { reasonText });
 
         const historyData = {
           ticket_id: ticketId,
           status: newStatus,
-          reason: reasonText,
+          reason: reasonText || null,
           created_by: currentUser.id,
           action_type: 'STATUS_CHANGE'
         };

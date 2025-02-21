@@ -67,6 +67,11 @@ export default function Dashboard() {
     const ticketDate = parseISO(ticket.created_at);
     const isToday = ticketDate >= dayStart && ticketDate <= dayEnd;
     
+    // Ignorar tickets faturados que não são de hoje
+    if (ticket.status === 'FATURADO' && !isToday) {
+      return acc;
+    }
+
     const existingUser = acc.find(u => u.user.id === ticket.assigned_to);
     if (existingUser) {
       existingUser.total += 1;
