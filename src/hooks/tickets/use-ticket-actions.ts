@@ -52,6 +52,7 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
         }
       }
 
+      // Primeiro atualiza o status do ticket
       const { error: updateError } = await supabase
         .from("tickets")
         .update({ status: newStatus })
@@ -66,6 +67,7 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
         return false;
       }
 
+      // Se há um motivo e um usuário atual, registra no histórico
       if (reasonText && currentUser?.id) {
         const historyData = {
           ticket_id: ticketId,
@@ -80,6 +82,7 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
           .insert([historyData]);
 
         if (historyError) {
+          console.error("Erro ao registrar histórico:", historyError);
           toast({
             variant: "destructive",
             title: "Erro ao registrar histórico",
