@@ -55,3 +55,14 @@ export type TicketHistory = {
     name: string;
   } | null;
 };
+
+export type Client = {
+  id: string;
+  razao_social: string;
+  cnpj: string;
+  email: string | null;
+  telefone: string | null;
+  endereco: string | null;
+  cep: string | null;
+  observacoes: string | null;
+};
