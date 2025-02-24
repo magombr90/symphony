@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { format } from "date-fns";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 
@@ -136,9 +136,12 @@ export function ClientDetails({ client, onEdit }: ClientDetailsProps) {
       </div>
 
       <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Histórico de Tickets - {client.razao_social}</DialogTitle>
+            <DialogDescription>
+              Visualize todos os tickets associados a este cliente
+            </DialogDescription>
           </DialogHeader>
           
           <div className="relative mb-4">
@@ -151,51 +154,53 @@ export function ClientDetails({ client, onEdit }: ClientDetailsProps) {
             />
           </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Código</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Data Agendada</TableHead>
-                <TableHead>Responsável</TableHead>
-                <TableHead>Faturado</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tickets?.map((ticket) => (
-                <TableRow key={ticket.id}>
-                  <TableCell>{ticket.codigo}</TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(ticket.status)}>
-                      {getStatusLabel(ticket.status)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {format(new Date(ticket.scheduled_for), "dd/MM/yyyy HH:mm")}
-                  </TableCell>
-                  <TableCell>{ticket.assigned_user?.name || "-"}</TableCell>
-                  <TableCell>
-                    {ticket.faturado ? (
-                      <Badge variant="outline" className="bg-green-50">
-                        Sim
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="bg-yellow-50">
-                        Não
-                      </Badge>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {!tickets?.length && (
+          <div className="flex-1 overflow-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-4">
-                    Nenhum ticket encontrado para este cliente.
-                  </TableCell>
+                  <TableHead>Código</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Data Agendada</TableHead>
+                  <TableHead>Responsável</TableHead>
+                  <TableHead>Faturado</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {tickets?.map((ticket) => (
+                  <TableRow key={ticket.id}>
+                    <TableCell>{ticket.codigo}</TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(ticket.status)}>
+                        {getStatusLabel(ticket.status)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {format(new Date(ticket.scheduled_for), "dd/MM/yyyy HH:mm")}
+                    </TableCell>
+                    <TableCell>{ticket.assigned_user?.name || "-"}</TableCell>
+                    <TableCell>
+                      {ticket.faturado ? (
+                        <Badge variant="outline" className="bg-green-50">
+                          Sim
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-yellow-50">
+                          Não
+                        </Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {!tickets?.length && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-4">
+                      Nenhum ticket encontrado para este cliente.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
