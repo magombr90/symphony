@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { query } from "@/config/database";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AddEquipmentDialogProps {
   clientId: string;
@@ -41,20 +41,20 @@ export function AddEquipmentDialog({
     e.preventDefault();
 
     try {
-      const { rows } = await query(
-        `INSERT INTO equipamentos 
-         (client_id, equipamento, numero_serie, condicao, observacoes, ticket_id) 
-         VALUES ($1, $2, $3, $4, $5, $6)
-         RETURNING id, codigo`,
-        [
-          clientId,
-          equipmentForm.equipamento,
-          equipmentForm.numero_serie || null,
-          equipmentForm.condicao,
-          equipmentForm.observacoes || null,
-          ticketId
-        ]
-      );
+      const { data, error } = await supabase
+        .from("equipamentos")
+        .insert([{
+          client_id: clientId,
+          equipamento: equipmentForm.equipamento,
+          numero_serie: equipmentForm.numero_serie || null,
+          condicao: equipmentForm.condicao,
+          observacoes: equipmentForm.observacoes || null,
+          ticket_id: ticketId
+        }])
+        .select('id, codigo')
+        .single();
+
+      if (error) throw error;
 
       toast({
         title: "Equipamento cadastrado com sucesso!",
