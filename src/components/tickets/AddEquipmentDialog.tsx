@@ -50,6 +50,7 @@ export function AddEquipmentDialog({
         numero_serie: equipmentForm.numero_serie || null,
         condicao: equipmentForm.condicao,
         observacoes: equipmentForm.observacoes || null,
+        codigo: "TEMP", // Valor temporário que será substituído pelo trigger
         ...(ticketId ? { ticket_id: ticketId } : {})
       };
 
