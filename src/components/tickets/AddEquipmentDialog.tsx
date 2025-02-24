@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,10 +18,16 @@ import { supabase } from "@/integrations/supabase/client";
 interface AddEquipmentDialogProps {
   clientId: string;
   ticketId?: string;
+  ticketCode?: string;
   onSuccess: () => void;
 }
 
-export function AddEquipmentDialog({ clientId, ticketId, onSuccess }: AddEquipmentDialogProps) {
+export function AddEquipmentDialog({ 
+  clientId, 
+  ticketId, 
+  ticketCode, 
+  onSuccess 
+}: AddEquipmentDialogProps) {
   const [open, setOpen] = useState(false);
   const [equipmentForm, setEquipmentForm] = useState({
     equipamento: "",
@@ -59,6 +66,9 @@ export function AddEquipmentDialog({ clientId, ticketId, onSuccess }: AddEquipme
 
     toast({
       title: "Equipamento cadastrado com sucesso!",
+      description: ticketCode 
+        ? `Equipamento vinculado ao ticket ${ticketCode}` 
+        : "Equipamento cadastrado para o cliente",
     });
     setEquipmentForm({
       equipamento: "",
@@ -81,6 +91,11 @@ export function AddEquipmentDialog({ clientId, ticketId, onSuccess }: AddEquipme
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Novo Equipamento</DialogTitle>
+          {ticketCode && (
+            <DialogDescription>
+              Vinculado ao ticket: {ticketCode}
+            </DialogDescription>
+          )}
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

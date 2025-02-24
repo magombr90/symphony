@@ -31,7 +31,7 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
   const [selectedStatus, setSelectedStatus] = useState("PENDENTE");
   const [selectedClient, setSelectedClient] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
-  const [newTicketId, setNewTicketId] = useState<string | null>(null);
+  const [newTicket, setNewTicket] = useState<{ id: string; codigo: string } | null>(null);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -71,7 +71,7 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
       return;
     }
     
-    const newTicket = {
+    const newTicketData = {
       description: String(formData.get("description")),
       client_id: selectedClient,
       status: selectedStatus,
@@ -83,7 +83,7 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
 
     const { data, error } = await supabase
       .from("tickets")
-      .insert(newTicket)
+      .insert(newTicketData)
       .select()
       .single();
 
@@ -96,7 +96,7 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
       return;
     }
 
-    setNewTicketId(data.id);
+    setNewTicket(data);
     toast({
       title: "Ticket criado com sucesso!",
     });
@@ -135,7 +135,8 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
         <div>
           <AddEquipmentDialog 
             clientId={selectedClient}
-            ticketId={newTicketId || undefined}
+            ticketId={newTicket?.id}
+            ticketCode={newTicket?.codigo}
             onSuccess={() => {
               toast({
                 title: "Equipamento adicionado com sucesso!",
