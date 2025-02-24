@@ -104,14 +104,8 @@ export default function Equipments() {
         throw error;
       }
 
-      // Ajuste para garantir que pegamos apenas o primeiro ticket (caso exista)
-      const equipmentsWithSingleTicket = data?.map(equipment => ({
-        ...equipment,
-        ticket: equipment.ticket ? equipment.ticket[0] : null
-      }));
-
-      console.log("Dados processados:", equipmentsWithSingleTicket);
-      return equipmentsWithSingleTicket as Equipment[];
+      console.log("Dados processados:", data);
+      return data as Equipment[];
     },
   });
 
@@ -158,7 +152,7 @@ export default function Equipments() {
                 <TableHead>Equipamento</TableHead>
                 <TableHead>Nº Série</TableHead>
                 <TableHead>Cliente</TableHead>
-                <TableHead>Nº Ticket</TableHead>
+                <TableHead>Código Ticket</TableHead>
                 <TableHead>Condição</TableHead>
                 <TableHead className="w-[50px]">Detalhes</TableHead>
               </TableRow>
