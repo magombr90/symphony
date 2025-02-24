@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { query } from "@/config/database";
 
 interface AddEquipmentDialogProps {
   clientId: string;
@@ -40,44 +40,44 @@ export function AddEquipmentDialog({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Adiciona o ticket_id ao objeto de dados
-    const equipmentData = {
-      client_id: clientId,
-      equipamento: equipmentForm.equipamento,
-      numero_serie: equipmentForm.numero_serie || null,
-      condicao: equipmentForm.condicao,
-      observacoes: equipmentForm.observacoes || null,
-      codigo: 'TEMP', // Será substituído pelo trigger
-      ticket_id: ticketId, // Garante que o ticket_id seja incluído
-    };
+    try {
+      const { rows } = await query(
+        `INSERT INTO equipamentos 
+         (client_id, equipamento, numero_serie, condicao, observacoes, ticket_id) 
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING id, codigo`,
+        [
+          clientId,
+          equipmentForm.equipamento,
+          equipmentForm.numero_serie || null,
+          equipmentForm.condicao,
+          equipmentForm.observacoes || null,
+          ticketId
+        ]
+      );
 
-    const { error } = await supabase
-      .from("equipamentos")
-      .insert([equipmentData]);
+      toast({
+        title: "Equipamento cadastrado com sucesso!",
+        description: ticketCode 
+          ? `Equipamento vinculado ao ticket ${ticketCode}` 
+          : "Equipamento cadastrado para o cliente",
+      });
 
-    if (error) {
+      setEquipmentForm({
+        equipamento: "",
+        numero_serie: "",
+        condicao: "NOVO",
+        observacoes: "",
+      });
+      setOpen(false);
+      onSuccess();
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Erro ao cadastrar equipamento",
-        description: error.message,
+        description: error instanceof Error ? error.message : "Erro desconhecido",
       });
-      return;
     }
-
-    toast({
-      title: "Equipamento cadastrado com sucesso!",
-      description: ticketCode 
-        ? `Equipamento vinculado ao ticket ${ticketCode}` 
-        : "Equipamento cadastrado para o cliente",
-    });
-    setEquipmentForm({
-      equipamento: "",
-      numero_serie: "",
-      condicao: "NOVO",
-      observacoes: "",
-    });
-    setOpen(false);
-    onSuccess();
   };
 
   return (
