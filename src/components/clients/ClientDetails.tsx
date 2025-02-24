@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Pencil } from "lucide-react";
+import { Eye, Pencil, Search } from "lucide-react";
 import { Client } from "@/types/client";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +15,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { format } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
 
 interface ClientDetailsProps {
   client: Client;
@@ -22,17 +25,25 @@ interface ClientDetailsProps {
 }
 
 export function ClientDetails({ client, onEdit }: ClientDetailsProps) {
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
   const { data: tickets } = useQuery({
-    queryKey: ["client-tickets", client.id],
+    queryKey: ["client-tickets", client.id, searchTerm],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("tickets")
         .select(`
           *,
           assigned_user:system_users!tickets_assigned_to_fkey(name)
         `)
-        .eq("client_id", client.id)
-        .order("created_at", { ascending: false });
+        .eq("client_id", client.id);
+
+      if (searchTerm) {
+        query = query.ilike('codigo', `%${searchTerm}%`);
+      }
+
+      const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
       return data;
@@ -106,56 +117,14 @@ export function ClientDetails({ client, onEdit }: ClientDetailsProps) {
         </div>
       </div>
 
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Histórico de Tickets</h3>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Código</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Data Agendada</TableHead>
-              <TableHead>Responsável</TableHead>
-              <TableHead>Faturado</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {tickets?.map((ticket) => (
-              <TableRow key={ticket.id}>
-                <TableCell>{ticket.codigo}</TableCell>
-                <TableCell>
-                  <Badge className={getStatusColor(ticket.status)}>
-                    {getStatusLabel(ticket.status)}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {format(new Date(ticket.scheduled_for), "dd/MM/yyyy HH:mm")}
-                </TableCell>
-                <TableCell>{ticket.assigned_user?.name || "-"}</TableCell>
-                <TableCell>
-                  {ticket.faturado ? (
-                    <Badge variant="outline" className="bg-green-50">
-                      Sim
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="bg-yellow-50">
-                      Não
-                    </Badge>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-            {!tickets?.length && (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-4">
-                  Nenhum ticket encontrado para este cliente.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
       <div className="flex justify-end gap-2">
+        <Button
+          variant="outline"
+          onClick={() => setIsHistoryOpen(true)}
+        >
+          <Eye className="h-4 w-4 mr-2" />
+          Histórico de Tickets
+        </Button>
         <Button 
           variant="outline"
           size="icon"
@@ -165,6 +134,70 @@ export function ClientDetails({ client, onEdit }: ClientDetailsProps) {
           <Pencil className="h-4 w-4" />
         </Button>
       </div>
+
+      <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Histórico de Tickets - {client.razao_social}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+            <Input
+              placeholder="Buscar por número do ticket..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Código</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Data Agendada</TableHead>
+                <TableHead>Responsável</TableHead>
+                <TableHead>Faturado</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {tickets?.map((ticket) => (
+                <TableRow key={ticket.id}>
+                  <TableCell>{ticket.codigo}</TableCell>
+                  <TableCell>
+                    <Badge className={getStatusColor(ticket.status)}>
+                      {getStatusLabel(ticket.status)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {format(new Date(ticket.scheduled_for), "dd/MM/yyyy HH:mm")}
+                  </TableCell>
+                  <TableCell>{ticket.assigned_user?.name || "-"}</TableCell>
+                  <TableCell>
+                    {ticket.faturado ? (
+                      <Badge variant="outline" className="bg-green-50">
+                        Sim
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-yellow-50">
+                        Não
+                      </Badge>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {!tickets?.length && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-4">
+                    Nenhum ticket encontrado para este cliente.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
