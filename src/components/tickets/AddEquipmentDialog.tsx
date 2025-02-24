@@ -14,6 +14,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
 interface AddEquipmentDialogProps {
   clientId: string;
@@ -22,14 +23,7 @@ interface AddEquipmentDialogProps {
   onSuccess: () => void;
 }
 
-type EquipmentInsert = {
-  client_id: string;
-  equipamento: string;
-  numero_serie: string | null;
-  condicao: "NOVO" | "USADO" | "DEFEITO";
-  observacoes: string | null;
-  ticket_id?: string;
-}
+type EquipmentInsert = Database['public']['Tables']['equipamentos']['Insert'];
 
 export function AddEquipmentDialog({ 
   clientId, 
@@ -61,7 +55,7 @@ export function AddEquipmentDialog({
 
       const { data, error } = await supabase
         .from("equipamentos")
-        .insert(insertData)
+        .insert([insertData])  // Passar o objeto dentro de um array
         .select('id, codigo')
         .single();
 
