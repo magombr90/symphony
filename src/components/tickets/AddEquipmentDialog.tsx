@@ -22,6 +22,15 @@ interface AddEquipmentDialogProps {
   onSuccess: () => void;
 }
 
+type EquipmentInsert = {
+  client_id: string;
+  equipamento: string;
+  numero_serie: string | null;
+  condicao: "NOVO" | "USADO" | "DEFEITO";
+  observacoes: string | null;
+  ticket_id?: string;
+}
+
 export function AddEquipmentDialog({ 
   clientId, 
   ticketId, 
@@ -41,16 +50,18 @@ export function AddEquipmentDialog({
     e.preventDefault();
 
     try {
+      const insertData: EquipmentInsert = {
+        client_id: clientId,
+        equipamento: equipmentForm.equipamento,
+        numero_serie: equipmentForm.numero_serie || null,
+        condicao: equipmentForm.condicao,
+        observacoes: equipmentForm.observacoes || null,
+        ...(ticketId ? { ticket_id: ticketId } : {})
+      };
+
       const { data, error } = await supabase
         .from("equipamentos")
-        .insert([{
-          client_id: clientId,
-          equipamento: equipmentForm.equipamento,
-          numero_serie: equipmentForm.numero_serie || null,
-          condicao: equipmentForm.condicao,
-          observacoes: equipmentForm.observacoes || null,
-          ticket_id: ticketId
-        }])
+        .insert(insertData)
         .select('id, codigo')
         .single();
 
