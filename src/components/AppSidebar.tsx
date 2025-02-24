@@ -17,7 +17,7 @@ import { useAuth } from "@/hooks/use-auth";
 export default function AppSidebar() {
   const location = useLocation();
   const isMobile = useIsMobile();
-  const { isAdmin, currentUser } = useAuth();
+  const { currentUser } = useAuth();
 
   const menuItems = [
     {
@@ -40,16 +40,11 @@ export default function AppSidebar() {
       icon: Box,
       path: "/equipments",
     },
-    ...(isAdmin 
-      ? [
-          {
-            title: "Usuários",
-            icon: User,
-            path: "/system-users",
-          }
-        ] 
-      : []
-    ),
+    {
+      title: "Usuários",
+      icon: User,
+      path: "/system-users",
+    },
   ];
 
   return (
