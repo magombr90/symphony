@@ -67,4 +67,82 @@ interface TicketPDFProps {
 
 export function TicketPDF({ ticket }: TicketPDFProps) {
   const formatDate = (date: string) => {
-    return
+    if (!date) return "-";
+    const formattedDate = new Date(date).toLocaleDateString('pt-BR');
+    return formattedDate;
+  };
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Ordem de Serviço - {ticket.codigo}</Text>
+          <View style={styles.row}>
+            <Text style={styles.label}>Status:</Text>
+            <Text style={styles.value}>{ticket.status}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Data de Abertura:</Text>
+            <Text style={styles.value}>{formatDate(ticket.created_at)}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Agendado para:</Text>
+            <Text style={styles.value}>{formatDate(ticket.scheduled_for)}</Text>
+          </View>
+        </View>
+
+        <View style={styles.clientInfo}>
+          <Text style={styles.sectionTitle}>Informações do Cliente</Text>
+          <View style={styles.row}>
+            <Text style={styles.label}>Cliente:</Text>
+            <Text style={styles.value}>{ticket.client.razao_social}</Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Detalhes do Atendimento</Text>
+          <View style={styles.row}>
+            <Text style={styles.label}>Descrição:</Text>
+            <Text style={styles.value}>{ticket.description}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Técnico Responsável:</Text>
+            <Text style={styles.value}>{ticket.assigned_user?.name || "Não atribuído"}</Text>
+          </View>
+        </View>
+
+        {ticket.equipamentos && ticket.equipamentos.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Equipamentos</Text>
+            {ticket.equipamentos.map((equipamento, index) => (
+              <View key={index} style={styles.equipment}>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Código:</Text>
+                  <Text style={styles.value}>{equipamento.codigo}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Equipamento:</Text>
+                  <Text style={styles.value}>{equipamento.equipamento}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Nº de Série:</Text>
+                  <Text style={styles.value}>{equipamento.numero_serie || "-"}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Condição:</Text>
+                  <Text style={styles.value}>{equipamento.condicao}</Text>
+                </View>
+                {equipamento.observacoes && (
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Observações:</Text>
+                    <Text style={styles.value}>{equipamento.observacoes}</Text>
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
+        )}
+      </Page>
+    </Document>
+  );
+}
