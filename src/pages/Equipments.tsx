@@ -21,6 +21,7 @@ import { TicketHistory } from "@/types/ticket";
 import { CreateEquipmentDialog } from "@/components/equipments/CreateEquipmentDialog";
 import { EditEquipmentDialog } from "@/components/equipments/EditEquipmentDialog";
 import { AssociateTicketDialog } from "@/components/equipments/AssociateTicketDialog";
+import { DeleteEquipmentDialog } from "@/components/equipments/DeleteEquipmentDialog";
 
 type Equipment = {
   id: string;
@@ -205,28 +206,28 @@ export default function Equipments() {
                       onSuccess={refetch} 
                     />
                     {!equipment.ticket_id && (
-                      <AssociateTicketDialog
-                        equipmentId={equipment.id}
-                        onSuccess={refetch}
-                      />
+                      <>
+                        <AssociateTicketDialog
+                          equipmentId={equipment.id}
+                          onSuccess={refetch}
+                        />
+                        <DeleteEquipmentDialog
+                          equipmentId={equipment.id}
+                          equipmentCode={equipment.codigo}
+                          onSuccess={refetch}
+                        />
+                      </>
                     )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        if (!equipment.ticket) {
-                          toast({
-                            title: "Sem ticket associado",
-                            description: "Este equipamento não está associado a nenhum ticket.",
-                          });
-                          return;
-                        }
-                        setSelectedTicket(equipment.ticket);
-                      }}
-                      className="hover:bg-gray-100"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
+                    {equipment.ticket && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setSelectedTicket(equipment.ticket)}
+                        className="hover:bg-gray-100"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
