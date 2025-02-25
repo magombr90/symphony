@@ -40,11 +40,13 @@ export default function AppSidebar() {
       icon: Box,
       path: "/equipments",
     },
-    {
-      title: "Usuários",
-      icon: User,
-      path: "/system-users",
-    },
+    ...(currentUser?.role === 'admin' ? [
+      {
+        title: "Usuários",
+        icon: User,
+        path: "/system-users",
+      }
+    ] : []),
   ];
 
   return (
