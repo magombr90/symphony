@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -26,16 +26,40 @@ export function AssociateTicketDialog({
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [filteredTickets, setFilteredTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const { toast } = useToast();
 
-  const handleSearch = async () => {
-    if (!searchTerm) return;
-    
+  // Carregar todos os tickets quando o diálogo for aberto
+  useEffect(() => {
+    if (open) {
+      loadAllTickets();
+    } else {
+      // Resetar estados quando fechar o diálogo
+      setSearchTerm("");
+      setSelectedTicket(null);
+    }
+  }, [open]);
+
+  // Filtrar tickets com base no termo de busca
+  useEffect(() => {
+    if (tickets.length > 0) {
+      if (searchTerm.trim() === "") {
+        setFilteredTickets(tickets);
+      } else {
+        const filtered = tickets.filter(ticket => 
+          ticket.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          ticket.client?.razao_social.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setFilteredTickets(filtered);
+      }
+    }
+  }, [searchTerm, tickets]);
+
+  const loadAllTickets = async () => {
     setLoading(true);
     try {
-      // Melhorada a busca por tickets
       const { data, error } = await supabase
         .from("tickets")
         .select(`
@@ -46,23 +70,28 @@ export function AssociateTicketDialog({
           description,
           client:clients(razao_social)
         `)
-        .ilike('codigo', `%${searchTerm}%`)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
       
-      console.log("Tickets encontrados:", data);
+      console.log("Tickets carregados:", data);
       setTickets(data as Ticket[]);
+      setFilteredTickets(data as Ticket[]);
     } catch (error) {
-      console.error("Erro na busca:", error);
+      console.error("Erro ao carregar tickets:", error);
       toast({
         variant: "destructive",
-        title: "Erro ao buscar tickets",
+        title: "Erro ao carregar tickets",
         description: error instanceof Error ? error.message : "Erro desconhecido",
       });
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = () => {
+    // A pesquisa agora é feita automaticamente pelo useEffect
+    console.log("Buscando por:", searchTerm);
   };
 
   const handleSelectTicket = (ticket: Ticket) => {
@@ -105,11 +134,11 @@ export function AssociateTicketDialog({
       >
         Associar Ticket
       </Button>
-      <DialogContent>
+      <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>Associar Ticket ao Equipamento</DialogTitle>
           <DialogDescription>
-            Busque um ticket pelo código para associar a este equipamento.
+            Selecione um ticket para associar a este equipamento.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -117,29 +146,25 @@ export function AssociateTicketDialog({
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
               <Input
-                placeholder="Buscar ticket por código..."
+                placeholder="Filtrar tickets por código ou cliente..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleSearch();
-                  }
-                }}
               />
             </div>
-            <Button onClick={handleSearch} disabled={loading}>
-              {loading ? "Buscando..." : "Buscar"}
-            </Button>
           </div>
 
-          <div className="border rounded-md divide-y max-h-60 overflow-y-auto">
-            {tickets.length === 0 ? (
+          <div className="border rounded-md divide-y max-h-[400px] overflow-y-auto">
+            {loading ? (
               <div className="p-4 text-center text-gray-500">
-                {searchTerm ? "Nenhum ticket encontrado" : "Busque por um ticket para associar"}
+                Carregando tickets...
+              </div>
+            ) : filteredTickets.length === 0 ? (
+              <div className="p-4 text-center text-gray-500">
+                {searchTerm ? "Nenhum ticket encontrado" : "Nenhum ticket disponível"}
               </div>
             ) : (
-              tickets.map((ticket) => (
+              filteredTickets.map((ticket) => (
                 <div 
                   key={ticket.id} 
                   className={`p-3 cursor-pointer hover:bg-gray-100 ${selectedTicket?.id === ticket.id ? 'bg-gray-100' : ''}`}
