@@ -13,11 +13,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Search, Eye } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { TicketDetails } from "@/components/tickets/TicketDetails";
 import { TicketHistory } from "@/types/ticket";
+import { CreateEquipmentDialog } from "@/components/equipments/CreateEquipmentDialog";
+import { EditEquipmentDialog } from "@/components/equipments/EditEquipmentDialog";
+import { AssociateTicketDialog } from "@/components/equipments/AssociateTicketDialog";
 
 type Equipment = {
   id: string;
@@ -26,9 +29,11 @@ type Equipment = {
   numero_serie: string | null;
   condicao: 'NOVO' | 'USADO' | 'DEFEITO';
   observacoes: string | null;
+  client_id: string;
   client: {
     razao_social: string;
   };
+  ticket_id: string | null;
   ticket: {
     id: string;
     codigo: string;
@@ -56,7 +61,7 @@ export default function Equipments() {
   const [selectedTicket, setSelectedTicket] = useState<Equipment["ticket"] | null>(null);
   const { toast } = useToast();
 
-  const { data: equipments } = useQuery({
+  const { data: equipments, refetch } = useQuery({
     queryKey: ["equipments", searchTerm],
     queryFn: async () => {
       console.log("Iniciando consulta de equipamentos");
@@ -109,6 +114,15 @@ export default function Equipments() {
     },
   });
 
+  const { data: clients } = useQuery({
+    queryKey: ["clients"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("clients").select("*");
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   const { data: ticketHistory } = useQuery({
     queryKey: ["ticket-history", selectedTicket?.id],
     enabled: !!selectedTicket?.id,
@@ -131,7 +145,13 @@ export default function Equipments() {
 
   return (
     <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-6">Equipamentos</h1>
+      <CardHeader className="flex flex-row items-center justify-between px-0">
+        <h1 className="text-3xl font-bold">Equipamentos</h1>
+        <CreateEquipmentDialog 
+          clients={clients || []} 
+          onSuccess={refetch} 
+        />
+      </CardHeader>
       
       <div className="mb-6 relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
@@ -154,7 +174,7 @@ export default function Equipments() {
                 <TableHead>Cliente</TableHead>
                 <TableHead>Código Ticket</TableHead>
                 <TableHead>Condição</TableHead>
-                <TableHead className="w-[50px]">Detalhes</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -178,7 +198,18 @@ export default function Equipments() {
                       {equipment.condicao}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-right space-x-1">
+                    <EditEquipmentDialog 
+                      equipment={equipment} 
+                      clients={clients || []} 
+                      onSuccess={refetch} 
+                    />
+                    {!equipment.ticket_id && (
+                      <AssociateTicketDialog
+                        equipmentId={equipment.id}
+                        onSuccess={refetch}
+                      />
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
