@@ -6,9 +6,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Ticket } from "@/types/ticket";
@@ -35,21 +35,26 @@ export function AssociateTicketDialog({
     
     setLoading(true);
     try {
+      // Melhorada a busca por tickets
       const { data, error } = await supabase
         .from("tickets")
         .select(`
-          id,
-          codigo,
-          status,
+          id, 
+          codigo, 
+          status, 
           client_id,
+          description,
           client:clients(razao_social)
         `)
-        .or(`codigo.ilike.%${searchTerm}%`)
+        .ilike('codigo', `%${searchTerm}%`)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
+      
+      console.log("Tickets encontrados:", data);
       setTickets(data as Ticket[]);
     } catch (error) {
+      console.error("Erro na busca:", error);
       toast({
         variant: "destructive",
         title: "Erro ao buscar tickets",
@@ -103,6 +108,9 @@ export function AssociateTicketDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Associar Ticket ao Equipamento</DialogTitle>
+          <DialogDescription>
+            Busque um ticket pelo código para associar a este equipamento.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="flex space-x-2">
@@ -113,6 +121,11 @@ export function AssociateTicketDialog({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch();
+                  }
+                }}
               />
             </div>
             <Button onClick={handleSearch} disabled={loading}>
@@ -136,7 +149,7 @@ export function AssociateTicketDialog({
                   <div className="text-sm text-gray-500">{ticket.client?.razao_social}</div>
                   <div className="text-xs mt-1">
                     <span className={`px-2 py-1 rounded-full text-xs ${
-                      ticket.status === 'ABERTO' ? 'bg-blue-100 text-blue-800' :
+                      ticket.status === 'PENDENTE' ? 'bg-blue-100 text-blue-800' :
                       ticket.status === 'EM_ANDAMENTO' ? 'bg-yellow-100 text-yellow-800' :
                       ticket.status === 'CONCLUIDO' ? 'bg-green-100 text-green-800' :
                       'bg-red-100 text-red-800'
