@@ -79,14 +79,14 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
   const handleMarkEquipmentAsDelivered = async (equipmentId: string, equipmentCode: string) => {
     setProcessingEquipment(equipmentId);
     try {
-      // Atualizar o status do equipamento
+      // Atualizar o status do equipamento, agora com as colunas corretas
       const { error: equipmentError } = await supabase
         .from("equipamentos")
         .update({ 
-          // Verificar se o campo 'status' já existe na tabela ou precisa ser adicionado
+          status: "ENTREGUE",
           entregue_at: new Date().toISOString() 
         })
-        .match({ id: equipmentId });
+        .eq("id", equipmentId);
 
       if (equipmentError) throw equipmentError;
 

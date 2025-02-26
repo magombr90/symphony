@@ -46,7 +46,7 @@ export function AddEquipmentDialog({
     e.preventDefault();
 
     try {
-      // Verificar quais campos são permitidos no tipo EquipmentInsert
+      // Inclui o status ao criar um novo equipamento
       const insertData: EquipmentInsert = {
         client_id: clientId,
         equipamento: equipmentForm.equipamento,
@@ -54,6 +54,7 @@ export function AddEquipmentDialog({
         condicao: equipmentForm.condicao,
         observacoes: equipmentForm.observacoes || null,
         codigo: "TEMP", // Valor temporário que será substituído pelo trigger
+        status: "RETIRADO", // Status inicial para todos os equipamentos
         ...(ticketId ? { ticket_id: ticketId } : {})
       };
 

@@ -51,10 +51,12 @@ export type Database = {
           codigo: string
           condicao: Database["public"]["Enums"]["equipment_condition"]
           created_at: string
+          entregue_at: string | null
           equipamento: string
           id: string
           numero_serie: string | null
           observacoes: string | null
+          status: string | null
           ticket_id: string | null
           updated_at: string
         }
@@ -63,10 +65,12 @@ export type Database = {
           codigo: string
           condicao: Database["public"]["Enums"]["equipment_condition"]
           created_at?: string
+          entregue_at?: string | null
           equipamento: string
           id?: string
           numero_serie?: string | null
           observacoes?: string | null
+          status?: string | null
           ticket_id?: string | null
           updated_at?: string
         }
@@ -75,10 +79,12 @@ export type Database = {
           codigo?: string
           condicao?: Database["public"]["Enums"]["equipment_condition"]
           created_at?: string
+          entregue_at?: string | null
           equipamento?: string
           id?: string
           numero_serie?: string | null
           observacoes?: string | null
+          status?: string | null
           ticket_id?: string | null
           updated_at?: string
         }
