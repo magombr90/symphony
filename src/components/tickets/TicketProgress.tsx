@@ -83,10 +83,10 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
       const { error: equipmentError } = await supabase
         .from("equipamentos")
         .update({ 
-          status: "ENTREGUE",
+          // Verificar se o campo 'status' já existe na tabela ou precisa ser adicionado
           entregue_at: new Date().toISOString() 
         })
-        .eq("id", equipmentId);
+        .match({ id: equipmentId });
 
       if (equipmentError) throw equipmentError;
 

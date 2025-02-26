@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
 import { Ticket } from "@/types/ticket";
 
@@ -8,6 +9,7 @@ Font.register({
   src: "https://fonts.gstatic.com/s/opensans/v28/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsjZ0B4gaVQUwaEQbjB_mQ.woff"
 });
 
+// Define estilos para o PDF
 const styles = StyleSheet.create({
   page: {
     padding: 30,
@@ -86,7 +88,8 @@ interface TicketPDFProps {
   history?: any[];
 }
 
-export function TicketPDF({ ticket, history = [] }: TicketPDFProps) {
+// Componente de PDF do Ticket
+export const TicketPDF: React.FC<TicketPDFProps> = ({ ticket, history = [] }) => {
   const formatDate = (date: string) => {
     if (!date) return "-";
     const formattedDate = new Date(date).toLocaleDateString('pt-BR');
@@ -168,7 +171,7 @@ export function TicketPDF({ ticket, history = [] }: TicketPDFProps) {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Equipamentos</Text>
             {ticket.equipamentos.map((equipamento, index) => (
-              <View key={index} style={styles.equipment}>
+              <View key={`equip-${index}`} style={styles.equipment}>
                 <View style={styles.row}>
                   <Text style={styles.label}>Código:</Text>
                   <Text style={styles.value}>{equipamento.codigo}</Text>
@@ -204,7 +207,7 @@ export function TicketPDF({ ticket, history = [] }: TicketPDFProps) {
           <View style={styles.section} wrap={false}>
             <Text style={styles.sectionTitle}>Histórico do Ticket</Text>
             {history.map((item, index) => (
-              <View key={index} style={styles.historyItem}>
+              <View key={`hist-${index}`} style={styles.historyItem}>
                 <Text style={styles.historyDate}>
                   {formatDateTime(item.created_at)} - por {item.created_by_user.name}
                 </Text>
@@ -219,4 +222,4 @@ export function TicketPDF({ ticket, history = [] }: TicketPDFProps) {
       </Page>
     </Document>
   );
-}
+};
