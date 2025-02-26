@@ -7,7 +7,7 @@ import { TicketDetails } from "@/components/tickets/TicketDetails";
 import { TicketStats } from "@/components/tickets/TicketStats";
 import { CreateTicketDialog } from "@/components/dashboard/CreateTicketDialog";
 import { RecentTickets } from "@/components/dashboard/RecentTickets";
-import { calculateUserStats } from "@/components/dashboard/UserStatsCalculator";
+import { calculateUserStats, calculateStatusCounts } from "@/components/dashboard/UserStatsCalculator";
 
 export default function Dashboard() {
   const { 
@@ -49,6 +49,9 @@ export default function Dashboard() {
 
   // Calcular stats dos usuários usando a função utilitária
   const userStats = calculateUserStats(tickets);
+  
+  // Calcular contagens de status
+  const statusCounts = calculateStatusCounts(tickets);
 
   const handleAssignSubmit = async () => {
     if (!editingTicket || !selectedUser) return;
@@ -77,10 +80,10 @@ export default function Dashboard() {
         <TicketStats 
           userStats={userStats}
           statusCounts={[
-            { status: 'PENDENTE', label: 'Pendente', count: 0 },
-            { status: 'EM_ANDAMENTO', label: 'Em Andamento', count: 0 },
-            { status: 'CONCLUIDO', label: 'Concluído', count: 0 },
-            { status: 'CANCELADO', label: 'Cancelado', count: 0 },
+            { status: 'PENDENTE', label: 'Pendente', count: statusCounts.PENDENTE },
+            { status: 'EM_ANDAMENTO', label: 'Em Andamento', count: statusCounts.EM_ANDAMENTO },
+            { status: 'CONCLUIDO', label: 'Concluído', count: statusCounts.CONCLUIDO },
+            { status: 'CANCELADO', label: 'Cancelado', count: statusCounts.CANCELADO },
           ]}
           filterUser={filterUser}
           filterStatus={filterStatus}

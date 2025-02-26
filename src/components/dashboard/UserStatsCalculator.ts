@@ -63,3 +63,37 @@ export function calculateUserStats(tickets: Ticket[] | undefined): UserStat[] {
     return acc;
   }, []) || [];
 }
+
+export function calculateStatusCounts(tickets: Ticket[] | undefined) {
+  const today = new Date();
+  const dayStart = startOfDay(today);
+  const dayEnd = endOfDay(today);
+  
+  // Inicializar contagens
+  const statusCounts = {
+    PENDENTE: 0,
+    EM_ANDAMENTO: 0,
+    CONCLUIDO: 0,
+    CANCELADO: 0,
+  };
+  
+  if (!tickets || tickets.length === 0) {
+    return statusCounts;
+  }
+  
+  return tickets.reduce((counts, ticket) => {
+    const ticketDate = parseISO(ticket.created_at);
+    const isToday = ticketDate >= dayStart && ticketDate <= dayEnd;
+    
+    // Para tickets CONCLUIDO e CANCELADO, contar apenas os de hoje
+    if ((ticket.status === 'CONCLUIDO' || ticket.status === 'CANCELADO') && !isToday) {
+      return counts;
+    }
+    
+    if (ticket.status in counts) {
+      counts[ticket.status as keyof typeof counts] += 1;
+    }
+    
+    return counts;
+  }, statusCounts);
+}

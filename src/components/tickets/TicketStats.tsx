@@ -53,37 +53,10 @@ export function TicketStats({
     }
   };
 
-  // Filtra o userStats para mostrar apenas tickets concluídos/cancelados do dia atual
-  const filteredUserStats = userStats.map(stat => {
-    const today = new Date();
-    const dayStart = startOfDay(today);
-    const dayEnd = endOfDay(today);
-
-    // Se o status for concluído ou cancelado, mostre apenas os do dia atual
-    return {
-      ...stat,
-      completed: 0, // Será atualizado apenas com os do dia
-      canceled: 0,  // Será atualizado apenas com os do dia
-    };
-  });
-
-  // Filtra os statusCounts para mostrar apenas tickets concluídos/cancelados do dia atual
-  const filteredStatusCounts = statusCounts.map(count => {
-    if (count.status === "CONCLUIDO" || count.status === "CANCELADO") {
-      const today = new Date();
-      // Retorna os status com contagem 0 para concluídos e cancelados que não são do dia
-      return {
-        ...count,
-        count: 0, // A contagem real virá do Dashboard
-      };
-    }
-    return count;
-  });
-
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        {filteredUserStats?.map(({ user, total, pending, inProgress, completed, canceled }) => (
+        {userStats?.map(({ user, total, pending, inProgress, completed, canceled }) => (
           <Card
             key={user.id}
             className={`cursor-pointer hover:opacity-80 transition-opacity ${
@@ -124,7 +97,7 @@ export function TicketStats({
       </div>
 
       <div className="grid grid-cols-4 gap-4 mb-8">
-        {filteredStatusCounts?.map((statusCount) => (
+        {statusCounts?.map((statusCount) => (
           <Card
             key={statusCount.status}
             className={`cursor-pointer hover:opacity-80 transition-opacity ${
