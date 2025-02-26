@@ -1,118 +1,114 @@
 
 import { useState } from "react";
+import { PDFDownloadLink } from "@react-pdf/renderer";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { Check, FileDown, Loader2, MoreHorizontal } from "lucide-react";
+import { useTicketActions } from "@/hooks/tickets/use-ticket-actions";
+import { Ticket, TicketHistory } from "@/types/ticket";
+import { TicketPDF } from "./TicketPDF";
 import { useQuery } from "@tanstack/react-query";
-import { SystemUser } from "@/types/ticket";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TicketProgressProps {
-  ticket: {
-    id: string;
-    status: string;
-  } | null;
+  ticket: Ticket;
   onSuccess: () => void;
 }
 
 export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
-  const [open, setOpen] = useState(false);
-  const [progress, setProgress] = useState("");
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { handleFaturarTicket } = useTicketActions([], () => {});
 
-  const { data: currentUser } = useQuery({
-    queryKey: ["system-users"],
+  // Buscar histórico do ticket para o PDF
+  const { data: ticketHistory } = useQuery({
+    queryKey: ["ticket-history-for-pdf", ticket.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("system_users")
-        .select("*")
-        .limit(1);
+        .from("ticket_history")
+        .select(`
+          *,
+          created_by_user:system_users!ticket_history_created_by_fkey(name),
+          previous_assigned_to_user:system_users!fk_previous_assigned_to(name),
+          new_assigned_to_user:system_users!fk_new_assigned_to(name)
+        `)
+        .eq("ticket_id", ticket.id)
+        .order("created_at", { ascending: false });
+
       if (error) throw error;
-      return data[0] as SystemUser;
+
+      return (data || []).map(item => ({
+        ...item,
+        action_type: item.action_type as "STATUS_CHANGE" | "USER_ASSIGNMENT"
+      })) as TicketHistory[];
     },
   });
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!ticket || !currentUser) return;
-
-    const historyData = {
-      ticket_id: ticket.id,
-      status: "EM_ANDAMENTO",
-      reason: progress,
-      created_by: currentUser.id,
-    };
-
-    const { error: historyError } = await supabase
-      .from("ticket_history")
-      .insert([historyData]);
-
-    if (historyError) {
+  const handleFaturar = async () => {
+    setLoading(true);
+    try {
+      const success = await handleFaturarTicket(ticket.id);
+      if (success) {
+        toast({
+          title: "Ticket faturado",
+          description: `O ticket ${ticket.codigo} foi marcado como faturado.`,
+        });
+        onSuccess();
+      }
+    } catch (error) {
+      console.error("Erro ao faturar ticket:", error);
       toast({
         variant: "destructive",
-        title: "Erro ao registrar andamento",
-        description: historyError.message,
+        title: "Erro ao faturar ticket",
+        description: "Não foi possível faturar este ticket.",
       });
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    // Atualiza o status do ticket para EM_ANDAMENTO
-    const { error: updateError } = await supabase
-      .from("tickets")
-      .update({ status: "EM_ANDAMENTO" })
-      .eq("id", ticket.id);
-
-    if (updateError) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao atualizar status",
-        description: updateError.message,
-      });
-      return;
-    }
-
-    toast({
-      title: "Andamento registrado com sucesso!",
-    });
-    setOpen(false);
-    setProgress("");
-    onSuccess();
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <Button 
-        variant="outline" 
-        onClick={() => setOpen(true)}
-      >
-        Registrar Andamento
-      </Button>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Registrar Andamento do Ticket</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label>Descrição do Andamento</Label>
-            <Textarea
-              value={progress}
-              onChange={(e) => setProgress(e.target.value)}
-              placeholder="Descreva o andamento do ticket..."
-              required
-            />
-          </div>
-          <Button type="submit" className="w-full">
-            Salvar
+    <div className="flex items-center gap-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="icon">
+            <MoreHorizontal className="h-4 w-4" />
           </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <PDFDownloadLink
+            document={<TicketPDF ticket={ticket} history={ticketHistory || []} />}
+            fileName={`ticket_${ticket.codigo}.pdf`}
+          >
+            {({ loading: pdfLoading }) => (
+              <DropdownMenuItem disabled={pdfLoading} onSelect={(e) => e.preventDefault()}>
+                {pdfLoading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <FileDown className="h-4 w-4 mr-2" />
+                )}
+                Baixar PDF
+              </DropdownMenuItem>
+            )}
+          </PDFDownloadLink>
+          {ticket.status === "CONCLUIDO" && !ticket.faturado && (
+            <DropdownMenuItem disabled={loading} onClick={handleFaturar}>
+              {loading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4 mr-2" />
+              )}
+              Marcar como Faturado
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }

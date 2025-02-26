@@ -59,17 +59,66 @@ const styles = StyleSheet.create({
     borderBottom: 1,
     borderColor: '#e0e0e0',
   },
+  historyItem: {
+    marginTop: 8,
+    padding: 8,
+    borderBottom: 1,
+    borderColor: '#e0e0e0',
+  },
+  historyDate: {
+    fontSize: 10,
+    color: '#666666',
+    marginBottom: 2,
+  },
+  historyText: {
+    fontSize: 11,
+  },
+  historyReason: {
+    fontSize: 10,
+    fontStyle: 'italic',
+    marginTop: 3,
+    color: '#444444',
+  },
 });
 
 interface TicketPDFProps {
   ticket: Ticket;
+  history?: any[];
 }
 
-export function TicketPDF({ ticket }: TicketPDFProps) {
+export function TicketPDF({ ticket, history = [] }: TicketPDFProps) {
   const formatDate = (date: string) => {
     if (!date) return "-";
     const formattedDate = new Date(date).toLocaleDateString('pt-BR');
     return formattedDate;
+  };
+
+  const formatDateTime = (date: string) => {
+    if (!date) return "-";
+    const formattedDate = new Date(date).toLocaleDateString('pt-BR');
+    const formattedTime = new Date(date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    return `${formattedDate} ${formattedTime}`;
+  };
+
+  const getStatusLabel = (status: string) => {
+    const statusMap: Record<string, string> = {
+      "PENDENTE": "Pendente",
+      "EM_ANDAMENTO": "Em Andamento",
+      "CONCLUIDO": "Concluído",
+      "CANCELADO": "Cancelado",
+      "FATURADO": "Faturado",
+    };
+    return statusMap[status] || status;
+  };
+
+  const getHistoryText = (item: any) => {
+    if (item.action_type === 'USER_ASSIGNMENT') {
+      const previousUser = item.previous_assigned_to_user?.name || "Nenhum usuário";
+      const newUser = item.new_assigned_to_user?.name || "Nenhum usuário";
+      return `Ticket reatribuído de ${previousUser} para ${newUser}`;
+    } else {
+      return `Status alterado para ${getStatusLabel(item.status)}`;
+    }
   };
 
   return (
@@ -79,7 +128,7 @@ export function TicketPDF({ ticket }: TicketPDFProps) {
           <Text style={styles.title}>Ordem de Serviço - {ticket.codigo}</Text>
           <View style={styles.row}>
             <Text style={styles.label}>Status:</Text>
-            <Text style={styles.value}>{ticket.status}</Text>
+            <Text style={styles.value}>{getStatusLabel(ticket.status)}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Data de Abertura:</Text>
@@ -137,6 +186,23 @@ export function TicketPDF({ ticket }: TicketPDFProps) {
                     <Text style={styles.label}>Observações:</Text>
                     <Text style={styles.value}>{equipamento.observacoes}</Text>
                   </View>
+                )}
+              </View>
+            ))}
+          </View>
+        )}
+
+        {history && history.length > 0 && (
+          <View style={styles.section} wrap={false}>
+            <Text style={styles.sectionTitle}>Histórico do Ticket</Text>
+            {history.map((item, index) => (
+              <View key={index} style={styles.historyItem}>
+                <Text style={styles.historyDate}>
+                  {formatDateTime(item.created_at)} - por {item.created_by_user.name}
+                </Text>
+                <Text style={styles.historyText}>{getHistoryText(item)}</Text>
+                {item.reason && (
+                  <Text style={styles.historyReason}>Motivo: {item.reason}</Text>
                 )}
               </View>
             ))}
