@@ -133,18 +133,25 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          {/* Corrigindo o PDFDownloadLink para que funcione corretamente */}
           <PDFDownloadLink
             document={<TicketPDF ticket={ticket} history={ticketHistory || []} />}
             fileName={`ticket_${ticket.codigo}.pdf`}
+            className="w-full"
           >
-            {({ loading: pdfLoading }) => (
-              <DropdownMenuItem disabled={pdfLoading} onSelect={(e) => e.preventDefault()}>
+            {({ loading: pdfLoading, error: pdfError }) => (
+              <DropdownMenuItem 
+                disabled={pdfLoading} 
+                onSelect={(e) => e.preventDefault()}
+                className="w-full cursor-pointer"
+              >
                 {pdfLoading ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
                   <FileDown className="h-4 w-4 mr-2" />
                 )}
                 Baixar PDF
+                {pdfError && console.error("Erro ao gerar PDF:", pdfError)}
               </DropdownMenuItem>
             )}
           </PDFDownloadLink>
@@ -165,6 +172,7 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
                         key={equip.id}
                         disabled={processingEquipment === equip.id}
                         onClick={() => equip.id && handleMarkEquipmentAsDelivered(equip.id, equip.codigo)}
+                        className="cursor-pointer"
                       >
                         {processingEquipment === equip.id ? (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -187,7 +195,11 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
           {ticket.status === "CONCLUIDO" && !ticket.faturado && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem disabled={loading} onClick={handleFaturar}>
+              <DropdownMenuItem 
+                disabled={loading} 
+                onClick={handleFaturar}
+                className="cursor-pointer"
+              >
                 {loading ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
