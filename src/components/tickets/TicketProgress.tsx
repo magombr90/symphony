@@ -7,9 +7,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { Check, FileDown, Loader2, MoreHorizontal } from "lucide-react";
+import { Check, FileDown, Loader2, MoreHorizontal, Package } from "lucide-react";
 import { useTicketActions } from "@/hooks/tickets/use-ticket-actions";
 import { Ticket, TicketHistory } from "@/types/ticket";
 import { TicketPDF } from "./TicketPDF";
@@ -23,6 +27,7 @@ interface TicketProgressProps {
 
 export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
   const [loading, setLoading] = useState(false);
+  const [processingEquipment, setProcessingEquipment] = useState<string | null>(null);
   const { toast } = useToast();
   const { handleFaturarTicket } = useTicketActions([], () => {});
 
@@ -45,7 +50,7 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
 
       return (data || []).map(item => ({
         ...item,
-        action_type: item.action_type as "STATUS_CHANGE" | "USER_ASSIGNMENT"
+        action_type: item.action_type as "STATUS_CHANGE" | "USER_ASSIGNMENT" | "EQUIPMENT_STATUS"
       })) as TicketHistory[];
     },
   });
@@ -53,14 +58,12 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
   const handleFaturar = async () => {
     setLoading(true);
     try {
-      const success = await handleFaturarTicket(ticket.id);
-      if (success) {
-        toast({
-          title: "Ticket faturado",
-          description: `O ticket ${ticket.codigo} foi marcado como faturado.`,
-        });
-        onSuccess();
-      }
+      await handleFaturarTicket(ticket.id);
+      toast({
+        title: "Ticket faturado",
+        description: `O ticket ${ticket.codigo} foi marcado como faturado.`,
+      });
+      onSuccess();
     } catch (error) {
       console.error("Erro ao faturar ticket:", error);
       toast({
@@ -70,6 +73,54 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMarkEquipmentAsDelivered = async (equipmentId: string, equipmentCode: string) => {
+    setProcessingEquipment(equipmentId);
+    try {
+      // Atualizar o status do equipamento
+      const { error: equipmentError } = await supabase
+        .from("equipamentos")
+        .update({ 
+          status: "ENTREGUE",
+          entregue_at: new Date().toISOString() 
+        })
+        .eq("id", equipmentId);
+
+      if (equipmentError) throw equipmentError;
+
+      // Registrar no histórico do ticket
+      const { error: historyError } = await supabase
+        .from("ticket_history")
+        .insert({
+          ticket_id: ticket.id,
+          status: ticket.status,
+          created_by: (await supabase.auth.getUser()).data.user?.id,
+          action_type: "EQUIPMENT_STATUS",
+          equipment_id: equipmentId,
+          equipment_codigo: equipmentCode,
+          equipment_status: "ENTREGUE",
+          reason: "Equipamento entregue ao cliente."
+        });
+
+      if (historyError) throw historyError;
+
+      toast({
+        title: "Equipamento entregue",
+        description: `O equipamento ${equipmentCode} foi marcado como entregue.`,
+      });
+      
+      onSuccess();
+    } catch (error) {
+      console.error("Erro ao marcar equipamento como entregue:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao atualizar equipamento",
+        description: "Não foi possível marcar o equipamento como entregue.",
+      });
+    } finally {
+      setProcessingEquipment(null);
     }
   };
 
@@ -97,15 +148,54 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
               </DropdownMenuItem>
             )}
           </PDFDownloadLink>
+
+          {ticket.equipamentos && ticket.equipamentos.length > 0 && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Package className="h-4 w-4 mr-2" />
+                  Marcar equipamento como entregue
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {ticket.equipamentos
+                    .filter(equip => equip.status !== "ENTREGUE" && equip.id)
+                    .map(equip => (
+                      <DropdownMenuItem 
+                        key={equip.id}
+                        disabled={processingEquipment === equip.id}
+                        onClick={() => equip.id && handleMarkEquipmentAsDelivered(equip.id, equip.codigo)}
+                      >
+                        {processingEquipment === equip.id ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Check className="h-4 w-4 mr-2" />
+                        )}
+                        {equip.codigo} - {equip.equipamento}
+                      </DropdownMenuItem>
+                    ))}
+                  {ticket.equipamentos.filter(equip => equip.status !== "ENTREGUE" && equip.id).length === 0 && (
+                    <DropdownMenuItem disabled>
+                      Nenhum equipamento pendente
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            </>
+          )}
+
           {ticket.status === "CONCLUIDO" && !ticket.faturado && (
-            <DropdownMenuItem disabled={loading} onClick={handleFaturar}>
-              {loading ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Check className="h-4 w-4 mr-2" />
-              )}
-              Marcar como Faturado
-            </DropdownMenuItem>
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem disabled={loading} onClick={handleFaturar}>
+                {loading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Check className="h-4 w-4 mr-2" />
+                )}
+                Marcar como Faturado
+              </DropdownMenuItem>
+            </>
           )}
         </DropdownMenuContent>
       </DropdownMenu>

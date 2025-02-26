@@ -107,6 +107,8 @@ export function TicketPDF({ ticket, history = [] }: TicketPDFProps) {
       "CONCLUIDO": "Concluído",
       "CANCELADO": "Cancelado",
       "FATURADO": "Faturado",
+      "RETIRADO": "Retirado",
+      "ENTREGUE": "Entregue",
     };
     return statusMap[status] || status;
   };
@@ -116,6 +118,8 @@ export function TicketPDF({ ticket, history = [] }: TicketPDFProps) {
       const previousUser = item.previous_assigned_to_user?.name || "Nenhum usuário";
       const newUser = item.new_assigned_to_user?.name || "Nenhum usuário";
       return `Ticket reatribuído de ${previousUser} para ${newUser}`;
+    } else if (item.action_type === 'EQUIPMENT_STATUS') {
+      return `Equipamento ${item.equipment_codigo} marcado como ${getStatusLabel(item.equipment_status)}`;
     } else {
       return `Status alterado para ${getStatusLabel(item.status)}`;
     }
@@ -140,75 +144,4 @@ export function TicketPDF({ ticket, history = [] }: TicketPDFProps) {
           </View>
         </View>
 
-        <View style={styles.clientInfo}>
-          <Text style={styles.sectionTitle}>Informações do Cliente</Text>
-          <View style={styles.row}>
-            <Text style={styles.label}>Cliente:</Text>
-            <Text style={styles.value}>{ticket.client.razao_social}</Text>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Detalhes do Atendimento</Text>
-          <View style={styles.row}>
-            <Text style={styles.label}>Descrição:</Text>
-            <Text style={styles.value}>{ticket.description}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Técnico Responsável:</Text>
-            <Text style={styles.value}>{ticket.assigned_user?.name || "Não atribuído"}</Text>
-          </View>
-        </View>
-
-        {ticket.equipamentos && ticket.equipamentos.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Equipamentos</Text>
-            {ticket.equipamentos.map((equipamento, index) => (
-              <View key={index} style={styles.equipment}>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Código:</Text>
-                  <Text style={styles.value}>{equipamento.codigo}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Equipamento:</Text>
-                  <Text style={styles.value}>{equipamento.equipamento}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Nº de Série:</Text>
-                  <Text style={styles.value}>{equipamento.numero_serie || "-"}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text style={styles.label}>Condição:</Text>
-                  <Text style={styles.value}>{equipamento.condicao}</Text>
-                </View>
-                {equipamento.observacoes && (
-                  <View style={styles.row}>
-                    <Text style={styles.label}>Observações:</Text>
-                    <Text style={styles.value}>{equipamento.observacoes}</Text>
-                  </View>
-                )}
-              </View>
-            ))}
-          </View>
-        )}
-
-        {history && history.length > 0 && (
-          <View style={styles.section} wrap={false}>
-            <Text style={styles.sectionTitle}>Histórico do Ticket</Text>
-            {history.map((item, index) => (
-              <View key={index} style={styles.historyItem}>
-                <Text style={styles.historyDate}>
-                  {formatDateTime(item.created_at)} - por {item.created_by_user.name}
-                </Text>
-                <Text style={styles.historyText}>{getHistoryText(item)}</Text>
-                {item.reason && (
-                  <Text style={styles.historyReason}>Motivo: {item.reason}</Text>
-                )}
-              </View>
-            ))}
-          </View>
-        )}
-      </Page>
-    </Document>
-  );
-}
+        

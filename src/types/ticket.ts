@@ -27,11 +27,14 @@ export type Ticket = {
   faturado: boolean;
   faturado_at: string | null;
   equipamentos?: Array<{
+    id?: string;
     codigo: string;
     equipamento: string;
     numero_serie: string | null;
     condicao: string;
     observacoes: string | null;
+    status?: "RETIRADO" | "ENTREGUE";
+    entregue_at?: string | null;
   }>;
 };
 
@@ -45,7 +48,7 @@ export type TicketHistory = {
   created_by_user: {
     name: string;
   };
-  action_type: "STATUS_CHANGE" | "USER_ASSIGNMENT";
+  action_type: "STATUS_CHANGE" | "USER_ASSIGNMENT" | "EQUIPMENT_STATUS";
   previous_assigned_to: string | null;
   new_assigned_to: string | null;
   previous_assigned_to_user?: {
@@ -54,6 +57,9 @@ export type TicketHistory = {
   new_assigned_to_user?: {
     name: string;
   } | null;
+  equipment_id?: string;
+  equipment_codigo?: string;
+  equipment_status?: "RETIRADO" | "ENTREGUE";
 };
 
 export type Client = {

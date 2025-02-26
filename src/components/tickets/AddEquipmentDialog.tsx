@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { useAuth } from "@/hooks/use-auth";
 
 interface AddEquipmentDialogProps {
   clientId: string;
@@ -39,6 +40,7 @@ export function AddEquipmentDialog({
     observacoes: "",
   });
   const { toast } = useToast();
+  const { currentUser } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -51,6 +53,7 @@ export function AddEquipmentDialog({
         condicao: equipmentForm.condicao,
         observacoes: equipmentForm.observacoes || null,
         codigo: "TEMP", // Valor temporário que será substituído pelo trigger
+        status: "RETIRADO", // Status inicial para todos os equipamentos
         ...(ticketId ? { ticket_id: ticketId } : {})
       };
 
@@ -61,6 +64,29 @@ export function AddEquipmentDialog({
         .single();
 
       if (error) throw error;
+
+      // Se tiver ticket_id, registrar no histórico do ticket
+      if (ticketId && currentUser) {
+        const historyData = {
+          ticket_id: ticketId,
+          status: "EM_ANDAMENTO", // Assumindo que o ticket está em andamento quando equipamentos são retirados
+          created_by: currentUser.id,
+          action_type: "EQUIPMENT_STATUS",
+          equipment_id: data.id,
+          equipment_codigo: data.codigo,
+          equipment_status: "RETIRADO",
+          reason: "Equipamento retirado do cliente."
+        };
+
+        const { error: historyError } = await supabase
+          .from("ticket_history")
+          .insert([historyData]);
+
+        if (historyError) {
+          console.error("Erro ao registrar histórico:", historyError);
+          // Não interrompe o fluxo, apenas loga o erro
+        }
+      }
 
       toast({
         title: "Equipamento cadastrado com sucesso!",

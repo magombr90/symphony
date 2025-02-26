@@ -60,8 +60,21 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
         "Nenhum usuário";
       const newUser = item.new_assigned_to_user?.name;
       return `Ticket reatribuído de ${previousUser} para ${newUser}`;
+    } else if (item.action_type === 'EQUIPMENT_STATUS') {
+      return `Equipamento ${item.equipment_codigo} marcado como ${item.equipment_status === 'ENTREGUE' ? 'ENTREGUE' : 'RETIRADO'}`;
     } else {
       return `Status alterado para ${statusOptions.find(s => s.value === item.status)?.label}`;
+    }
+  };
+
+  const getEquipmentStatusColor = (status?: string) => {
+    switch (status) {
+      case "RETIRADO":
+        return "bg-blue-500";
+      case "ENTREGUE":
+        return "bg-green-500";
+      default:
+        return "bg-gray-500";
     }
   };
 
@@ -103,7 +116,7 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
           </div>
 
           <div>
-            <Label className="block mb-3">Equipamentos Retirados</Label>
+            <Label className="block mb-3">Equipamentos</Label>
             {ticket.equipamentos && ticket.equipamentos.length > 0 ? (
               <div className="border rounded-lg overflow-hidden">
                 <Table>
@@ -113,6 +126,7 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
                       <TableHead>Equipamento</TableHead>
                       <TableHead>Nº de Série</TableHead>
                       <TableHead>Condição</TableHead>
+                      <TableHead>Status</TableHead>
                       <TableHead>Observações</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -123,6 +137,11 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
                         <TableCell>{equip.equipamento}</TableCell>
                         <TableCell>{equip.numero_serie || "-"}</TableCell>
                         <TableCell>{equip.condicao}</TableCell>
+                        <TableCell>
+                          <Badge className={getEquipmentStatusColor(equip.status)}>
+                            {equip.status || "RETIRADO"}
+                          </Badge>
+                        </TableCell>
                         <TableCell>{equip.observacoes || "-"}</TableCell>
                       </TableRow>
                     ))}
