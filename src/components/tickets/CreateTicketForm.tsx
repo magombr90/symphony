@@ -62,6 +62,7 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
   }, [searchTerm, clients]);
 
   const handleClientSelect = (client: { id: string; razao_social: string }) => {
+    console.log('Cliente selecionado:', client); // Para debug
     setSelectedClient(client.id);
     setSelectedClientLabel(client.razao_social);
     setIsSearchOpen(false);
@@ -163,7 +164,7 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
               role="combobox"
               aria-expanded={isSearchOpen}
               className="w-full justify-between"
-              type="button" // Importante para evitar que o botão submeta o formulário
+              type="button"
             >
               {selectedClient
                 ? selectedClientLabel
@@ -188,7 +189,11 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
                         key={client.id}
                         variant="ghost"
                         className="justify-start text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors py-3"
-                        onClick={() => handleClientSelect(client)}
+                        onClick={(e) => {
+                          e.preventDefault(); // Previne o comportamento padrão do botão
+                          console.log('Clicou no cliente:', client); // Para debug
+                          handleClientSelect(client);
+                        }}
                         type="button"
                       >
                         <div className="flex flex-col items-start">
@@ -218,6 +223,7 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
         )}
       </div>
 
+      {/* Resto do formulário permanece o mesmo */}
       {selectedClient && (
         <div>
           <AddEquipmentDialog 
