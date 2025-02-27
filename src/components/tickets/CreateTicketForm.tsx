@@ -65,11 +65,21 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
     setSelectedClient(client.id);
     setSelectedClientLabel(client.razao_social);
     setIsSearchOpen(false);
+    setSearchTerm(""); // Limpar o termo de busca após a seleção
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+
+    if (!selectedClient) {
+      toast({
+        variant: "destructive",
+        title: "Cliente não selecionado",
+        description: "Por favor, selecione um cliente para o ticket.",
+      });
+      return;
+    }
 
     const scheduledForValue = formData.get("scheduled_for");
     
@@ -153,6 +163,7 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
               role="combobox"
               aria-expanded={isSearchOpen}
               className="w-full justify-between"
+              type="button" // Importante para evitar que o botão submeta o formulário
             >
               {selectedClient
                 ? selectedClientLabel
@@ -160,7 +171,7 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
               <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-full p-0" align="start">
+          <PopoverContent className="w-full p-0 max-w-[400px]" align="start">
             <div className="flex flex-col p-2 gap-2">
               <Input
                 placeholder="Buscar por razão social ou CNPJ..."
@@ -176,8 +187,9 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
                       <Button
                         key={client.id}
                         variant="ghost"
-                        className="justify-start text-left"
+                        className="justify-start text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors py-3"
                         onClick={() => handleClientSelect(client)}
+                        type="button"
                       >
                         <div className="flex flex-col items-start">
                           <span className="font-medium">{client.razao_social}</span>
@@ -199,6 +211,11 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
             </div>
           </PopoverContent>
         </Popover>
+        {selectedClient && (
+          <p className="text-sm text-muted-foreground mt-1">
+            Cliente selecionado: <span className="font-medium">{selectedClientLabel}</span>
+          </p>
+        )}
       </div>
 
       {selectedClient && (
