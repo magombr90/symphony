@@ -139,23 +139,21 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
             fileName={`ticket_${ticket.codigo}.pdf`}
             className="w-full"
           >
-            {({ loading: pdfLoading, error: pdfError }) => {
-              if (pdfError) console.error("Erro ao gerar PDF:", pdfError);
-              return (
-                <DropdownMenuItem 
-                  disabled={pdfLoading} 
-                  onSelect={(e) => e.preventDefault()}
-                  className="w-full cursor-pointer"
-                >
-                  {pdfLoading ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <FileDown className="h-4 w-4 mr-2" />
-                  )}
-                  Baixar PDF
-                </DropdownMenuItem>
-              );
-            }}
+            {({ loading: pdfLoading, error: pdfError }) => (
+              <DropdownMenuItem 
+                disabled={pdfLoading} 
+                onSelect={(e) => e.preventDefault()}
+                className="w-full cursor-pointer"
+              >
+                {pdfLoading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <FileDown className="h-4 w-4 mr-2" />
+                )}
+                Baixar PDF
+                {pdfError && console.error("Erro ao gerar PDF:", pdfError)}
+              </DropdownMenuItem>
+            )}
           </PDFDownloadLink>
 
           {ticket.equipamentos && ticket.equipamentos.length > 0 && (

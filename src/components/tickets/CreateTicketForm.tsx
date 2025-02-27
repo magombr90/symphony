@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,18 +10,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AddEquipmentDialog } from "./AddEquipmentDialog";
-import { Search } from "lucide-react";
 
 interface CreateTicketFormProps {
-  clients: Array<{ id: string; razao_social: string; cnpj: string }>;
+  clients: Array<{ id: string; razao_social: string }>;
   systemUsers: Array<{ id: string; name: string }>;
   onSuccess: () => void;
 }
@@ -38,49 +32,11 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
   const [selectedClient, setSelectedClient] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
   const [newTicket, setNewTicket] = useState<{ id: string; codigo: string } | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState<Array<{ id: string; razao_social: string; cnpj: string }>>([]);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [selectedClientLabel, setSelectedClientLabel] = useState("");
   const { toast } = useToast();
-
-  // Efeito para filtrar clientes baseado no termo de busca
-  useEffect(() => {
-    if (searchTerm.trim() === "") {
-      setSearchResults([]);
-      return;
-    }
-
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    const filtered = clients.filter(
-      client => 
-        client.razao_social.toLowerCase().includes(lowerSearchTerm) || 
-        (client.cnpj && client.cnpj.includes(searchTerm))
-    );
-    
-    setSearchResults(filtered);
-  }, [searchTerm, clients]);
-
-  const handleClientSelect = (client: { id: string; razao_social: string }) => {
-    console.log('Cliente selecionado:', client); // Para debug
-    setSelectedClient(client.id);
-    setSelectedClientLabel(client.razao_social);
-    setIsSearchOpen(false);
-    setSearchTerm(""); // Limpar o termo de busca após a seleção
-  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-
-    if (!selectedClient) {
-      toast({
-        variant: "destructive",
-        title: "Cliente não selecionado",
-        description: "Por favor, selecione um cliente para o ticket.",
-      });
-      return;
-    }
 
     const scheduledForValue = formData.get("scheduled_for");
     
@@ -157,62 +113,22 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <Label>Cliente</Label>
-        <Popover open={isSearchOpen} onOpenChange={setIsSearchOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={isSearchOpen}
-              className="w-full justify-between"
-              type="button"
-            >
-              {selectedClient
-                ? selectedClientLabel
-                : "Buscar cliente..."}
-              <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-full p-0" align="start">
-            <div className="flex flex-col p-2 gap-2">
-              <Input
-                placeholder="Buscar por razão social ou CNPJ..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="mb-2"
-                autoFocus
-              />
-              <div className="max-h-60 overflow-y-auto">
-                {searchResults.length > 0 ? (
-                  <ul className="flex flex-col gap-1">
-                    {searchResults.map((client) => (
-                      <li 
-                        key={client.id}
-                        className="p-3 hover:bg-accent rounded cursor-pointer"
-                        onClick={() => handleClientSelect(client)}
-                      >
-                        <strong>{client.razao_social}</strong>
-                        {client.cnpj && <div className="text-xs text-muted-foreground">CNPJ: {client.cnpj}</div>}
-                      </li>
-                    ))}
-                  </ul>
-                ) : searchTerm.trim() !== "" ? (
-                  <div className="py-6 text-center text-sm text-muted-foreground">
-                    Nenhum cliente encontrado.
-                  </div>
-                ) : (
-                  <div className="py-6 text-center text-sm text-muted-foreground">
-                    Digite para buscar um cliente.
-                  </div>
-                )}
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-        {selectedClient && (
-          <p className="text-sm text-muted-foreground mt-1">
-            Cliente selecionado: <span className="font-medium">{selectedClientLabel}</span>
-          </p>
-        )}
+        <Select
+          value={selectedClient}
+          onValueChange={setSelectedClient}
+          required
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione um cliente" />
+          </SelectTrigger>
+          <SelectContent>
+            {(clients || []).map((client) => (
+              <SelectItem key={client.id} value={client.id}>
+                {client.razao_social}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {selectedClient && (
