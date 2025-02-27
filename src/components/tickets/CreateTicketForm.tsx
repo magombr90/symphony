@@ -172,7 +172,7 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
               <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-full p-0 max-w-[400px]" align="start">
+          <PopoverContent className="w-full p-0" align="start">
             <div className="flex flex-col p-2 gap-2">
               <Input
                 placeholder="Buscar por razão social ou CNPJ..."
@@ -183,23 +183,18 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
               />
               <div className="max-h-60 overflow-y-auto">
                 {searchResults.length > 0 ? (
-                  <div className="flex flex-col gap-1">
+                  <ul className="flex flex-col gap-1">
                     {searchResults.map((client) => (
-                      <div
+                      <li 
                         key={client.id}
-                        className="w-full p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded cursor-pointer transition-colors"
-                        onClick={() => {
-                          console.log('Clicou no cliente div:', client);
-                          handleClientSelect(client);
-                        }}
+                        className="p-3 hover:bg-accent rounded cursor-pointer"
+                        onClick={() => handleClientSelect(client)}
                       >
-                        <div className="flex flex-col items-start">
-                          <span className="font-medium">{client.razao_social}</span>
-                          {client.cnpj && <span className="text-xs text-muted-foreground">CNPJ: {client.cnpj}</span>}
-                        </div>
-                      </div>
+                        <strong>{client.razao_social}</strong>
+                        {client.cnpj && <div className="text-xs text-muted-foreground">CNPJ: {client.cnpj}</div>}
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 ) : searchTerm.trim() !== "" ? (
                   <div className="py-6 text-center text-sm text-muted-foreground">
                     Nenhum cliente encontrado.
@@ -220,7 +215,6 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
         )}
       </div>
 
-      {/* Resto do formulário permanece o mesmo */}
       {selectedClient && (
         <div>
           <AddEquipmentDialog 
