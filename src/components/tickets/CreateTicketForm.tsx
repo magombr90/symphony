@@ -185,22 +185,19 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
                 {searchResults.length > 0 ? (
                   <div className="flex flex-col gap-1">
                     {searchResults.map((client) => (
-                      <Button
+                      <div
                         key={client.id}
-                        variant="ghost"
-                        className="justify-start text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors py-3"
-                        onClick={(e) => {
-                          e.preventDefault(); // Previne o comportamento padrão do botão
-                          console.log('Clicou no cliente:', client); // Para debug
+                        className="w-full p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded cursor-pointer transition-colors"
+                        onClick={() => {
+                          console.log('Clicou no cliente div:', client);
                           handleClientSelect(client);
                         }}
-                        type="button"
                       >
                         <div className="flex flex-col items-start">
                           <span className="font-medium">{client.razao_social}</span>
                           {client.cnpj && <span className="text-xs text-muted-foreground">CNPJ: {client.cnpj}</span>}
                         </div>
-                      </Button>
+                      </div>
                     ))}
                   </div>
                 ) : searchTerm.trim() !== "" ? (
