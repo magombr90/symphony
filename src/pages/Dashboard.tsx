@@ -8,6 +8,7 @@ import { TicketStats } from "@/components/tickets/TicketStats";
 import { CreateTicketDialog } from "@/components/dashboard/CreateTicketDialog";
 import { RecentTickets } from "@/components/dashboard/RecentTickets";
 import { calculateUserStats, calculateStatusCounts } from "@/components/dashboard/UserStatsCalculator";
+import { ReasonDialog } from "@/components/tickets/ReasonDialog";
 
 export default function Dashboard() {
   const { 
@@ -21,12 +22,19 @@ export default function Dashboard() {
     selectedUser,
     setSelectedUser,
     handleAssignTicket,
+    handleStatusChange,
+    showReasonDialog,
+    setShowReasonDialog,
+    reason,
+    setReason,
+    editingTicket,
+    handleReasonSubmit
   } = useTickets();
 
   const [filterUser, setFilterUser] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
-  const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
+  const [ticketToAssign, setTicketToAssign] = useState<Ticket | null>(null);
   const [selectedTicketDetails, setSelectedTicketDetails] = useState<Ticket | null>(null);
 
   // Aplicar filtros aos tickets
@@ -54,11 +62,11 @@ export default function Dashboard() {
   const statusCounts = calculateStatusCounts(tickets);
 
   const handleAssignSubmit = async () => {
-    if (!editingTicket || !selectedUser) return;
-    const success = await handleAssignTicket(editingTicket.id, selectedUser, editingTicket.assigned_to);
+    if (!ticketToAssign || !selectedUser) return;
+    const success = await handleAssignTicket(ticketToAssign.id, selectedUser, ticketToAssign.assigned_to);
     if (success) {
       setShowAssignDialog(false);
-      setEditingTicket(null);
+      setTicketToAssign(null);
       setSelectedUser(null);
     }
   };
@@ -95,16 +103,17 @@ export default function Dashboard() {
           tickets={recentTickets}
           onViewDetails={setSelectedTicketDetails}
           onAssign={(ticket: Ticket) => {
-            setEditingTicket(ticket);
+            setTicketToAssign(ticket);
             setShowAssignDialog(true);
           }}
+          onStatusChange={handleStatusChange}
         />
       </div>
 
       <AssignDialog
         open={showAssignDialog}
         onOpenChange={setShowAssignDialog}
-        ticket={editingTicket}
+        ticket={ticketToAssign}
         users={systemUsers || []}
         selectedUser={selectedUser}
         onUserChange={setSelectedUser}
@@ -115,6 +124,15 @@ export default function Dashboard() {
         ticket={selectedTicketDetails}
         history={ticketHistory || []}
         onClose={() => setSelectedTicketDetails(null)}
+      />
+
+      <ReasonDialog
+        open={showReasonDialog}
+        onOpenChange={setShowReasonDialog}
+        reason={reason}
+        onReasonChange={setReason}
+        onSubmit={handleReasonSubmit}
+        status={editingTicket?.status}
       />
     </div>
   );

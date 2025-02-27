@@ -7,9 +7,10 @@ interface RecentTicketsProps {
   tickets: Ticket[];
   onViewDetails: (ticket: Ticket) => void;
   onAssign: (ticket: Ticket) => void;
+  onStatusChange: (ticketId: string, newStatus: string) => void;
 }
 
-export function RecentTickets({ tickets, onViewDetails, onAssign }: RecentTicketsProps) {
+export function RecentTickets({ tickets, onViewDetails, onAssign, onStatusChange }: RecentTicketsProps) {
   return (
     <Card>
       <div className="p-6">
@@ -23,7 +24,7 @@ export function RecentTickets({ tickets, onViewDetails, onAssign }: RecentTicket
         </h2>
         <TicketsTable 
           tickets={tickets} 
-          onStatusChange={() => {}} 
+          onStatusChange={onStatusChange} 
           onViewDetails={onViewDetails}
           onAssign={onAssign}
         />
