@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Client } from "@/types/ticket";
 import { Pencil } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Equipment {
   id: string;
@@ -25,6 +26,7 @@ interface Equipment {
   observacoes: string | null;
   client_id: string;
   ticket_id: string | null;
+  status?: string | null;
 }
 
 interface EditEquipmentDialogProps {
@@ -45,6 +47,7 @@ export function EditEquipmentDialog({
     condicao: "NOVO" as "NOVO" | "USADO" | "DEFEITO",
     observacoes: "",
     client_id: "",
+    status: "" as "RETIRADO" | "ENTREGUE" | "",
   });
   const { toast } = useToast();
 
@@ -56,6 +59,7 @@ export function EditEquipmentDialog({
         condicao: equipment.condicao,
         observacoes: equipment.observacoes || "",
         client_id: equipment.client_id,
+        status: equipment.status as "RETIRADO" | "ENTREGUE" | "" || "RETIRADO",
       });
     }
   }, [equipment]);
@@ -73,15 +77,27 @@ export function EditEquipmentDialog({
     }
 
     try {
+      const updateData: any = {
+        equipamento: equipmentForm.equipamento,
+        numero_serie: equipmentForm.numero_serie || null,
+        condicao: equipmentForm.condicao,
+        observacoes: equipmentForm.observacoes || null,
+        client_id: equipmentForm.client_id,
+      };
+      
+      // Adicionar status apenas se foi alterado
+      if (equipmentForm.status && equipmentForm.status !== equipment.status) {
+        updateData.status = equipmentForm.status;
+        
+        // Se o status for ENTREGUE, adicionar a data de entrega
+        if (equipmentForm.status === "ENTREGUE") {
+          updateData.entregue_at = new Date().toISOString();
+        }
+      }
+
       const { error } = await supabase
         .from("equipamentos")
-        .update({
-          equipamento: equipmentForm.equipamento,
-          numero_serie: equipmentForm.numero_serie || null,
-          condicao: equipmentForm.condicao,
-          observacoes: equipmentForm.observacoes || null,
-          client_id: equipmentForm.client_id,
-        })
+        .update(updateData)
         .eq("id", equipment.id);
 
       if (error) throw error;
@@ -133,6 +149,23 @@ export function EditEquipmentDialog({
               ))}
             </select>
           </div>
+          
+          <div>
+            <Label htmlFor="status">Status</Label>
+            <Select
+              value={equipmentForm.status}
+              onValueChange={(value) => setEquipmentForm(prev => ({ ...prev, status: value as "RETIRADO" | "ENTREGUE" | "" }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="RETIRADO">Retirado</SelectItem>
+                <SelectItem value="ENTREGUE">Entregue</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
           <div>
             <Label htmlFor="equipamento">Equipamento</Label>
             <Input
