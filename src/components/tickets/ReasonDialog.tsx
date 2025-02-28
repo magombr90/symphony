@@ -8,25 +8,30 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Ticket } from "@/types/ticket";
 
 interface ReasonDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  editingTicket: Ticket | null;
   reason: string;
   onReasonChange: (reason: string) => void;
   onSubmit: () => void;
+  status?: string;
+  editingTicket?: { status: string } | null;
 }
 
 export function ReasonDialog({
   open,
   onOpenChange,
-  editingTicket,
   reason,
   onReasonChange,
   onSubmit,
+  status,
+  editingTicket,
 }: ReasonDialogProps) {
+  // Determinar o status do ticket, primeiro verificando o prop status direto,
+  // depois tentando obter de editingTicket se disponível
+  const ticketStatus = status || (editingTicket?.status);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (reason.trim()) {
@@ -39,7 +44,7 @@ export function ReasonDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {editingTicket?.status === "CANCELADO"
+            {ticketStatus === "CANCELADO"
               ? "Motivo do Cancelamento"
               : "Motivo da Conclusão"}
           </DialogTitle>

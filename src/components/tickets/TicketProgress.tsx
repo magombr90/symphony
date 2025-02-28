@@ -133,28 +133,27 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          {/* Corrigindo o PDFDownloadLink para que funcione corretamente */}
-          <PDFDownloadLink
-            document={<TicketPDF ticket={ticket} history={ticketHistory || []} />}
-            fileName={`ticket_${ticket.codigo}.pdf`}
-            className="w-full"
-          >
-            {({ loading: pdfLoading, error: pdfError }) => (
-              <DropdownMenuItem 
-                disabled={pdfLoading} 
-                onSelect={(e) => e.preventDefault()}
-                className="w-full cursor-pointer"
+          {/* PDF Download Link */}
+          {ticketHistory && (
+            <DropdownMenuItem className="w-full cursor-pointer" onSelect={(e) => e.preventDefault()}>
+              <PDFDownloadLink
+                document={<TicketPDF ticket={ticket} history={ticketHistory || []} />}
+                fileName={`ticket_${ticket.codigo}.pdf`}
+                className="flex w-full items-center"
               >
-                {pdfLoading ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <FileDown className="h-4 w-4 mr-2" />
+                {({ loading: pdfLoading }) => (
+                  <>
+                    {pdfLoading ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <FileDown className="h-4 w-4 mr-2" />
+                    )}
+                    Baixar PDF
+                  </>
                 )}
-                Baixar PDF
-                {pdfError && console.error("Erro ao gerar PDF:", pdfError)}
-              </DropdownMenuItem>
-            )}
-          </PDFDownloadLink>
+              </PDFDownloadLink>
+            </DropdownMenuItem>
+          )}
 
           {ticket.equipamentos && ticket.equipamentos.length > 0 && (
             <>

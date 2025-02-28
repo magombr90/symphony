@@ -132,7 +132,7 @@ export default function Dashboard() {
         reason={reason}
         onReasonChange={setReason}
         onSubmit={handleReasonSubmit}
-        status={editingTicket?.status}
+        editingTicket={editingTicket}
       />
     </div>
   );
