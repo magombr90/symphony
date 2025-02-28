@@ -13,18 +13,16 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
 import { Client } from "@/types/ticket";
+import { PlusCircle } from "lucide-react";
 
 interface CreateEquipmentDialogProps {
   clients: Client[];
   onSuccess: () => void;
 }
 
-type EquipmentInsert = Database['public']['Tables']['equipamentos']['Insert'];
-
 export function CreateEquipmentDialog({ 
-  clients, 
+  clients = [],
   onSuccess 
 }: CreateEquipmentDialogProps) {
   const [open, setOpen] = useState(false);
@@ -50,26 +48,22 @@ export function CreateEquipmentDialog({
     }
 
     try {
-      const insertData: EquipmentInsert = {
-        client_id: equipmentForm.client_id,
-        equipamento: equipmentForm.equipamento,
-        numero_serie: equipmentForm.numero_serie || null,
-        condicao: equipmentForm.condicao,
-        observacoes: equipmentForm.observacoes || null,
-        codigo: "TEMP", // Valor temporário que será substituído pelo trigger
-      };
-
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("equipamentos")
-        .insert([insertData])
-        .select('id, codigo')
-        .single();
+        .insert([{
+          equipamento: equipmentForm.equipamento,
+          numero_serie: equipmentForm.numero_serie || null,
+          condicao: equipmentForm.condicao,
+          observacoes: equipmentForm.observacoes || null,
+          client_id: equipmentForm.client_id,
+          codigo: "TEMP", // Valor temporário que será substituído pelo trigger
+          status: "RETIRADO" // Status inicial para todos os equipamentos
+        }]);
 
       if (error) throw error;
 
       toast({
         title: "Equipamento cadastrado com sucesso!",
-        description: `Equipamento ${data.codigo} cadastrado`,
       });
 
       setEquipmentForm({
@@ -92,9 +86,8 @@ export function CreateEquipmentDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Button 
-        onClick={() => setOpen(true)}
-      >
+      <Button onClick={() => setOpen(true)}>
+        <PlusCircle className="h-4 w-4 mr-2" />
         Novo Equipamento
       </Button>
       <DialogContent>
@@ -146,16 +139,16 @@ export function CreateEquipmentDialog({
               className="flex space-x-4"
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="NOVO" id="novo" />
-                <Label htmlFor="novo">Novo</Label>
+                <RadioGroupItem value="NOVO" id="create-novo" />
+                <Label htmlFor="create-novo">Novo</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="USADO" id="usado" />
-                <Label htmlFor="usado">Usado</Label>
+                <RadioGroupItem value="USADO" id="create-usado" />
+                <Label htmlFor="create-usado">Usado</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="DEFEITO" id="defeito" />
-                <Label htmlFor="defeito">Defeito</Label>
+                <RadioGroupItem value="DEFEITO" id="create-defeito" />
+                <Label htmlFor="create-defeito">Defeito</Label>
               </div>
             </RadioGroup>
           </div>
