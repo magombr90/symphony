@@ -82,8 +82,8 @@ export function useTicketQueries(
         // Type assertion is used to tell TypeScript these properties exist or will be set to null
         const typedTicket = {
           ...ticket,
-          started_at: null, // Default to null if not present
-          time_spent: null, // Default to null if not present
+          started_at: ticket.started_at || null, // Default to null if not present
+          time_spent: ticket.time_spent || null, // Default to null if not present
           equipamentos: ticketEquipments.map(eq => ({
             id: eq.id,
             codigo: eq.codigo,
