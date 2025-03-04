@@ -13,12 +13,13 @@ import {
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { Check, FileDown, Loader2, MoreHorizontal, Package } from "lucide-react";
+import { Check, FileDown, Loader2, MoreHorizontal, Package, Timer } from "lucide-react";
 import { useTicketActions } from "@/hooks/tickets/use-ticket-actions";
 import { Ticket, TicketHistory } from "@/types/ticket";
 import { TicketPDF } from "./TicketPDF";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 
 interface TicketProgressProps {
   ticket: Ticket;
@@ -88,8 +89,28 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
     }
   };
 
+  // Function to format time spent (minutes) into a readable format
+  const formatTimeSpent = (minutes: number | null) => {
+    if (!minutes) return "N/A";
+    
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = Math.floor(minutes % 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${remainingMinutes}min`;
+    }
+    return `${remainingMinutes}min`;
+  };
+
   return (
     <div className="flex items-center gap-2">
+      {ticket.status === "EM_ANDAMENTO" && ticket.started_at && (
+        <div className="text-xs text-muted-foreground flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-md">
+          <Timer className="h-3 w-3" />
+          <span>Em andamento desde {format(new Date(ticket.started_at), "dd/MM HH:mm")}</span>
+        </div>
+      )}
+      
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon">

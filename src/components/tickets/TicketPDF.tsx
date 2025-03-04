@@ -81,6 +81,11 @@ const styles = StyleSheet.create({
     marginTop: 3,
     color: '#444444',
   },
+  timeSpent: {
+    fontSize: 10,
+    marginTop: 3,
+    color: '#0066cc',
+  },
 });
 
 interface TicketPDFProps {
@@ -124,8 +129,21 @@ export const TicketPDF: React.FC<TicketPDFProps> = ({ ticket, history = [] }) =>
     } else if (item.action_type === 'EQUIPMENT_STATUS') {
       return `Equipamento ${item.equipment_codigo} marcado como ${getStatusLabel(item.equipment_status)}`;
     } else {
-      return `Status alterado para ${getStatusLabel(item.status)}`;
+      const fromStatus = item.previous_status ? `de ${getStatusLabel(item.previous_status)}` : '';
+      return `Status alterado ${fromStatus} para ${getStatusLabel(item.status)}`;
     }
+  };
+
+  const formatTimeSpent = (minutes: number | null) => {
+    if (!minutes) return null;
+    
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = Math.floor(minutes % 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${remainingMinutes}min`;
+    }
+    return `${remainingMinutes}min`;
   };
 
   return (
@@ -145,6 +163,12 @@ export const TicketPDF: React.FC<TicketPDFProps> = ({ ticket, history = [] }) =>
             <Text style={styles.label}>Agendado para:</Text>
             <Text style={styles.value}>{formatDate(ticket.scheduled_for)}</Text>
           </View>
+          {ticket.time_spent && (
+            <View style={styles.row}>
+              <Text style={styles.label}>Tempo em andamento:</Text>
+              <Text style={styles.value}>{formatTimeSpent(ticket.time_spent)}</Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.clientInfo}>
@@ -214,6 +238,9 @@ export const TicketPDF: React.FC<TicketPDFProps> = ({ ticket, history = [] }) =>
                 <Text style={styles.historyText}>{getHistoryText(item)}</Text>
                 {item.reason && (
                   <Text style={styles.historyReason}>Motivo: {item.reason}</Text>
+                )}
+                {item.previous_status === "EM_ANDAMENTO" && item.time_spent && (
+                  <Text style={styles.timeSpent}>Tempo em andamento: {formatTimeSpent(item.time_spent)}</Text>
                 )}
               </View>
             ))}

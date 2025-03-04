@@ -1,233 +1,208 @@
-
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { SystemUser } from "@/types/ticket";
-import { useAuth } from "@/hooks/use-auth";
+import { Ticket } from "@/types/ticket";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../use-auth";
 
-export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch: () => void) {
+export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
   const { toast } = useToast();
-  const { isAdmin, currentUser } = useAuth();
+  const { currentUser } = useAuth();
+  const queryClient = useQueryClient();
+
+  const handleStatusChange = async (ticketId: string, newStatus: string, oldStatus: string, reason?: string) => {
+    try {
+      // Update ticket status
+      const { error: ticketError } = await supabase
+        .from("tickets")
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", ticketId);
+
+      if (ticketError) throw ticketError;
+
+      // Create status change history record
+      const { error: historyError } = await supabase
+        .from("ticket_history")
+        .insert({
+          ticket_id: ticketId,
+          status: newStatus,
+          previous_status: oldStatus,
+          reason,
+          created_by: currentUser?.id || "",
+          action_type: "STATUS_CHANGE"
+        });
+
+      if (historyError) throw historyError;
+
+      toast({
+        title: "Status do ticket atualizado",
+        description: `O status do ticket foi alterado para ${newStatus}.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      onSuccess();
+      return true;
+    } catch (error) {
+      console.error("Erro ao atualizar status do ticket:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao atualizar status do ticket",
+        description: "Não foi possível atualizar o status deste ticket.",
+      });
+      return false;
+    }
+  };
+
+  const handleAssignTicket = async (ticketId: string, userId: string, previousUserId: string | null) => {
+    try {
+      // Update ticket assignment
+      const { error: ticketError } = await supabase
+        .from("tickets")
+        .update({ assigned_to: userId })
+        .eq("id", ticketId);
+
+      if (ticketError) throw ticketError;
+
+      // Create assignment history record
+      const { error: historyError } = await supabase
+        .from("ticket_history")
+        .insert({
+          ticket_id: ticketId,
+          created_by: currentUser?.id || "",
+          action_type: "USER_ASSIGNMENT",
+          previous_assigned_to: previousUserId,
+          new_assigned_to: userId,
+          status: "EM_ANDAMENTO"
+        });
+
+      if (historyError) throw historyError;
+
+      toast({
+        title: "Ticket atribuído",
+        description: `O ticket foi atribuído ao usuário.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      onSuccess();
+      return true;
+    } catch (error) {
+      console.error("Erro ao atribuir ticket:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao atribuir ticket",
+        description: "Não foi possível atribuir este ticket.",
+      });
+      return false;
+    }
+  };
+
+  const handleReasonSubmit = async (ticketId: string, newStatus: string, oldStatus: string, reason: string) => {
+    const success = await handleStatusChange(ticketId, newStatus, oldStatus, reason);
+    if (success) {
+      toast({
+        title: "Motivo adicionado",
+        description: "O motivo foi adicionado ao histórico do ticket.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      onSuccess();
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Erro ao adicionar motivo",
+        description: "Não foi possível adicionar o motivo ao ticket.",
+      });
+    }
+  };
 
   const handleFaturarTicket = async (ticketId: string) => {
-    const { error } = await supabase
-      .from("tickets")
-      .update({
-        faturado: true,
-        status: "FATURADO",
-        faturado_at: new Date().toISOString(),
-      })
-      .eq("id", ticketId);
+    try {
+      // Update ticket to faturado
+      const { data, error } = await supabase
+        .from("tickets")
+        .update({ 
+          faturado: true,
+          faturado_at: new Date().toISOString()
+        })
+        .eq("id", ticketId)
+        .select()
 
-    if (error) {
+      if (error) throw error;
+
+      // Optionally, create a history record for faturamento
+      const { error: historyError } = await supabase
+        .from("ticket_history")
+        .insert({
+          ticket_id: ticketId,
+          status: data[0].status,
+          reason: "Ticket faturado",
+          created_by: currentUser?.id || "",
+          action_type: "STATUS_CHANGE"
+        });
+
+      if (historyError) throw historyError;
+
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      onSuccess();
+    } catch (error) {
+      console.error("Erro ao faturar ticket:", error);
       toast({
         variant: "destructive",
         title: "Erro ao faturar ticket",
-        description: error.message,
+        description: "Não foi possível faturar este ticket.",
       });
-      return;
-    }
-
-    toast({
-      title: "Ticket faturado com sucesso!",
-    });
-    refetch();
-  };
-
-  const updateTicketStatus = async (ticketId: string, newStatus: string, reasonText?: string) => {
-    try {
-      console.log("Atualizando ticket:", { ticketId, newStatus, reasonText });
-
-      // Verifica se o usuário já moveu o ticket (exceto para admins)
-      if (!isAdmin && currentUser?.id) {
-        const { data: canMove } = await supabase
-          .rpc('can_move_ticket', { 
-            ticket_id: ticketId, 
-            user_id: currentUser.id 
-          });
-
-        if (!canMove) {
-          toast({
-            variant: "destructive",
-            title: "Não é possível mover o ticket",
-            description: "Você já moveu este ticket anteriormente.",
-          });
-          return false;
-        }
-      }
-
-      // Primeiro atualiza o status do ticket
-      const { error: updateError } = await supabase
-        .from("tickets")
-        .update({ status: newStatus })
-        .eq("id", ticketId);
-
-      if (updateError) {
-        console.error("Erro ao atualizar status:", updateError);
-        toast({
-          variant: "destructive",
-          title: "Erro ao atualizar status",
-          description: updateError.message,
-        });
-        return false;
-      }
-
-      // Registrar o histórico independentemente do motivo
-      if (currentUser?.id) {
-        console.log("Registrando histórico com motivo:", { reasonText });
-
-        const historyData = {
-          ticket_id: ticketId,
-          status: newStatus,
-          reason: reasonText || null,
-          created_by: currentUser.id,
-          action_type: 'STATUS_CHANGE'
-        };
-
-        const { data: historyResult, error: historyError } = await supabase
-          .from("ticket_history")
-          .insert([historyData])
-          .select();
-
-        console.log("Resultado do registro do histórico:", { historyResult, historyError });
-
-        if (historyError) {
-          console.error("Erro ao registrar histórico:", historyError);
-          toast({
-            variant: "destructive",
-            title: "Erro ao registrar histórico",
-            description: historyError.message,
-          });
-          return false;
-        }
-      }
-
-      toast({
-        title: "Status atualizado com sucesso!",
-      });
-      refetch();
-      return true;
-    } catch (error) {
-      console.error("Erro ao atualizar ticket:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao atualizar ticket",
-        description: "Ocorreu um erro ao atualizar o ticket. Tente novamente.",
-      });
-      return false;
-    }
-  };
-
-  const handleAssignTicket = async (ticketId: string, newUserId: string, currentAssignedTo: string | null = null) => {
-    try {
-      const { data: ticket } = await supabase
-        .from("tickets")
-        .select("status")
-        .eq("id", ticketId)
-        .single();
-
-      const { error: updateError } = await supabase
-        .from("tickets")
-        .update({ assigned_to: newUserId })
-        .eq("id", ticketId);
-
-      if (updateError) throw updateError;
-
-      if (currentUser?.id) {
-        const historyData = {
-          ticket_id: ticketId,
-          action_type: 'USER_ASSIGNMENT',
-          status: ticket?.status,
-          previous_assigned_to: currentAssignedTo,
-          new_assigned_to: newUserId,
-          created_by: currentUser.id,
-        };
-
-        const { error: historyError } = await supabase
-          .from("ticket_history")
-          .insert([historyData]);
-
-        if (historyError) throw historyError;
-      }
-
-      toast({
-        title: "Ticket reatribuído com sucesso!",
-      });
-      refetch();
-      return true;
-    } catch (error) {
-      console.error("Erro ao reatribuir ticket:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao reatribuir ticket",
-        description: "Ocorreu um erro ao reatribuir o ticket. Tente novamente.",
-      });
-      return false;
     }
   };
 
   const handleMarkEquipmentAsDelivered = async (equipmentId: string, equipmentCode: string, ticketId: string, ticketStatus: string) => {
     try {
-      console.log("Marcando equipamento como entregue:", { equipmentId, equipmentCode, ticketId });
-      
-      // Atualizar o status do equipamento para ENTREGUE
+      // Update equipment status to "ENTREGUE"
       const { error: equipmentError } = await supabase
         .from("equipamentos")
         .update({ 
           status: "ENTREGUE",
-          entregue_at: new Date().toISOString() 
+          entregue_at: new Date().toISOString()
         })
         .eq("id", equipmentId);
-
-      if (equipmentError) {
-        console.error("Erro ao atualizar equipamento:", equipmentError);
-        throw equipmentError;
-      }
-
-      // Registrar no histórico do ticket
-      if (currentUser?.id) {
-        const historyData = {
+  
+      if (equipmentError) throw equipmentError;
+  
+      // Create history record for equipment delivery
+      const { error: historyError } = await supabase
+        .from("ticket_history")
+        .insert({
           ticket_id: ticketId,
           status: ticketStatus,
-          created_by: currentUser.id,
+          reason: `Equipamento ${equipmentCode} marcado como entregue`,
+          created_by: currentUser?.id || "",
           action_type: "EQUIPMENT_STATUS",
           equipment_id: equipmentId,
           equipment_codigo: equipmentCode,
-          equipment_status: "ENTREGUE",
-          reason: "Equipamento entregue ao cliente."
-        };
-
-        const { error: historyError } = await supabase
-          .from("ticket_history")
-          .insert([historyData]);
-
-        if (historyError) {
-          console.error("Erro ao registrar histórico:", historyError);
-          throw historyError;
-        }
-      }
-
+          equipment_status: "ENTREGUE"
+        });
+  
+      if (historyError) throw historyError;
+  
       toast({
-        title: "Equipamento entregue",
+        title: "Equipamento marcado como entregue",
         description: `O equipamento ${equipmentCode} foi marcado como entregue.`,
       });
-      
-      refetch();
-      return true;
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      onSuccess();
     } catch (error) {
       console.error("Erro ao marcar equipamento como entregue:", error);
       toast({
         variant: "destructive",
-        title: "Erro ao atualizar equipamento",
-        description: "Não foi possível marcar o equipamento como entregue.",
+        title: "Erro ao marcar equipamento como entregue",
+        description: "Não foi possível marcar este equipamento como entregue.",
       });
-      return false;
     }
   };
 
   return {
-    handleFaturarTicket,
-    updateTicketStatus,
+    handleStatusChange,
     handleAssignTicket,
-    handleMarkEquipmentAsDelivered,
+    handleReasonSubmit,
+    handleFaturarTicket,
+    handleMarkEquipmentAsDelivered
   };
 }

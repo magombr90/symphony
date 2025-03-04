@@ -26,6 +26,8 @@ export type Ticket = {
   } | null;
   faturado: boolean;
   faturado_at: string | null;
+  started_at: string | null;
+  time_spent: number | null;
   equipamentos?: Array<{
     id?: string;
     codigo: string;
@@ -42,6 +44,8 @@ export type TicketHistory = {
   id: string;
   ticket_id: string;
   status: string;
+  previous_status: string | null;
+  time_spent: number | null;
   reason: string | null;
   created_at: string;
   created_by: string;

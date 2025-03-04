@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, User, Clock, AlertCircle, Check, Loader2 } from "lucide-react";
+import { Package, User, Clock, AlertCircle, Check, Loader2, Timer } from "lucide-react";
 import { Ticket, TicketHistory } from "@/types/ticket";
 import { TicketProgress } from "./TicketProgress";
 import { Button } from "../ui/button";
@@ -84,6 +84,19 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
     }
   };
 
+  // Function to format time spent (minutes) into a readable format
+  const formatTimeSpent = (minutes: number | null) => {
+    if (!minutes) return "N/A";
+    
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = Math.floor(minutes % 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${remainingMinutes}min`;
+    }
+    return `${remainingMinutes}min`;
+  };
+
   return (
     <Dialog open={!!ticket} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -133,6 +146,24 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
                       <p>{format(new Date(ticket.scheduled_for), "dd/MM/yyyy HH:mm")}</p>
                     </div>
                   </div>
+                  {ticket.status === "EM_ANDAMENTO" && ticket.started_at && (
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Em andamento desde</h4>
+                      <div className="flex items-center">
+                        <Timer className="h-4 w-4 mr-2" />
+                        <p>{format(new Date(ticket.started_at), "dd/MM/yyyy HH:mm")}</p>
+                      </div>
+                    </div>
+                  )}
+                  {ticket.time_spent !== null && ticket.time_spent !== undefined && ticket.time_spent > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Tempo total em andamento</h4>
+                      <div className="flex items-center">
+                        <Timer className="h-4 w-4 mr-2" />
+                        <p>{formatTimeSpent(ticket.time_spent)}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <h4 className="text-sm font-medium mb-1">Descrição</h4>
@@ -168,7 +199,21 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
                         <TableCell>
                           {entry.action_type === "STATUS_CHANGE" && (
                             <div>
-                              <div>Status: {getStatusBadge(entry.status)}</div>
+                              <div className="flex flex-col gap-1">
+                                {entry.previous_status && (
+                                  <div className="text-sm text-muted-foreground">
+                                    De: {getStatusBadge(entry.previous_status)}
+                                  </div>
+                                )}
+                                <div>Para: {getStatusBadge(entry.status)}</div>
+
+                                {entry.previous_status === "EM_ANDAMENTO" && entry.time_spent && (
+                                  <div className="flex items-center gap-1 mt-1 text-sm">
+                                    <Timer className="h-3 w-3" />
+                                    <span>Tempo em andamento: {formatTimeSpent(entry.time_spent)}</span>
+                                  </div>
+                                )}
+                              </div>
                               {entry.reason && (
                                 <div className="mt-1">
                                   <span className="font-semibold">Motivo: </span>
