@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Ticket, SystemUser, TicketHistory } from "@/types/ticket";
@@ -75,19 +74,26 @@ export function useTicketQueries(
       if (error) throw error;
 
       // Map equipment data to tickets
-      return (data || []).map(ticket => {
+      const mappedTickets = (data || []).map(ticket => {
         const ticketEquipments = equipmentData?.filter(eq => eq.ticket_id === ticket.id) || [];
         return {
           ...ticket,
+          started_at: ticket.started_at || null,
+          time_spent: ticket.time_spent || null,
           equipamentos: ticketEquipments.map(eq => ({
+            id: eq.id,
             codigo: eq.codigo,
             equipamento: eq.equipamento,
             numero_serie: eq.numero_serie,
             condicao: eq.condicao,
-            observacoes: eq.observacoes
+            observacoes: eq.observacoes,
+            status: eq.status,
+            entregue_at: eq.entregue_at
           }))
-        };
-      }) as Ticket[];
+        } as Ticket;
+      });
+      
+      return mappedTickets;
     },
   });
 
@@ -131,7 +137,7 @@ export function useTicketQueries(
 
       return (data || []).map(item => ({
         ...item,
-        action_type: item.action_type as "STATUS_CHANGE" | "USER_ASSIGNMENT"
+        action_type: item.action_type as "STATUS_CHANGE" | "USER_ASSIGNMENT" | "EQUIPMENT_STATUS"
       })) as TicketHistory[];
     },
   });

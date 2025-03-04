@@ -24,29 +24,19 @@ export function useTickets() {
     refetch,
   } = useTicketQueries(searchTerm, statusFilter, dateFilter, selectedTicketDetails);
 
+  const ticketActions = useTicketActions(tickets || [], refetch);
+
   const {
     handleFaturarTicket,
-    updateTicketStatus,
+    handleStatusChange,
     handleAssignTicket,
-  } = useTicketActions(systemUsers, refetch);
-
-  const handleStatusChange = async (ticketId: string, newStatus: string) => {
-    if (newStatus === "CANCELADO" || newStatus === "CONCLUIDO") {
-      setEditingTicket({
-        ...(tickets?.find((t) => t.id === ticketId) as Ticket),
-        status: newStatus,
-      });
-      setShowReasonDialog(true);
-      return;
-    }
-
-    await updateTicketStatus(ticketId, newStatus);
-  };
+    handleMarkEquipmentAsDelivered
+  } = ticketActions;
 
   const handleReasonSubmit = async () => {
     if (!editingTicket) return;
     
-    const success = await updateTicketStatus(editingTicket.id, editingTicket.status, reason);
+    const success = await handleStatusChange(editingTicket.id, editingTicket.status, reason);
     if (success) {
       setShowReasonDialog(false);
       setReason("");
@@ -78,8 +68,9 @@ export function useTickets() {
     setSelectedUser,
     handleStatusChange,
     handleAssignTicket,
-    updateTicketStatus,
     handleReasonSubmit,
     refetch,
+    handleFaturarTicket,
+    handleMarkEquipmentAsDelivered
   };
 }

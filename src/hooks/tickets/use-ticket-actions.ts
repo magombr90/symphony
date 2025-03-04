@@ -9,8 +9,14 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
   const { currentUser } = useAuth();
   const queryClient = useQueryClient();
 
-  const handleStatusChange = async (ticketId: string, newStatus: string, oldStatus: string, reason?: string) => {
+  const handleStatusChange = async (ticketId: string, newStatus: string, reason?: string) => {
     try {
+      // Get the ticket information to pass the old status
+      const ticket = tickets.find(t => t.id === ticketId);
+      if (!ticket) throw new Error("Ticket não encontrado");
+      
+      const oldStatus = ticket.status;
+
       // Update ticket status
       const { error: ticketError } = await supabase
         .from("tickets")
@@ -97,7 +103,7 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
   };
 
   const handleReasonSubmit = async (ticketId: string, newStatus: string, oldStatus: string, reason: string) => {
-    const success = await handleStatusChange(ticketId, newStatus, oldStatus, reason);
+    const success = await handleStatusChange(ticketId, newStatus, reason);
     if (success) {
       toast({
         title: "Motivo adicionado",

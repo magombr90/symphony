@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { TicketDetails } from "@/components/tickets/TicketDetails";
-import { TicketHistory } from "@/types/ticket";
+import { Ticket, TicketHistory } from "@/types/ticket";
 import { CreateEquipmentDialog } from "@/components/equipments/CreateEquipmentDialog";
 import { EditEquipmentDialog } from "@/components/equipments/EditEquipmentDialog";
 import { AssociateTicketDialog } from "@/components/equipments/AssociateTicketDialog";
@@ -54,6 +54,8 @@ type Equipment = {
     assigned_user?: {
       name: string | null;
     } | null;
+    started_at: string | null;
+    time_spent: number | null;
   } | null;
 };
 
@@ -85,6 +87,8 @@ export default function Equipments() {
             updated_at,
             faturado,
             faturado_at,
+            started_at,
+            time_spent,
             client:clients(razao_social),
             assigned_user:system_users!tickets_assigned_to_fkey(name)
           )
@@ -244,7 +248,7 @@ export default function Equipments() {
       </Card>
 
       <TicketDetails
-        ticket={selectedTicket}
+        ticket={selectedTicket as Ticket | null}
         history={ticketHistory || []}
         onClose={() => setSelectedTicket(null)}
       />
