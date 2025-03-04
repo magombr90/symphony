@@ -81,8 +81,9 @@ export function useTicketQueries(
         // Create a properly typed ticket object with all required properties
         const typedTicket: Ticket = {
           ...ticket,
-          started_at: ticket.started_at || null,  // Add these properties explicitly
-          time_spent: ticket.time_spent || null,  // Add these properties explicitly
+          // Add these properties with explicit defaults since they might not be in the view
+          started_at: ticket.started_at || null,
+          time_spent: ticket.time_spent || null,
           equipamentos: ticketEquipments.map(eq => ({
             id: eq.id,
             codigo: eq.codigo,
@@ -90,8 +91,9 @@ export function useTicketQueries(
             numero_serie: eq.numero_serie,
             condicao: eq.condicao,
             observacoes: eq.observacoes,
-            status: eq.status || "RETIRADO",
-            entregue_at: eq.entregue_at
+            // Ensure status is cast to one of the allowed values
+            status: (eq.status === "ENTREGUE" ? "ENTREGUE" : "RETIRADO") as "RETIRADO" | "ENTREGUE",
+            entregue_at: eq.entregue_at || null
           }))
         };
         
