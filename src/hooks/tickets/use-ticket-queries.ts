@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Ticket, SystemUser, TicketHistory } from "@/types/ticket";
@@ -77,10 +78,11 @@ export function useTicketQueries(
       const mappedTickets = (data || []).map(ticket => {
         const ticketEquipments = equipmentData?.filter(eq => eq.ticket_id === ticket.id) || [];
         
-        return {
+        // Create a properly typed ticket object with all required properties
+        const typedTicket: Ticket = {
           ...ticket,
-          started_at: ticket.started_at || null,  // Explicitly handle optional fields
-          time_spent: ticket.time_spent || null,  // Default to null if not present
+          started_at: ticket.started_at || null,  // Add these properties explicitly
+          time_spent: ticket.time_spent || null,  // Add these properties explicitly
           equipamentos: ticketEquipments.map(eq => ({
             id: eq.id,
             codigo: eq.codigo,
@@ -88,10 +90,12 @@ export function useTicketQueries(
             numero_serie: eq.numero_serie,
             condicao: eq.condicao,
             observacoes: eq.observacoes,
-            status: eq.status,
+            status: eq.status || "RETIRADO",
             entregue_at: eq.entregue_at
           }))
-        } as Ticket; // Type assertion needed to satisfy TypeScript
+        };
+        
+        return typedTicket;
       });
       
       return mappedTickets;

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useTicketQueries } from "./tickets/use-ticket-queries";
 import { useTicketActions } from "./tickets/use-ticket-actions";
@@ -37,14 +38,16 @@ export const useTickets = () => {
   const handleReasonSubmit = async () => {
     if (!editingTicket) return;
     
-    const success = await handleReasonSubmitAction(
+    // Fix the truthiness check issue by storing the result
+    const result = await handleReasonSubmitAction(
       editingTicket.id,
       editingTicket.status,
       editingTicket.status,
       reason
     );
     
-    if (success) {
+    // Now check the boolean result instead
+    if (result) {
       setShowReasonDialog(false);
       setReason("");
       setEditingTicket(null);
