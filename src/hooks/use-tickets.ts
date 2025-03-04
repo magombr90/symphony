@@ -1,42 +1,49 @@
-
 import { useState } from "react";
-import { Ticket } from "@/types/ticket";
-import { DateRange } from "react-day-picker";
 import { useTicketQueries } from "./tickets/use-ticket-queries";
 import { useTicketActions } from "./tickets/use-ticket-actions";
+import { Ticket } from "@/types/ticket";
+import { DateRange } from "react-day-picker";
+import { useAuth } from "./use-auth";
 
-export function useTickets() {
+export const useTickets = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
-  const [dateFilter, setDateFilter] = useState<DateRange>();
+  const [dateFilter, setDateFilter] = useState<DateRange | undefined>(undefined);
   const [selectedTicketDetails, setSelectedTicketDetails] = useState<Ticket | null>(null);
-  const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
   const [showReasonDialog, setShowReasonDialog] = useState(false);
   const [reason, setReason] = useState("");
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
+  const { currentUser } = useAuth();
+
+  console.log("Is admin:", currentUser?.role === "admin", "User role:", currentUser?.role);
+
+  const { tickets, clients, systemUsers, ticketHistory, refetch } = useTicketQueries(
+    searchTerm,
+    statusFilter,
+    dateFilter,
+    selectedTicketDetails
+  );
 
   const {
-    tickets,
-    clients,
-    systemUsers,
-    ticketHistory,
-    refetch,
-  } = useTicketQueries(searchTerm, statusFilter, dateFilter, selectedTicketDetails);
-
-  const ticketActions = useTicketActions(tickets || [], refetch);
-
-  const {
-    handleFaturarTicket,
     handleStatusChange,
     handleAssignTicket,
-    handleMarkEquipmentAsDelivered
-  } = ticketActions;
+    handleReasonSubmit: handleReasonSubmitAction,
+    handleFaturarTicket,
+    handleMarkEquipmentAsDelivered,
+  } = useTicketActions(tickets || [], refetch);
 
   const handleReasonSubmit = async () => {
     if (!editingTicket) return;
     
-    const success = await handleStatusChange(editingTicket.id, editingTicket.status, reason);
+    const success = await handleReasonSubmitAction(
+      editingTicket.id,
+      editingTicket.status,
+      editingTicket.status,
+      reason
+    );
+    
     if (success) {
       setShowReasonDialog(false);
       setReason("");
@@ -57,7 +64,6 @@ export function useTickets() {
     setDateFilter,
     selectedTicketDetails,
     setSelectedTicketDetails,
-    editingTicket,
     showReasonDialog,
     setShowReasonDialog,
     reason,
@@ -66,11 +72,11 @@ export function useTickets() {
     setShowAssignDialog,
     selectedUser,
     setSelectedUser,
+    editingTicket,
+    setEditingTicket,
     handleStatusChange,
     handleAssignTicket,
     handleReasonSubmit,
     refetch,
-    handleFaturarTicket,
-    handleMarkEquipmentAsDelivered
   };
-}
+};

@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Ticket } from "@/types/ticket";
@@ -11,6 +12,8 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
 
   const handleStatusChange = async (ticketId: string, newStatus: string, reason?: string) => {
     try {
+      console.log("Current user:", currentUser);
+      
       // Get the ticket information to pass the old status
       const ticket = tickets.find(t => t.id === ticketId);
       if (!ticket) throw new Error("Ticket não encontrado");
@@ -28,6 +31,17 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
 
       if (ticketError) throw ticketError;
 
+      // Make sure we have a valid user ID
+      if (!currentUser?.id) {
+        console.error("User ID is missing for ticket history");
+        toast({
+          variant: "destructive",
+          title: "Erro na autenticação",
+          description: "Não foi possível identificar o usuário atual.",
+        });
+        return false;
+      }
+
       // Create status change history record
       const { error: historyError } = await supabase
         .from("ticket_history")
@@ -36,7 +50,7 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
           status: newStatus,
           previous_status: oldStatus,
           reason,
-          created_by: currentUser?.id || "",
+          created_by: currentUser.id,
           action_type: "STATUS_CHANGE"
         });
 

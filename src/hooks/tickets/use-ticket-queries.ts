@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Ticket, SystemUser, TicketHistory } from "@/types/ticket";
@@ -78,12 +77,10 @@ export function useTicketQueries(
       const mappedTickets = (data || []).map(ticket => {
         const ticketEquipments = equipmentData?.filter(eq => eq.ticket_id === ticket.id) || [];
         
-        // Need to explicitly handle the optional fields that might not be present in the view
-        // Type assertion is used to tell TypeScript these properties exist or will be set to null
-        const typedTicket = {
+        return {
           ...ticket,
-          started_at: ticket.started_at || null, // Default to null if not present
-          time_spent: ticket.time_spent || null, // Default to null if not present
+          started_at: ticket.started_at || null,  // Explicitly handle optional fields
+          time_spent: ticket.time_spent || null,  // Default to null if not present
           equipamentos: ticketEquipments.map(eq => ({
             id: eq.id,
             codigo: eq.codigo,
@@ -94,9 +91,7 @@ export function useTicketQueries(
             status: eq.status,
             entregue_at: eq.entregue_at
           }))
-        } as Ticket; // Type assertion to Ticket
-        
-        return typedTicket;
+        } as Ticket; // Type assertion needed to satisfy TypeScript
       });
       
       return mappedTickets;
