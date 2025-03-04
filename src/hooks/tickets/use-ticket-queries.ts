@@ -77,11 +77,13 @@ export function useTicketQueries(
       // Map equipment data to tickets with proper type handling
       const mappedTickets = (data || []).map(ticket => {
         const ticketEquipments = equipmentData?.filter(eq => eq.ticket_id === ticket.id) || [];
-        return {
+        
+        // Need to explicitly handle the optional fields that might not be present in the view
+        // Type assertion is used to tell TypeScript these properties exist or will be set to null
+        const typedTicket = {
           ...ticket,
-          // Ensure these properties are explicitly set with default values if not present
-          started_at: ticket.started_at || null,
-          time_spent: ticket.time_spent || null,
+          started_at: null, // Default to null if not present
+          time_spent: null, // Default to null if not present
           equipamentos: ticketEquipments.map(eq => ({
             id: eq.id,
             codigo: eq.codigo,
@@ -92,7 +94,9 @@ export function useTicketQueries(
             status: eq.status,
             entregue_at: eq.entregue_at
           }))
-        } as Ticket;
+        } as Ticket; // Type assertion to Ticket
+        
+        return typedTicket;
       });
       
       return mappedTickets;
