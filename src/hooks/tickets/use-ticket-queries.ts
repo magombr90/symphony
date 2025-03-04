@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Ticket, SystemUser, TicketHistory } from "@/types/ticket";
@@ -73,11 +74,12 @@ export function useTicketQueries(
       const { data, error } = await query;
       if (error) throw error;
 
-      // Map equipment data to tickets
+      // Map equipment data to tickets with proper type handling
       const mappedTickets = (data || []).map(ticket => {
         const ticketEquipments = equipmentData?.filter(eq => eq.ticket_id === ticket.id) || [];
         return {
           ...ticket,
+          // Ensure these properties are explicitly set with default values if not present
           started_at: ticket.started_at || null,
           time_spent: ticket.time_spent || null,
           equipamentos: ticketEquipments.map(eq => ({
