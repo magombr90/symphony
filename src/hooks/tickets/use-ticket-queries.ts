@@ -82,8 +82,8 @@ export function useTicketQueries(
         const typedTicket: Ticket = {
           ...ticket,
           // Add these properties with explicit defaults since they might not be in the view
-          started_at: ticket.started_at || null,
-          time_spent: ticket.time_spent || null,
+          started_at: null,  // Default to null since it doesn't exist in the view
+          time_spent: null,  // Default to null since it doesn't exist in the view
           equipamentos: ticketEquipments.map(eq => ({
             id: eq.id,
             codigo: eq.codigo,
