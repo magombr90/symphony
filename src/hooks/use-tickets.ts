@@ -38,16 +38,16 @@ export const useTickets = () => {
   const handleReasonSubmit = async () => {
     if (!editingTicket) return;
     
-    // Fix the truthiness check issue by storing the result
-    const result = await handleReasonSubmitAction(
+    // Store the result of handleReasonSubmitAction in a boolean variable
+    const success = await handleReasonSubmitAction(
       editingTicket.id,
       editingTicket.status,
       editingTicket.status,
       reason
     );
     
-    // Now check the boolean result instead
-    if (result) {
+    // Now check the boolean result
+    if (success) {
       setShowReasonDialog(false);
       setReason("");
       setEditingTicket(null);
