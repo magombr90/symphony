@@ -175,8 +175,11 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
 
           <TabsContent value="history">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Histórico do Ticket</CardTitle>
+                <div className="flex items-center gap-2">
+                  <TicketProgress ticket={ticket} onSuccess={onClose} />
+                </div>
               </CardHeader>
               <CardContent>
                 <Table>
