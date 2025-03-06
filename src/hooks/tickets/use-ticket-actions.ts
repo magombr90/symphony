@@ -219,11 +219,55 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
     }
   };
 
+  const handleAddProgressNote = async (ticketId: string, progressNote: string, currentStatus: string): Promise<boolean> => {
+    try {
+      if (!currentUser?.id) {
+        console.error("User ID is missing for ticket history");
+        toast({
+          variant: "destructive",
+          title: "Erro na autenticação",
+          description: "Não foi possível identificar o usuário atual.",
+        });
+        return false;
+      }
+
+      // Create progress note history record
+      const { error: historyError } = await supabase
+        .from("ticket_history")
+        .insert({
+          ticket_id: ticketId,
+          status: currentStatus,
+          reason: progressNote,
+          created_by: currentUser.id,
+          action_type: "PROGRESS_NOTE"
+        });
+
+      if (historyError) throw historyError;
+
+      toast({
+        title: "Andamento registrado",
+        description: "O andamento do ticket foi registrado com sucesso.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      onSuccess();
+      return true;
+    } catch (error) {
+      console.error("Erro ao adicionar andamento:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao registrar andamento",
+        description: "Não foi possível registrar o andamento deste ticket.",
+      });
+      return false;
+    }
+  };
+
   return {
     handleStatusChange,
     handleAssignTicket,
     handleReasonSubmit,
     handleFaturarTicket,
-    handleMarkEquipmentAsDelivered
+    handleMarkEquipmentAsDelivered,
+    handleAddProgressNote
   };
 }

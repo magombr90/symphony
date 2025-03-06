@@ -52,7 +52,7 @@ export type TicketHistory = {
   created_by_user: {
     name: string;
   };
-  action_type: "STATUS_CHANGE" | "USER_ASSIGNMENT" | "EQUIPMENT_STATUS";
+  action_type: "STATUS_CHANGE" | "USER_ASSIGNMENT" | "EQUIPMENT_STATUS" | "PROGRESS_NOTE";
   previous_assigned_to: string | null;
   new_assigned_to: string | null;
   previous_assigned_to_user?: {
