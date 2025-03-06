@@ -221,14 +221,24 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
 
   const handleAddProgressNote = async (ticketId: string, progressNote: string, currentStatus: string): Promise<boolean> => {
     try {
-      if (!currentUser?.id) {
-        console.error("User ID is missing for ticket history");
-        toast({
-          variant: "destructive",
-          title: "Erro na autenticação",
-          description: "Não foi possível identificar o usuário atual.",
-        });
-        return false;
+      // Get the current user data from Supabase directly if currentUser is not available
+      let userId = currentUser?.id;
+      
+      if (!userId) {
+        // If currentUser is not available, try to get the user directly from Supabase
+        const { data: { user } } = await supabase.auth.getUser();
+        userId = user?.id;
+        
+        // Still no user ID, show an error
+        if (!userId) {
+          console.error("User ID is missing for ticket history - not authenticated");
+          toast({
+            variant: "destructive",
+            title: "Erro na autenticação",
+            description: "Não foi possível identificar o usuário atual. Por favor, faça login novamente.",
+          });
+          return false;
+        }
       }
 
       // Create progress note history record
@@ -238,7 +248,7 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
           ticket_id: ticketId,
           status: currentStatus,
           reason: progressNote,
-          created_by: currentUser.id,
+          created_by: userId,
           action_type: "PROGRESS_NOTE"
         });
 

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useAuth() {
-  const { data: currentUser } = useQuery({
+  const { data: currentUser, isLoading, error } = useQuery({
     queryKey: ["current-user"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -29,5 +29,7 @@ export function useAuth() {
   return {
     currentUser,
     isAdmin,
+    isLoading,
+    error,
   };
 }
