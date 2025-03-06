@@ -11,6 +11,11 @@ interface RecentTicketsProps {
 }
 
 export function RecentTickets({ tickets, onViewDetails, onAssign, onStatusChange }: RecentTicketsProps) {
+  // Wrap onStatusChange to ensure the table updates
+  const handleStatusChange = async (ticketId: string, newStatus: string) => {
+    await onStatusChange(ticketId, newStatus);
+  };
+
   return (
     <Card>
       <div className="p-6">
@@ -24,7 +29,7 @@ export function RecentTickets({ tickets, onViewDetails, onAssign, onStatusChange
         </h2>
         <TicketsTable 
           tickets={tickets} 
-          onStatusChange={onStatusChange} 
+          onStatusChange={handleStatusChange} 
           onViewDetails={onViewDetails}
           onAssign={onAssign}
         />

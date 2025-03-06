@@ -28,12 +28,23 @@ export const useTickets = () => {
   );
 
   const {
-    handleStatusChange,
+    handleStatusChange: handleStatusChangeAction,
     handleAssignTicket,
     handleReasonSubmit: handleReasonSubmitAction,
     handleFaturarTicket,
     handleMarkEquipmentAsDelivered,
   } = useTicketActions(tickets || [], refetch);
+
+  // Wrap handleStatusChange to ensure updates trigger refetch
+  const handleStatusChange = async (ticketId: string, newStatus: string) => {
+    const success = await handleStatusChangeAction(ticketId, newStatus);
+    if (success) {
+      // Explicitly call refetch after successful status change
+      await refetch();
+      return true;
+    }
+    return false;
+  };
 
   const handleReasonSubmit = async () => {
     if (!editingTicket) return;
@@ -51,6 +62,8 @@ export const useTickets = () => {
       setShowReasonDialog(false);
       setReason("");
       setEditingTicket(null);
+      // Explicitly refetch data after successful submission
+      await refetch();
     }
   };
 

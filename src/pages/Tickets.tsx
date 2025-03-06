@@ -58,6 +58,13 @@ export default function Tickets() {
     refetch();
   };
 
+  // Custom handler for status changes that ensures UI updates
+  const handleTicketStatusChange = async (ticketId: string, newStatus: string) => {
+    await handleStatusChange(ticketId, newStatus);
+    // Explicitly trigger a refetch after status change
+    refetch();
+  };
+
   return (
     <div className="fade-in">
       <div className="flex justify-between items-center mb-8">
@@ -99,7 +106,7 @@ export default function Tickets() {
 
       <TicketsTable
         tickets={tickets || []}
-        onStatusChange={handleStatusChange}
+        onStatusChange={handleTicketStatusChange}
         onViewDetails={(ticket: Ticket) => setSelectedTicketDetails(ticket)}
         onAssign={(ticket: Ticket) => {
           setEditingTicket(ticket);
