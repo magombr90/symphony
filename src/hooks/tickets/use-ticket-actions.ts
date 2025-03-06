@@ -1,4 +1,3 @@
-
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Ticket } from "@/types/ticket";
@@ -116,7 +115,7 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
     }
   };
 
-  const handleReasonSubmit = async (ticketId: string, newStatus: string, oldStatus: string, reason: string) => {
+  const handleReasonSubmit = async (ticketId: string, newStatus: string, oldStatus: string, reason: string): Promise<boolean> => {
     const success = await handleStatusChange(ticketId, newStatus, reason);
     if (success) {
       toast({
@@ -125,12 +124,14 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
       });
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       onSuccess();
+      return true;
     } else {
       toast({
         variant: "destructive",
         title: "Erro ao adicionar motivo",
         description: "Não foi possível adicionar o motivo ao ticket.",
       });
+      return false;
     }
   };
 

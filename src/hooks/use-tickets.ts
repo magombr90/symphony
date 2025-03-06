@@ -38,7 +38,7 @@ export const useTickets = () => {
   const handleReasonSubmit = async () => {
     if (!editingTicket) return;
     
-    // Store the result of handleReasonSubmitAction in a boolean variable
+    // Explicitly store the boolean result from handleReasonSubmitAction
     const success = await handleReasonSubmitAction(
       editingTicket.id,
       editingTicket.status,
@@ -46,8 +46,8 @@ export const useTickets = () => {
       reason
     );
     
-    // Now check the boolean result
-    if (success) {
+    // Check the boolean result
+    if (success === true) {
       setShowReasonDialog(false);
       setReason("");
       setEditingTicket(null);
