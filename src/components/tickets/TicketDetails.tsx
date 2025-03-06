@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, User, Clock, AlertCircle, Check, Loader2, Timer } from "lucide-react";
+import { Package, User, Clock, AlertCircle, Check, Loader2, Timer, ArrowRight } from "lucide-react";
 import { Ticket, TicketHistory } from "@/types/ticket";
 import { TicketProgress } from "./TicketProgress";
 import { Button } from "../ui/button";
@@ -32,7 +31,8 @@ interface TicketDetailsProps {
 
 export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) {
   const [processingEquipment, setProcessingEquipment] = useState<string | null>(null);
-  const { handleMarkEquipmentAsDelivered } = useTicketActions([], onClose);
+  const [processingStatus, setProcessingStatus] = useState(false);
+  const { handleMarkEquipmentAsDelivered, handleStatusChange } = useTicketActions([], onClose);
 
   if (!ticket) return null;
 
@@ -84,7 +84,6 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
     }
   };
 
-  // Function to format time spent (minutes) into a readable format
   const formatTimeSpent = (minutes: number | null) => {
     if (!minutes) return "N/A";
     
@@ -97,6 +96,51 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
     return `${remainingMinutes}min`;
   };
 
+  const advanceTicketStatus = async () => {
+    if (!ticket) return;
+    
+    setProcessingStatus(true);
+    try {
+      let newStatus = '';
+      
+      switch (ticket.status) {
+        case 'PENDENTE':
+          newStatus = 'EM_ANDAMENTO';
+          break;
+        case 'EM_ANDAMENTO':
+          newStatus = 'CONCLUIDO';
+          break;
+        case 'CONCLUIDO':
+          newStatus = 'FATURADO';
+          break;
+        default:
+          return; // Don't do anything for other statuses
+      }
+      
+      await handleStatusChange(ticket.id, newStatus);
+      onClose();
+    } catch (error) {
+      console.error('Error advancing ticket status:', error);
+    } finally {
+      setProcessingStatus(false);
+    }
+  };
+
+  const getNextStatusLabel = () => {
+    switch (ticket.status) {
+      case 'PENDENTE':
+        return 'Em andamento';
+      case 'EM_ANDAMENTO':
+        return 'Concluir';
+      case 'CONCLUIDO':
+        return 'Faturar';
+      default:
+        return null; // No next status for other cases
+    }
+  };
+
+  const nextStatusLabel = getNextStatusLabel();
+
   return (
     <Dialog open={!!ticket} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -106,6 +150,21 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
           </DialogTitle>
           <div className="flex items-center gap-2">
             {getStatusBadge(ticket.status)}
+            {nextStatusLabel && (
+              <Button 
+                variant="outline"
+                className="ml-2"
+                disabled={processingStatus} 
+                onClick={advanceTicketStatus}
+              >
+                {processingStatus ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <ArrowRight className="h-4 w-4 mr-2" />
+                )}
+                {nextStatusLabel}
+              </Button>
+            )}
             <TicketProgress ticket={ticket} onSuccess={onClose} />
           </div>
         </DialogHeader>
@@ -178,6 +237,20 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Histórico do Ticket</CardTitle>
                 <div className="flex items-center gap-2">
+                  {nextStatusLabel && (
+                    <Button 
+                      variant="outline"
+                      disabled={processingStatus} 
+                      onClick={advanceTicketStatus}
+                    >
+                      {processingStatus ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <ArrowRight className="h-4 w-4 mr-2" />
+                      )}
+                      {nextStatusLabel}
+                    </Button>
+                  )}
                   <TicketProgress ticket={ticket} onSuccess={onClose} />
                 </div>
               </CardHeader>
