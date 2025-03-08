@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Ticket } from "@/types/ticket";
@@ -9,9 +10,33 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
   const { currentUser } = useAuth();
   const queryClient = useQueryClient();
 
+  // Helper function to get current user ID, with fallback to Supabase auth
+  const getCurrentUserId = async (): Promise<string | null> => {
+    // First try to get from React Query cache
+    if (currentUser?.id) {
+      return currentUser.id;
+    }
+    
+    // If not in cache, try to get directly from Supabase auth
+    const { data: { user } } = await supabase.auth.getUser();
+    return user?.id || null;
+  };
+
   const handleStatusChange = async (ticketId: string, newStatus: string, reason?: string) => {
     try {
       console.log("Current user:", currentUser);
+      
+      // Get current user ID
+      const userId = await getCurrentUserId();
+      if (!userId) {
+        console.error("User ID is missing for ticket history");
+        toast({
+          variant: "destructive",
+          title: "Erro na autenticação",
+          description: "Não foi possível identificar o usuário atual. Por favor, faça login novamente.",
+        });
+        return false;
+      }
       
       // Get the ticket information to pass the old status
       const ticket = tickets.find(t => t.id === ticketId);
@@ -30,17 +55,6 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
 
       if (ticketError) throw ticketError;
 
-      // Make sure we have a valid user ID
-      if (!currentUser?.id) {
-        console.error("User ID is missing for ticket history");
-        toast({
-          variant: "destructive",
-          title: "Erro na autenticação",
-          description: "Não foi possível identificar o usuário atual.",
-        });
-        return false;
-      }
-
       // Create status change history record
       const { error: historyError } = await supabase
         .from("ticket_history")
@@ -49,7 +63,7 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
           status: newStatus,
           previous_status: oldStatus,
           reason,
-          created_by: currentUser.id,
+          created_by: userId,
           action_type: "STATUS_CHANGE"
         });
 
@@ -75,6 +89,17 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
 
   const handleAssignTicket = async (ticketId: string, userId: string, previousUserId: string | null) => {
     try {
+      // Get current user ID
+      const currentUserId = await getCurrentUserId();
+      if (!currentUserId) {
+        toast({
+          variant: "destructive",
+          title: "Erro na autenticação",
+          description: "Não foi possível identificar o usuário atual. Por favor, faça login novamente.",
+        });
+        return false;
+      }
+      
       // Update ticket assignment
       const { error: ticketError } = await supabase
         .from("tickets")
@@ -88,7 +113,7 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
         .from("ticket_history")
         .insert({
           ticket_id: ticketId,
-          created_by: currentUser?.id || "",
+          created_by: currentUserId,
           action_type: "USER_ASSIGNMENT",
           previous_assigned_to: previousUserId,
           new_assigned_to: userId,
@@ -137,6 +162,17 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
 
   const handleFaturarTicket = async (ticketId: string) => {
     try {
+      // Get current user ID
+      const userId = await getCurrentUserId();
+      if (!userId) {
+        toast({
+          variant: "destructive",
+          title: "Erro na autenticação",
+          description: "Não foi possível identificar o usuário atual. Por favor, faça login novamente.",
+        });
+        return false;
+      }
+      
       // Update ticket to faturado
       const { data, error } = await supabase
         .from("tickets")
@@ -156,7 +192,7 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
           ticket_id: ticketId,
           status: data[0].status,
           reason: "Ticket faturado",
-          created_by: currentUser?.id || "",
+          created_by: userId,
           action_type: "STATUS_CHANGE"
         });
 
@@ -164,6 +200,7 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
 
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       onSuccess();
+      return true;
     } catch (error) {
       console.error("Erro ao faturar ticket:", error);
       toast({
@@ -171,11 +208,23 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
         title: "Erro ao faturar ticket",
         description: "Não foi possível faturar este ticket.",
       });
+      return false;
     }
   };
 
   const handleMarkEquipmentAsDelivered = async (equipmentId: string, equipmentCode: string, ticketId: string, ticketStatus: string) => {
     try {
+      // Get current user ID
+      const userId = await getCurrentUserId();
+      if (!userId) {
+        toast({
+          variant: "destructive",
+          title: "Erro na autenticação",
+          description: "Não foi possível identificar o usuário atual. Por favor, faça login novamente.",
+        });
+        return false;
+      }
+      
       // Update equipment status to "ENTREGUE"
       const { error: equipmentError } = await supabase
         .from("equipamentos")
@@ -194,7 +243,7 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
           ticket_id: ticketId,
           status: ticketStatus,
           reason: `Equipamento ${equipmentCode} marcado como entregue`,
-          created_by: currentUser?.id || "",
+          created_by: userId,
           action_type: "EQUIPMENT_STATUS",
           equipment_id: equipmentId,
           equipment_codigo: equipmentCode,
@@ -209,6 +258,7 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
       });
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       onSuccess();
+      return true;
     } catch (error) {
       console.error("Erro ao marcar equipamento como entregue:", error);
       toast({
@@ -216,29 +266,24 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
         title: "Erro ao marcar equipamento como entregue",
         description: "Não foi possível marcar este equipamento como entregue.",
       });
+      return false;
     }
   };
 
   const handleAddProgressNote = async (ticketId: string, progressNote: string, currentStatus: string): Promise<boolean> => {
     try {
-      // Get the current user data from Supabase directly if currentUser is not available
-      let userId = currentUser?.id;
+      // Get current user ID with fallback
+      const userId = await getCurrentUserId();
       
+      // No user ID, show an error
       if (!userId) {
-        // If currentUser is not available, try to get the user directly from Supabase
-        const { data: { user } } = await supabase.auth.getUser();
-        userId = user?.id;
-        
-        // Still no user ID, show an error
-        if (!userId) {
-          console.error("User ID is missing for ticket history - not authenticated");
-          toast({
-            variant: "destructive",
-            title: "Erro na autenticação",
-            description: "Não foi possível identificar o usuário atual. Por favor, faça login novamente.",
-          });
-          return false;
-        }
+        console.error("User ID is missing for ticket history - not authenticated");
+        toast({
+          variant: "destructive",
+          title: "Erro na autenticação",
+          description: "Não foi possível identificar o usuário atual. Por favor, faça login novamente.",
+        });
+        return false;
       }
 
       // Create progress note history record
