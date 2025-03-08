@@ -1,4 +1,3 @@
-
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Ticket } from "@/types/ticket";
@@ -14,12 +13,30 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
   const getCurrentUserId = async (): Promise<string | null> => {
     // First try to get from React Query cache
     if (currentUser?.id) {
+      console.log("Using cached user ID:", currentUser.id);
       return currentUser.id;
     }
     
     // If not in cache, try to get directly from Supabase auth
-    const { data: { user } } = await supabase.auth.getUser();
-    return user?.id || null;
+    try {
+      const { data, error } = await supabase.auth.getUser();
+      
+      if (error) {
+        console.error("Error fetching auth user:", error);
+        return null;
+      }
+      
+      if (data?.user?.id) {
+        console.log("Using Supabase auth user ID:", data.user.id);
+        return data.user.id;
+      }
+      
+      console.error("No user found in Supabase auth");
+      return null;
+    } catch (error) {
+      console.error("Unexpected error in getCurrentUserId:", error);
+      return null;
+    }
   };
 
   const handleStatusChange = async (ticketId: string, newStatus: string, reason?: string) => {
@@ -272,6 +289,8 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
 
   const handleAddProgressNote = async (ticketId: string, progressNote: string, currentStatus: string): Promise<boolean> => {
     try {
+      console.log("Adding progress note to ticket:", ticketId);
+      
       // Get current user ID with fallback
       const userId = await getCurrentUserId();
       
@@ -286,6 +305,8 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
         return false;
       }
 
+      console.log("Progress note will be added by user:", userId);
+
       // Create progress note history record
       const { error: historyError } = await supabase
         .from("ticket_history")
@@ -297,7 +318,10 @@ export function useTicketActions(tickets: Ticket[], onSuccess: () => void) {
           action_type: "PROGRESS_NOTE"
         });
 
-      if (historyError) throw historyError;
+      if (historyError) {
+        console.error("Error adding progress note:", historyError);
+        throw historyError;
+      }
 
       toast({
         title: "Andamento registrado",

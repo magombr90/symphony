@@ -6,25 +6,44 @@ export function useAuth() {
   const { data: currentUser, isLoading, error } = useQuery({
     queryKey: ["current-user"],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError) {
+          console.error("Auth error:", authError);
+          return null;
+        }
 
-      const { data } = await supabase
-        .from("system_users")
-        .select("*")
-        .eq("id", user.id)
-        .single();
+        if (!user) {
+          console.log("No authenticated user found");
+          return null;
+        }
 
-      console.log("Current user data:", data); // Log para debug
-      return data;
+        const { data, error: userError } = await supabase
+          .from("system_users")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+
+        if (userError) {
+          console.error("User data fetch error:", userError);
+          return null;
+        }
+
+        console.log("Current user data:", data); // Log for debugging
+        return data;
+      } catch (error) {
+        console.error("Unexpected error in useAuth:", error);
+        return null;
+      }
     },
-    staleTime: 1000 * 60 * 5, // 5 minutos
+    staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: false,
   });
 
-  // Verificar explicitamente se o usuário tem role admin
+  // Verify explicitly if the user has admin role
   const isAdmin = Boolean(currentUser?.role === "admin");
-  console.log("Is admin:", isAdmin, "User role:", currentUser?.role); // Log para debug
+  console.log("Is admin:", isAdmin, "User role:", currentUser?.role); // Log for debugging
 
   return {
     currentUser,
