@@ -11,6 +11,20 @@ export function useAuth() {
         
         if (authError) {
           console.error("Auth error:", authError);
+          if (authError.message === "Auth session missing!") {
+            // Check if there's a session in localStorage
+            const localSession = localStorage.getItem('supabase.auth.token');
+            if (localSession) {
+              console.log("Found session in localStorage, refreshing...");
+              // Try to refresh the session
+              const { data } = await supabase.auth.refreshSession();
+              if (data.session) {
+                console.log("Session refreshed successfully");
+              }
+            } else {
+              console.log("No session found in localStorage");
+            }
+          }
           return null;
         }
 
@@ -39,6 +53,7 @@ export function useAuth() {
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: false,
+    retry: 2, // Add retry logic
   });
 
   // Verify explicitly if the user has admin role
