@@ -29,7 +29,7 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
   const [loading, setLoading] = useState(false);
   const [processingEquipment, setProcessingEquipment] = useState<string | null>(null);
   const { toast } = useToast();
-  const { handleFaturarTicket } = useTicketActions([], () => {});
+  const { handleFaturarTicket, handleMarkEquipmentAsDelivered } = useTicketActions([], onSuccess);
 
   // Buscar histórico do ticket para o PDF
   const { data: ticketHistory } = useQuery({
@@ -76,49 +76,13 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
     }
   };
 
-  const handleMarkEquipmentAsDelivered = async (equipmentId: string, equipmentCode: string) => {
+  const handleDeliverEquipment = async (equipmentId: string, equipmentCode: string) => {
     setProcessingEquipment(equipmentId);
     try {
-      // Atualizar o status do equipamento para ENTREGUE
-      const { error: equipmentError } = await supabase
-        .from("equipamentos")
-        .update({ 
-          status: "ENTREGUE",
-          entregue_at: new Date().toISOString() 
-        })
-        .eq("id", equipmentId);
-
-      if (equipmentError) throw equipmentError;
-
-      // Registrar no histórico do ticket
-      const { error: historyError } = await supabase
-        .from("ticket_history")
-        .insert({
-          ticket_id: ticket.id,
-          status: ticket.status,
-          created_by: (await supabase.auth.getUser()).data.user?.id,
-          action_type: "EQUIPMENT_STATUS",
-          equipment_id: equipmentId,
-          equipment_codigo: equipmentCode,
-          equipment_status: "ENTREGUE",
-          reason: "Equipamento entregue ao cliente."
-        });
-
-      if (historyError) throw historyError;
-
-      toast({
-        title: "Equipamento entregue",
-        description: `O equipamento ${equipmentCode} foi marcado como entregue.`,
-      });
-      
+      await handleMarkEquipmentAsDelivered(equipmentId, equipmentCode, ticket.id, ticket.status);
       onSuccess();
     } catch (error) {
       console.error("Erro ao marcar equipamento como entregue:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao atualizar equipamento",
-        description: "Não foi possível marcar o equipamento como entregue.",
-      });
     } finally {
       setProcessingEquipment(null);
     }
@@ -170,7 +134,7 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
                       <DropdownMenuItem 
                         key={equip.id}
                         disabled={processingEquipment === equip.id}
-                        onClick={() => equip.id && handleMarkEquipmentAsDelivered(equip.id, equip.codigo)}
+                        onClick={() => equip.id && handleDeliverEquipment(equip.id, equip.codigo)}
                         className="cursor-pointer"
                       >
                         {processingEquipment === equip.id ? (

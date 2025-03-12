@@ -1,15 +1,13 @@
 
+import { useState } from "react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Ticket, TicketHistory } from "@/types/ticket";
-import { TicketProgress } from "./TicketProgress";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -18,6 +16,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Package, User, Clock, AlertCircle, Check, Loader2 } from "lucide-react";
+import { Ticket, TicketHistory } from "@/types/ticket";
+import { TicketProgress } from "./TicketProgress";
+import { Button } from "../ui/button";
+import { useTicketActions } from "@/hooks/tickets/use-ticket-actions";
 
 interface TicketDetailsProps {
   ticket: Ticket | null;
@@ -25,174 +30,277 @@ interface TicketDetailsProps {
   onClose: () => void;
 }
 
-const statusOptions = [
-  { value: "PENDENTE", label: "Pendente" },
-  { value: "EM_ANDAMENTO", label: "Em Andamento" },
-  { value: "CONCLUIDO", label: "Concluído" },
-  { value: "CANCELADO", label: "Cancelado" },
-  { value: "FATURADO", label: "Faturado" },
-];
-
 export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) {
+  const [processingEquipment, setProcessingEquipment] = useState<string | null>(null);
+  const { handleMarkEquipmentAsDelivered } = useTicketActions([], onClose);
+
   if (!ticket) return null;
 
-  const getStatusColor = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "PENDENTE":
-        return "bg-yellow-500";
+        return <Badge className="bg-yellow-500">Pendente</Badge>;
       case "EM_ANDAMENTO":
-        return "bg-blue-500";
+        return <Badge className="bg-blue-500">Em Andamento</Badge>;
       case "CONCLUIDO":
-        return "bg-green-500";
+        return <Badge className="bg-green-500">Concluído</Badge>;
       case "CANCELADO":
-        return "bg-red-500";
+        return <Badge className="bg-red-500">Cancelado</Badge>;
       case "FATURADO":
-        return "bg-green-700";
+        return <Badge className="bg-green-700">Faturado</Badge>;
       default:
-        return "bg-gray-500";
+        return <Badge className="bg-gray-500">{status}</Badge>;
     }
   };
 
-  const getHistoryText = (item: TicketHistory) => {
-    if (item.action_type === 'USER_ASSIGNMENT') {
-      const previousUser = item.previous_assigned_to ? 
-        `${item.previous_assigned_to_user?.name}` : 
-        "Nenhum usuário";
-      const newUser = item.new_assigned_to_user?.name;
-      return `Ticket reatribuído de ${previousUser} para ${newUser}`;
-    } else if (item.action_type === 'EQUIPMENT_STATUS') {
-      return `Equipamento ${item.equipment_codigo} marcado como ${item.equipment_status === 'ENTREGUE' ? 'ENTREGUE' : 'RETIRADO'}`;
-    } else {
-      return `Status alterado para ${statusOptions.find(s => s.value === item.status)?.label}`;
+  const getActionTypeText = (actionType: string) => {
+    switch (actionType) {
+      case "STATUS_CHANGE":
+        return "Alteração de Status";
+      case "USER_ASSIGNMENT":
+        return "Reatribuição de Usuário";
+      case "EQUIPMENT_STATUS":
+        return "Status de Equipamento";
+      default:
+        return actionType;
     }
   };
 
-  const getEquipmentStatusColor = (status?: string) => {
-    switch (status) {
-      case "RETIRADO":
-        return "bg-blue-500";
-      case "ENTREGUE":
-        return "bg-green-500";
-      default:
-        return "bg-gray-500";
+  const getEquipmentStatusBadge = (status: string | undefined) => {
+    if (!status) return null;
+    return status === "ENTREGUE" ? 
+      <Badge className="bg-green-500">Entregue</Badge> : 
+      <Badge className="bg-blue-500">Retirado</Badge>;
+  };
+
+  const handleDeliverEquipment = async (equipmentId: string, equipmentCode: string) => {
+    if (!ticket) return;
+    
+    setProcessingEquipment(equipmentId);
+    try {
+      await handleMarkEquipmentAsDelivered(equipmentId, equipmentCode, ticket.id, ticket.status);
+    } finally {
+      setProcessingEquipment(null);
     }
   };
 
   return (
-    <Sheet open={!!ticket} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>
-            Detalhes do Ticket - {ticket.codigo}
-          </SheetTitle>
-        </SheetHeader>
-        <div className="mt-6 space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Cliente</Label>
-              <p className="mt-1 font-medium">{ticket.client.razao_social}</p>
-            </div>
-            <div>
-              <Label>Responsável</Label>
-              <p className="mt-1 font-medium">{ticket.assigned_user?.name || "Não atribuído"}</p>
-            </div>
-            <div>
-              <Label>Data Agendada</Label>
-              <p className="mt-1 font-medium">
-                {format(new Date(ticket.scheduled_for), "dd/MM/yyyy HH:mm")}
-              </p>
-            </div>
-            <div>
-              <Label>Status Atual</Label>
-              <Badge className={`mt-1 ${getStatusColor(ticket.status)}`}>
-                {statusOptions.find((s) => s.value === ticket.status)?.label}
-              </Badge>
-            </div>
+    <Dialog open={!!ticket} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="flex flex-row items-center justify-between">
+          <DialogTitle className="text-xl">
+            Ticket #{ticket.codigo}
+          </DialogTitle>
+          <div className="flex items-center gap-2">
+            {getStatusBadge(ticket.status)}
+            <TicketProgress ticket={ticket} onSuccess={onClose} />
           </div>
+        </DialogHeader>
 
-          <div>
-            <Label>Descrição</Label>
-            <p className="mt-1 text-gray-700">{ticket.description}</p>
-          </div>
+        <Tabs defaultValue="details">
+          <TabsList className="mb-4">
+            <TabsTrigger value="details">Detalhes</TabsTrigger>
+            <TabsTrigger value="history">Histórico</TabsTrigger>
+            <TabsTrigger value="equipment">Equipamentos</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="details">
+            <Card>
+              <CardHeader>
+                <CardTitle>Informações do Ticket</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">Cliente</h4>
+                    <p>{ticket.client.razao_social}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">Status</h4>
+                    <p>{getStatusBadge(ticket.status)}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">Responsável</h4>
+                    <div className="flex items-center">
+                      <User className="h-4 w-4 mr-2" />
+                      <p>{ticket.assigned_user?.name || "Não atribuído"}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium mb-1">Agendado para</h4>
+                    <div className="flex items-center">
+                      <Clock className="h-4 w-4 mr-2" />
+                      <p>{format(new Date(ticket.scheduled_for), "dd/MM/yyyy HH:mm")}</p>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Descrição</h4>
+                  <p className="whitespace-pre-line">{ticket.description}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-          <div>
-            <Label className="block mb-3">Equipamentos</Label>
-            {ticket.equipamentos && ticket.equipamentos.length > 0 ? (
-              <div className="border rounded-lg overflow-hidden">
+          <TabsContent value="history">
+            <Card>
+              <CardHeader>
+                <CardTitle>Histórico do Ticket</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Usuário</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Detalhes</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {history.map((entry) => (
+                      <TableRow key={entry.id}>
+                        <TableCell>
+                          {format(new Date(entry.created_at), "dd/MM/yyyy HH:mm")}
+                        </TableCell>
+                        <TableCell>{entry.created_by_user?.name}</TableCell>
+                        <TableCell>{getActionTypeText(entry.action_type)}</TableCell>
+                        <TableCell>
+                          {entry.action_type === "STATUS_CHANGE" && (
+                            <div>
+                              <div>Status: {getStatusBadge(entry.status)}</div>
+                              {entry.reason && (
+                                <div className="mt-1">
+                                  <span className="font-semibold">Motivo: </span>
+                                  {entry.reason}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {entry.action_type === "USER_ASSIGNMENT" && (
+                            <div>
+                              <div>De: {entry.previous_assigned_to_user?.name || "Não atribuído"}</div>
+                              <div>Para: {entry.new_assigned_to_user?.name || "Não atribuído"}</div>
+                            </div>
+                          )}
+                          {entry.action_type === "EQUIPMENT_STATUS" && (
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-2">
+                                <Package className="h-4 w-4" />
+                                <span>{entry.equipment_codigo}</span>
+                                {getEquipmentStatusBadge(entry.equipment_status)}
+                              </div>
+                              {entry.reason && <div className="text-sm">{entry.reason}</div>}
+                              {entry.equipment_status !== "ENTREGUE" && entry.equipment_id && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  disabled={processingEquipment === entry.equipment_id}
+                                  onClick={() => entry.equipment_id && entry.equipment_codigo && 
+                                    handleDeliverEquipment(entry.equipment_id, entry.equipment_codigo)}
+                                  className="w-fit mt-1"
+                                >
+                                  {processingEquipment === entry.equipment_id ? (
+                                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                  ) : (
+                                    <Check className="h-3 w-3 mr-1" />
+                                  )}
+                                  Marcar como entregue
+                                </Button>
+                              )}
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {history.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-4">
+                          <div className="flex flex-col items-center justify-center text-muted-foreground">
+                            <AlertCircle className="h-6 w-6 mb-2" />
+                            Nenhum registro de histórico encontrado
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="equipment">
+            <Card>
+              <CardHeader>
+                <CardTitle>Equipamentos</CardTitle>
+              </CardHeader>
+              <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Código</TableHead>
                       <TableHead>Equipamento</TableHead>
-                      <TableHead>Nº de Série</TableHead>
+                      <TableHead>Número de Série</TableHead>
                       <TableHead>Condição</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Observações</TableHead>
+                      <TableHead>Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {ticket.equipamentos.map((equip, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{equip.codigo}</TableCell>
-                        <TableCell>{equip.equipamento}</TableCell>
-                        <TableCell>{equip.numero_serie || "-"}</TableCell>
-                        <TableCell>{equip.condicao}</TableCell>
-                        <TableCell>
-                          <Badge className={getEquipmentStatusColor(equip.status)}>
-                            {equip.status || "RETIRADO"}
-                          </Badge>
+                    {ticket.equipamentos && ticket.equipamentos.length > 0 ? (
+                      ticket.equipamentos.map((equip) => (
+                        <TableRow key={equip.id}>
+                          <TableCell>{equip.codigo}</TableCell>
+                          <TableCell>{equip.equipamento}</TableCell>
+                          <TableCell>{equip.numero_serie || "-"}</TableCell>
+                          <TableCell>
+                            <Badge className={
+                              equip.condicao === "NOVO" ? "bg-green-500" :
+                              equip.condicao === "USADO" ? "bg-yellow-500" : "bg-red-500"
+                            }>
+                              {equip.condicao}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {getEquipmentStatusBadge(equip.status)}
+                          </TableCell>
+                          <TableCell>
+                            {equip.status !== "ENTREGUE" && equip.id && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                disabled={processingEquipment === equip.id}
+                                onClick={() => equip.id && 
+                                  handleDeliverEquipment(equip.id, equip.codigo)}
+                              >
+                                {processingEquipment === equip.id ? (
+                                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                ) : (
+                                  <Check className="h-3 w-3 mr-1" />
+                                )}
+                                Marcar como entregue
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-4">
+                          <div className="flex flex-col items-center justify-center text-muted-foreground">
+                            <Package className="h-6 w-6 mb-2" />
+                            Nenhum equipamento associado a este ticket
+                          </div>
                         </TableCell>
-                        <TableCell>{equip.observacoes || "-"}</TableCell>
                       </TableRow>
-                    ))}
+                    )}
                   </TableBody>
                 </Table>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500">Nenhum equipamento registrado.</p>
-            )}
-          </div>
-
-          <div className="flex justify-end">
-            <TicketProgress
-              ticket={ticket}
-              onSuccess={() => {
-                onClose();
-              }}
-            />
-          </div>
-
-          <div>
-            <Label className="mb-2 block">Histórico</Label>
-            {history.length > 0 ? (
-              <div className="space-y-4">
-                {history.map((item) => (
-                  <div key={item.id} className="border p-4 rounded-lg">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <p className="font-medium">
-                          {getHistoryText(item)}
-                        </p>
-                        {item.reason && (
-                          <p className="mt-2 text-sm text-gray-600 whitespace-pre-wrap">
-                            <span className="font-medium">Motivo:</span> {item.reason}
-                          </p>
-                        )}
-                      </div>
-                      <div className="text-sm text-gray-500 text-right ml-4">
-                        <p>{format(new Date(item.created_at), "dd/MM/yyyy HH:mm")}</p>
-                        <p>por {item.created_by_user.name}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500">Nenhuma alteração registrada.</p>
-            )}
-          </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
   );
 }
