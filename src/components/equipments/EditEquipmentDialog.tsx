@@ -47,7 +47,7 @@ export function EditEquipmentDialog({
     condicao: "NOVO" as "NOVO" | "USADO" | "DEFEITO",
     observacoes: "",
     client_id: "",
-    status: "" as string,
+    status: "" as "RETIRADO" | "ENTREGUE" | "",
   });
   const { toast } = useToast();
 
@@ -59,7 +59,7 @@ export function EditEquipmentDialog({
         condicao: equipment.condicao,
         observacoes: equipment.observacoes || "",
         client_id: equipment.client_id,
-        status: equipment.status || "",
+        status: equipment.status as "RETIRADO" | "ENTREGUE" | "" || "RETIRADO",
       });
     }
   }, [equipment]);
@@ -152,12 +152,18 @@ export function EditEquipmentDialog({
           
           <div>
             <Label htmlFor="status">Status</Label>
-            <Input
-              id="status"
+            <Select
               value={equipmentForm.status}
-              onChange={(e) => setEquipmentForm(prev => ({ ...prev, status: e.target.value }))}
-              placeholder="Digite qualquer status (ex: RETIRADO, ENTREGUE, MANUTENÇÃO, etc)"
-            />
+              onValueChange={(value) => setEquipmentForm(prev => ({ ...prev, status: value as "RETIRADO" | "ENTREGUE" | "" }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="RETIRADO">Retirado</SelectItem>
+                <SelectItem value="ENTREGUE">Entregue</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           <div>

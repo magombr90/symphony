@@ -26,8 +26,6 @@ export type Ticket = {
   } | null;
   faturado: boolean;
   faturado_at: string | null;
-  started_at: string | null;
-  time_spent: number | null;
   equipamentos?: Array<{
     id?: string;
     codigo: string;
@@ -44,15 +42,13 @@ export type TicketHistory = {
   id: string;
   ticket_id: string;
   status: string;
-  previous_status: string | null;
-  time_spent: number | null;
   reason: string | null;
   created_at: string;
   created_by: string;
   created_by_user: {
     name: string;
   };
-  action_type: "STATUS_CHANGE" | "USER_ASSIGNMENT" | "EQUIPMENT_STATUS" | "PROGRESS_NOTE";
+  action_type: "STATUS_CHANGE" | "USER_ASSIGNMENT" | "EQUIPMENT_STATUS";
   previous_assigned_to: string | null;
   new_assigned_to: string | null;
   previous_assigned_to_user?: {

@@ -74,33 +74,20 @@ export function useTicketQueries(
       const { data, error } = await query;
       if (error) throw error;
 
-      // Map equipment data to tickets with proper type handling
-      const mappedTickets = (data || []).map(ticket => {
+      // Map equipment data to tickets
+      return (data || []).map(ticket => {
         const ticketEquipments = equipmentData?.filter(eq => eq.ticket_id === ticket.id) || [];
-        
-        // Create a properly typed ticket object with all required properties
-        const typedTicket: Ticket = {
+        return {
           ...ticket,
-          // Add these properties with explicit defaults since they might not be in the view
-          started_at: null,  // Default to null since it doesn't exist in the view
-          time_spent: null,  // Default to null since it doesn't exist in the view
           equipamentos: ticketEquipments.map(eq => ({
-            id: eq.id,
             codigo: eq.codigo,
             equipamento: eq.equipamento,
             numero_serie: eq.numero_serie,
             condicao: eq.condicao,
-            observacoes: eq.observacoes,
-            // Ensure status is cast to one of the allowed values
-            status: (eq.status === "ENTREGUE" ? "ENTREGUE" : "RETIRADO") as "RETIRADO" | "ENTREGUE",
-            entregue_at: eq.entregue_at || null
+            observacoes: eq.observacoes
           }))
         };
-        
-        return typedTicket;
-      });
-      
-      return mappedTickets;
+      }) as Ticket[];
     },
   });
 
@@ -144,7 +131,7 @@ export function useTicketQueries(
 
       return (data || []).map(item => ({
         ...item,
-        action_type: item.action_type as "STATUS_CHANGE" | "USER_ASSIGNMENT" | "EQUIPMENT_STATUS"
+        action_type: item.action_type as "STATUS_CHANGE" | "USER_ASSIGNMENT"
       })) as TicketHistory[];
     },
   });
