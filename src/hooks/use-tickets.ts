@@ -28,6 +28,7 @@ export function useTickets() {
     handleFaturarTicket,
     updateTicketStatus,
     handleAssignTicket,
+    addProgressNote,
   } = useTicketActions(systemUsers, refetch);
 
   const handleStatusChange = async (ticketId: string, newStatus: string) => {
@@ -80,6 +81,7 @@ export function useTickets() {
     handleAssignTicket,
     updateTicketStatus,
     handleReasonSubmit,
+    addProgressNote,
     refetch,
   };
 }

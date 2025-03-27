@@ -250,18 +250,24 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
         return false;
       }
 
+      console.log("Adding progress note:", { ticketId, note, ticketStatus });
+
       // Registrar o andamento no histórico do ticket
       const historyData = {
         ticket_id: ticketId,
         status: ticketStatus,
         reason: note,
         created_by: currentUser.id,
-        action_type: 'PROGRESS_NOTE'
+        action_type: 'PROGRESS_NOTE',
+        previous_status: ticketStatus // O status não muda, mas precisamos preencher para manter consistência
       };
 
-      const { error: historyError } = await supabase
+      const { data: historyResult, error: historyError } = await supabase
         .from("ticket_history")
-        .insert([historyData]);
+        .insert([historyData])
+        .select();
+
+      console.log("Progress note history result:", { historyResult, historyError });
 
       if (historyError) {
         console.error("Erro ao registrar andamento:", historyError);

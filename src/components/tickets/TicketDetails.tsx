@@ -24,7 +24,6 @@ import { TicketProgress } from "./TicketProgress";
 import { Button } from "../ui/button";
 import { useTicketActions } from "@/hooks/tickets/use-ticket-actions";
 import { Textarea } from "../ui/textarea";
-import { Alert, AlertDescription } from "../ui/alert";
 
 interface TicketDetailsProps {
   ticket: Ticket | null;
@@ -98,11 +97,15 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
   const handleSubmitProgressNote = async () => {
     if (!ticket || !progressNote.trim()) return;
     
+    console.log("Submitting progress note:", { ticketId: ticket.id, note: progressNote, status: ticket.status });
     setIsSubmittingProgress(true);
     try {
-      await addProgressNote(ticket.id, progressNote, ticket.status);
-      setProgressNote("");
-      setShowProgressForm(false);
+      const success = await addProgressNote(ticket.id, progressNote, ticket.status);
+      console.log("Progress note submission result:", success);
+      if (success) {
+        setProgressNote("");
+        setShowProgressForm(false);
+      }
     } finally {
       setIsSubmittingProgress(false);
     }
