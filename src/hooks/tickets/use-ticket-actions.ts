@@ -246,21 +246,36 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
 
   const addProgressNote = async (ticketId: string, note: string, ticketStatus: string) => {
     try {
-      if (!currentUser?.id || !note.trim()) {
+      if (!note.trim()) {
         return false;
       }
 
       console.log("Adding progress note:", { ticketId, note, ticketStatus });
+
+      // Get the current user ID directly from Supabase auth
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.error("No authenticated user found");
+        toast({
+          variant: "destructive",
+          title: "Erro ao registrar andamento",
+          description: "Você precisa estar autenticado para registrar andamentos.",
+        });
+        return false;
+      }
 
       // Registrar o andamento no histórico do ticket
       const historyData = {
         ticket_id: ticketId,
         status: ticketStatus,
         reason: note,
-        created_by: currentUser.id,
+        created_by: user.id,
         action_type: 'PROGRESS_NOTE',
         previous_status: ticketStatus // O status não muda, mas precisamos preencher para manter consistência
       };
+
+      console.log("Sending history data:", historyData);
 
       const { data: historyResult, error: historyError } = await supabase
         .from("ticket_history")
