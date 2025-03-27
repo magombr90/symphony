@@ -129,10 +129,7 @@ export function useTicketQueries(
 
       if (error) throw error;
 
-      return (data || []).map(item => ({
-        ...item,
-        action_type: item.action_type as "STATUS_CHANGE" | "USER_ASSIGNMENT"
-      })) as TicketHistory[];
+      return (data || []) as TicketHistory[];
     },
   });
 

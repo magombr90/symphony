@@ -238,7 +238,15 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
                         <TableCell>
                           {entry.action_type === "STATUS_CHANGE" && (
                             <div>
-                              <div>Status: {getStatusBadge(entry.status)}</div>
+                              <div className="flex items-center gap-2">
+                                {entry.previous_status && (
+                                  <>
+                                    {getStatusBadge(entry.previous_status)}
+                                    <span className="mx-1">→</span>
+                                  </>
+                                )}
+                                {getStatusBadge(entry.status)}
+                              </div>
                               {entry.reason && (
                                 <div className="mt-1">
                                   <span className="font-semibold">Motivo: </span>

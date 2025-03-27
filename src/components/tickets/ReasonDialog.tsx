@@ -32,6 +32,15 @@ export function ReasonDialog({
   // depois tentando obter de editingTicket se disponível
   const ticketStatus = status || (editingTicket?.status);
 
+  const getDialogTitle = () => {
+    if (ticketStatus === "CANCELADO") {
+      return "Motivo do Cancelamento";
+    } else if (ticketStatus === "CONCLUIDO") {
+      return "Motivo da Conclusão";
+    }
+    return "Adicionar Motivo";
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (reason.trim()) {
@@ -43,11 +52,7 @@ export function ReasonDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            {ticketStatus === "CANCELADO"
-              ? "Motivo do Cancelamento"
-              : "Motivo da Conclusão"}
-          </DialogTitle>
+          <DialogTitle>{getDialogTitle()}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

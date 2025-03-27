@@ -24,6 +24,7 @@ type TicketHistory = {
     name: string;
   };
   action_type: string;
+  previous_status?: string | null;
 };
 
 type Equipment = {
@@ -65,6 +66,7 @@ export function ClientTicketDetails({ ticket, onClose }: ClientTicketDetailsProp
             reason,
             created_at,
             action_type,
+            previous_status,
             created_by_user:system_users!ticket_history_created_by_fkey(name)
           `)
           .eq("ticket_id", ticket.id)
@@ -188,9 +190,10 @@ export function ClientTicketDetails({ ticket, onClose }: ClientTicketDetailsProp
                       <CardTitle className="text-sm font-medium flex items-center justify-between">
                         <span>
                           {getActionTypeLabel(item.action_type)}
-                          {item.action_type === "STATUS_CHANGE" 
-                            ? `: ${getStatusLabel(item.status)}`
-                            : ""}
+                          {item.action_type === "STATUS_CHANGE" && 
+                            `: ${item.previous_status ? `${getStatusLabel(item.previous_status)} → ` : ''}${getStatusLabel(item.status)}`
+                          }
+                          {item.action_type === "PROGRESS_NOTE" && ": Atualização"}
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {format(new Date(item.created_at), "dd/MM/yyyy HH:mm")}
@@ -237,7 +240,7 @@ export function ClientTicketDetails({ ticket, onClose }: ClientTicketDetailsProp
                           {equipment.status && (
                             <div className="col-span-2">
                               <span className="font-medium">Status:</span>{" "}
-                              {equipment.status}
+                              {equipment.status === "ENTREGUE" ? "Entregue" : "Retirado"}
                             </div>
                           )}
                           {equipment.observacoes && (

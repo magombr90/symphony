@@ -55,7 +55,16 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
         }
       }
 
-      // Primeiro atualiza o status do ticket
+      // Primeiro obter o status atual para registrar no histórico
+      const { data: currentTicket } = await supabase
+        .from("tickets")
+        .select("status")
+        .eq("id", ticketId)
+        .single();
+
+      const previousStatus = currentTicket?.status;
+
+      // Atualiza o status do ticket
       const { error: updateError } = await supabase
         .from("tickets")
         .update({ status: newStatus })
@@ -71,6 +80,16 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
         return false;
       }
 
+      // Um motivo é obrigatório para cancelamentos e conclusões
+      if ((newStatus === "CANCELADO" || newStatus === "CONCLUIDO") && !reasonText) {
+        toast({
+          variant: "destructive",
+          title: "Motivo obrigatório",
+          description: `É necessário informar o motivo para ${newStatus === "CANCELADO" ? "cancelar" : "concluir"} o ticket.`,
+        });
+        return false;
+      }
+
       // Registrar o histórico independentemente do motivo
       if (currentUser?.id) {
         console.log("Registrando histórico com motivo:", { reasonText });
@@ -80,7 +99,8 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
           status: newStatus,
           reason: reasonText || null,
           created_by: currentUser.id,
-          action_type: 'STATUS_CHANGE'
+          action_type: 'STATUS_CHANGE',
+          previous_status: previousStatus
         };
 
         const { data: historyResult, error: historyError } = await supabase
