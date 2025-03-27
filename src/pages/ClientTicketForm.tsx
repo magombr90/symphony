@@ -92,14 +92,17 @@ export default function ClientTicketForm() {
       }
 
       // Create a new ticket
+      // Using .insert().select().single() so the trigger can generate the codigo
       const { data, error } = await supabase
         .from("tickets")
         .insert({
           client_id: clientSession.clientId,
           description: description,
           scheduled_for: new Date(scheduledDate).toISOString(),
-          created_by: systemUser.id, // Using admin as creator
+          created_by: systemUser.id,
           status: "PENDENTE",
+          // Add a temporary codigo that will be replaced by the trigger
+          codigo: "TEMP-" + new Date().getTime()
         })
         .select()
         .single();
