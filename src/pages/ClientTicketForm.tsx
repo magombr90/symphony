@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ClientTicketsList } from "@/components/client/ClientTicketsList";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type ClientSession = {
   clientId: string;
@@ -21,6 +23,7 @@ export default function ClientTicketForm() {
   const [scheduledDate, setScheduledDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [clientSession, setClientSession] = useState<ClientSession | null>(null);
+  const [activeTab, setActiveTab] = useState("new");
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -119,9 +122,9 @@ export default function ClientTicketForm() {
       // Clear form
       setDescription("");
       setScheduledDate("");
-
-      // Redirect to success page
-      navigate("/client-ticket-success");
+      
+      // Switch to tickets tab to see the new ticket
+      setActiveTab("tickets");
     } catch (error) {
       console.error("Erro ao criar ticket:", error);
       toast({
@@ -158,44 +161,59 @@ export default function ClientTicketForm() {
           </div>
         </div>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Solicitar Atendimento</CardTitle>
-            <CardDescription>
-              Descreva seu problema e sugerira uma data para atendimento
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmitTicket}>
-              <div className="grid gap-6">
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Descrição do problema</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Descreva detalhadamente o problema que está enfrentando"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    required
-                    className="min-h-[120px]"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="date">Data sugerida para atendimento</Label>
-                  <Input
-                    id="date"
-                    type="datetime-local"
-                    value={scheduledDate}
-                    onChange={(e) => setScheduledDate(e.target.value)}
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Enviando..." : "Enviar solicitação"}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+        <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="new">Nova Solicitação</TabsTrigger>
+            <TabsTrigger value="tickets">Meus Tickets</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="new">
+            <Card>
+              <CardHeader>
+                <CardTitle>Solicitar Atendimento</CardTitle>
+                <CardDescription>
+                  Descreva seu problema e sugira uma data para atendimento
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmitTicket}>
+                  <div className="grid gap-6">
+                    <div className="grid gap-2">
+                      <Label htmlFor="description">Descrição do problema</Label>
+                      <Textarea
+                        id="description"
+                        placeholder="Descreva detalhadamente o problema que está enfrentando"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        required
+                        className="min-h-[120px]"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="date">Data sugerida para atendimento</Label>
+                      <Input
+                        id="date"
+                        type="datetime-local"
+                        value={scheduledDate}
+                        onChange={(e) => setScheduledDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? "Enviando..." : "Enviar solicitação"}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="tickets">
+            {clientSession && (
+              <ClientTicketsList clientId={clientSession.clientId} />
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
