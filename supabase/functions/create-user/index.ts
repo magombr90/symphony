@@ -14,10 +14,23 @@ serve(async (req) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://zooxsmqfzpxedecpukjq.supabase.co';
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseServiceKey) {
+      console.error('SUPABASE_SERVICE_ROLE_KEY não está configurada');
+      return new Response(
+        JSON.stringify({ 
+          error: "SUPABASE_SERVICE_ROLE_KEY não está configurada nas variáveis de ambiente da função. Por favor, configure-a nas configurações de Edge Functions do Supabase." 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
+    }
+    
     // Create a Supabase client with the Admin key
     const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      supabaseUrl,
+      supabaseServiceKey,
       {
         auth: {
           autoRefreshToken: false,

@@ -65,6 +65,11 @@ export default function Login() {
   const createAdminUser = async () => {
     setLoading(true);
     try {
+      // Preencher automaticamente os campos
+      setEmail('mailton@tfsinformatica.com.br');
+      setPassword('29786015');
+      
+      // Cria o usuário admin
       const response = await supabase.functions.invoke('create-user', {
         body: {
           email: 'mailton@tfsinformatica.com.br',
@@ -75,24 +80,44 @@ export default function Login() {
       });
       
       if (response.error) {
-        throw new Error(response.error.message);
+        throw new Error(response.error);
       }
-      
-      // Preencher automaticamente os campos
-      setEmail('mailton@tfsinformatica.com.br');
-      setPassword('29786015');
       
       toast({
         title: "Usuário administrador criado com sucesso",
-        description: "Agora você pode fazer login"
+        description: "Agora você pode fazer login usando os dados preenchidos."
       });
+      
+      // Esperar um pouco antes de tentar fazer login
+      setTimeout(() => {
+        handleLogin({ preventDefault: () => {} } as React.FormEvent);
+      }, 1500);
+      
     } catch (error: any) {
       console.error("Error creating admin user:", error);
-      toast({
-        title: "Erro ao criar usuário administrador",
-        description: error.message,
-        variant: "destructive"
-      });
+      
+      // Se o erro for que o usuário já existe, informamos que está tudo bem e preenchemos os campos
+      if (error.message && (
+          error.message.includes("already exists") || 
+          error.message.includes("já existe") ||
+          error.message.includes("User already exists")
+        )) {
+        toast({
+          title: "Usuário já existe",
+          description: "Você pode fazer login com as credenciais preenchidas"
+        });
+        
+        // Esperar um pouco antes de tentar fazer login
+        setTimeout(() => {
+          handleLogin({ preventDefault: () => {} } as React.FormEvent);
+        }, 1500);
+      } else {
+        toast({
+          title: "Erro ao criar usuário administrador",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
     } finally {
       setLoading(false);
     }
