@@ -42,6 +42,7 @@ export type TicketHistory = {
   id: string;
   ticket_id: string;
   status: string;
+  previous_status: string | null;
   reason: string | null;
   created_at: string;
   created_by: string;
