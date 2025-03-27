@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,43 +41,6 @@ interface SystemUser {
   active: boolean;
 }
 
-// Add this function at the beginning of the SystemUsers component
-const handleCreateAdminUser = async () => {
-  try {
-    setIsLoading(true);
-    
-    // Call the edge function to create the admin user
-    const response = await supabase.functions.invoke('create-user', {
-      body: {
-        email: 'mailton@tfsinformatica.com.br',
-        password: '29786015',
-        name: 'Mailton',
-        role: 'admin'
-      }
-    });
-    
-    if (response.error) {
-      throw new Error(response.error.message);
-    }
-    
-    toast({
-      title: "Usuário administrador criado com sucesso",
-      description: "Você já pode fazer login com esse usuário"
-    });
-    
-    void refetchUsers();
-  } catch (error) {
-    console.error("Error creating admin user:", error);
-    toast({
-      title: "Erro ao criar usuário administrador",
-      description: error.message,
-      variant: "destructive"
-    });
-  } finally {
-    setIsLoading(false);
-  }
-};
-
 export default function SystemUsers() {
   const [openNewUser, setOpenNewUser] = useState(false);
   const [users, setUsers] = useState<SystemUser[]>([]);
@@ -110,6 +74,43 @@ export default function SystemUsers() {
       }
 
       setUsers(data || []);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Move the function inside the component to access component variables
+  const handleCreateAdminUser = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Call the edge function to create the admin user
+      const response = await supabase.functions.invoke('create-user', {
+        body: {
+          email: 'mailton@tfsinformatica.com.br',
+          password: '29786015',
+          name: 'Mailton',
+          role: 'admin'
+        }
+      });
+      
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+      
+      toast({
+        title: "Usuário administrador criado com sucesso",
+        description: "Você já pode fazer login com esse usuário"
+      });
+      
+      void refetchUsers();
+    } catch (error) {
+      console.error("Error creating admin user:", error);
+      toast({
+        title: "Erro ao criar usuário administrador",
+        description: error.message,
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
