@@ -10,6 +10,9 @@ import SystemUsers from "./pages/SystemUsers";
 import Dashboard from "./pages/Dashboard";
 import Equipments from "./pages/Equipments";
 import UserProfile from "./pages/UserProfile";
+import ClientPortal from "./pages/ClientPortal";
+import ClientTicketForm from "./pages/ClientTicketForm";
+import ClientTicketSuccess from "./pages/ClientTicketSuccess";
 
 const queryClient = new QueryClient();
 
@@ -17,16 +20,20 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AppLayout>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/clients" element={<Clients />} />
-            <Route path="/tickets" element={<Tickets />} />
-            <Route path="/system-users" element={<SystemUsers />} />
-            <Route path="/equipments" element={<Equipments />} />
-            <Route path="/profile" element={<UserProfile />} />
-          </Routes>
-        </AppLayout>
+        <Routes>
+          {/* Client Portal Routes - No AppLayout */}
+          <Route path="/client-portal" element={<ClientPortal />} />
+          <Route path="/client-ticket-form" element={<ClientTicketForm />} />
+          <Route path="/client-ticket-success" element={<ClientTicketSuccess />} />
+          
+          {/* Admin App Routes */}
+          <Route path="/" element={<AppLayout><Dashboard /></AppLayout>} />
+          <Route path="/clients" element={<AppLayout><Clients /></AppLayout>} />
+          <Route path="/tickets" element={<AppLayout><Tickets /></AppLayout>} />
+          <Route path="/system-users" element={<AppLayout><SystemUsers /></AppLayout>} />
+          <Route path="/equipments" element={<AppLayout><Equipments /></AppLayout>} />
+          <Route path="/profile" element={<AppLayout><UserProfile /></AppLayout>} />
+        </Routes>
         <Toaster />
       </BrowserRouter>
     </QueryClientProvider>

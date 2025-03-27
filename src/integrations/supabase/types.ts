@@ -153,9 +153,11 @@ export type Database = {
           id: string
           new_assigned_to: string | null
           previous_assigned_to: string | null
+          previous_status: string | null
           reason: string | null
           status: string
           ticket_id: string
+          time_spent: number | null
         }
         Insert: {
           action_type?: string
@@ -164,9 +166,11 @@ export type Database = {
           id?: string
           new_assigned_to?: string | null
           previous_assigned_to?: string | null
+          previous_status?: string | null
           reason?: string | null
           status: string
           ticket_id: string
+          time_spent?: number | null
         }
         Update: {
           action_type?: string
@@ -175,9 +179,11 @@ export type Database = {
           id?: string
           new_assigned_to?: string | null
           previous_assigned_to?: string | null
+          previous_status?: string | null
           reason?: string | null
           status?: string
           ticket_id?: string
+          time_spent?: number | null
         }
         Relationships: [
           {
@@ -229,7 +235,9 @@ export type Database = {
           faturado_at: string | null
           id: string
           scheduled_for: string
+          started_at: string | null
           status: string
+          time_spent: number | null
           updated_at: string
         }
         Insert: {
@@ -243,7 +251,9 @@ export type Database = {
           faturado_at?: string | null
           id?: string
           scheduled_for: string
+          started_at?: string | null
           status: string
+          time_spent?: number | null
           updated_at?: string
         }
         Update: {
@@ -257,7 +267,9 @@ export type Database = {
           faturado_at?: string | null
           id?: string
           scheduled_for?: string
+          started_at?: string | null
           status?: string
+          time_spent?: number | null
           updated_at?: string
         }
         Relationships: [
