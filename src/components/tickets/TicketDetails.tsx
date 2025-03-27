@@ -18,11 +18,13 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, User, Clock, AlertCircle, Check, Loader2 } from "lucide-react";
+import { Package, User, Clock, AlertCircle, Check, Loader2, FileText } from "lucide-react";
 import { Ticket, TicketHistory } from "@/types/ticket";
 import { TicketProgress } from "./TicketProgress";
 import { Button } from "../ui/button";
 import { useTicketActions } from "@/hooks/tickets/use-ticket-actions";
+import { Textarea } from "../ui/textarea";
+import { Alert, AlertDescription } from "../ui/alert";
 
 interface TicketDetailsProps {
   ticket: Ticket | null;
@@ -32,7 +34,14 @@ interface TicketDetailsProps {
 
 export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) {
   const [processingEquipment, setProcessingEquipment] = useState<string | null>(null);
-  const { handleMarkEquipmentAsDelivered } = useTicketActions([], onClose);
+  const [showProgressForm, setShowProgressForm] = useState(false);
+  const [progressNote, setProgressNote] = useState("");
+  const [isSubmittingProgress, setIsSubmittingProgress] = useState(false);
+  
+  const { 
+    handleMarkEquipmentAsDelivered,
+    addProgressNote 
+  } = useTicketActions([], onClose);
 
   if (!ticket) return null;
 
@@ -61,6 +70,8 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
         return "Reatribuição de Usuário";
       case "EQUIPMENT_STATUS":
         return "Status de Equipamento";
+      case "PROGRESS_NOTE":
+        return "Andamento";
       default:
         return actionType;
     }
@@ -81,6 +92,19 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
       await handleMarkEquipmentAsDelivered(equipmentId, equipmentCode, ticket.id, ticket.status);
     } finally {
       setProcessingEquipment(null);
+    }
+  };
+
+  const handleSubmitProgressNote = async () => {
+    if (!ticket || !progressNote.trim()) return;
+    
+    setIsSubmittingProgress(true);
+    try {
+      await addProgressNote(ticket.id, progressNote, ticket.status);
+      setProgressNote("");
+      setShowProgressForm(false);
+    } finally {
+      setIsSubmittingProgress(false);
     }
   };
 
@@ -138,6 +162,52 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
                   <h4 className="text-sm font-medium mb-1">Descrição</h4>
                   <p className="whitespace-pre-line">{ticket.description}</p>
                 </div>
+                <div className="pt-2">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setShowProgressForm(!showProgressForm)}
+                    className="w-full"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Adicionar andamento
+                  </Button>
+                </div>
+
+                {showProgressForm && (
+                  <div className="border rounded-md p-4 bg-muted/30">
+                    <h4 className="text-sm font-medium mb-2">Andamento do ticket</h4>
+                    <Textarea
+                      placeholder="Detalhe o que foi feito ou o andamento atual do ticket..."
+                      value={progressNote}
+                      onChange={(e) => setProgressNote(e.target.value)}
+                      className="mb-3"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setShowProgressForm(false);
+                          setProgressNote("");
+                        }}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button 
+                        size="sm"
+                        onClick={handleSubmitProgressNote}
+                        disabled={!progressNote.trim() || isSubmittingProgress}
+                      >
+                        {isSubmittingProgress ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Check className="h-4 w-4 mr-2" />
+                        )}
+                        Salvar andamento
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -209,6 +279,9 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
                                 </Button>
                               )}
                             </div>
+                          )}
+                          {entry.action_type === "PROGRESS_NOTE" && (
+                            <div className="whitespace-pre-line">{entry.reason}</div>
                           )}
                         </TableCell>
                       </TableRow>

@@ -127,6 +127,21 @@ export function ClientTicketDetails({ ticket, onClose }: ClientTicketDetailsProp
     }
   };
 
+  const getActionTypeLabel = (actionType: string) => {
+    switch (actionType) {
+      case "STATUS_CHANGE":
+        return "Status alterado";
+      case "USER_ASSIGNMENT":
+        return "Técnico atribuído";
+      case "EQUIPMENT_STATUS":
+        return "Status de equipamento";
+      case "PROGRESS_NOTE":
+        return "Andamento";
+      default:
+        return "Atualização";
+    }
+  };
+
   return (
     <Dialog open={!!ticket} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
@@ -172,11 +187,10 @@ export function ClientTicketDetails({ ticket, onClose }: ClientTicketDetailsProp
                     <CardHeader className="p-4 pb-2">
                       <CardTitle className="text-sm font-medium flex items-center justify-between">
                         <span>
+                          {getActionTypeLabel(item.action_type)}
                           {item.action_type === "STATUS_CHANGE" 
-                            ? `Status alterado para ${getStatusLabel(item.status)}`
-                            : item.action_type === "USER_ASSIGNMENT" 
-                              ? "Técnico atribuído"
-                              : "Atualização"}
+                            ? `: ${getStatusLabel(item.status)}`
+                            : ""}
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {format(new Date(item.created_at), "dd/MM/yyyy HH:mm")}

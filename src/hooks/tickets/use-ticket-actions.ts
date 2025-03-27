@@ -224,10 +224,56 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
     }
   };
 
+  const addProgressNote = async (ticketId: string, note: string, ticketStatus: string) => {
+    try {
+      if (!currentUser?.id || !note.trim()) {
+        return false;
+      }
+
+      // Registrar o andamento no histórico do ticket
+      const historyData = {
+        ticket_id: ticketId,
+        status: ticketStatus,
+        reason: note,
+        created_by: currentUser.id,
+        action_type: 'PROGRESS_NOTE'
+      };
+
+      const { error: historyError } = await supabase
+        .from("ticket_history")
+        .insert([historyData]);
+
+      if (historyError) {
+        console.error("Erro ao registrar andamento:", historyError);
+        toast({
+          variant: "destructive",
+          title: "Erro ao registrar andamento",
+          description: historyError.message,
+        });
+        return false;
+      }
+
+      toast({
+        title: "Andamento registrado com sucesso!",
+      });
+      refetch();
+      return true;
+    } catch (error) {
+      console.error("Erro ao registrar andamento:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao registrar andamento",
+        description: "Ocorreu um erro ao registrar o andamento. Tente novamente.",
+      });
+      return false;
+    }
+  };
+
   return {
     handleFaturarTicket,
     updateTicketStatus,
     handleAssignTicket,
     handleMarkEquipmentAsDelivered,
+    addProgressNote,
   };
 }
