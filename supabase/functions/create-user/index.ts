@@ -39,7 +39,49 @@ serve(async (req) => {
 
     console.log(`Creating user: ${email}, name: ${name}, role: ${role || 'user'}`)
     
-    // First create the auth user
+    // Check if the user already exists
+    const { data: existingUser } = await supabaseAdmin.auth.admin.getUserByEmail(email)
+    
+    if (existingUser) {
+      console.log('User already exists, updating user in system_users table')
+      
+      // Update the system_users table if needed
+      const { data: systemUser, error: systemError } = await supabaseAdmin
+        .from('system_users')
+        .upsert({
+          id: existingUser.id,
+          email,
+          name,
+          role: role || 'user',
+          password_hash: 'password-is-in-auth-system',
+          active: true,
+        })
+        .select()
+        .single()
+        
+      if (systemError) {
+        console.error('Error updating system user:', systemError)
+        return new Response(
+          JSON.stringify({ error: systemError.message }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        )
+      }
+      
+      return new Response(
+        JSON.stringify({ 
+          message: 'User already exists, updated in system_users table', 
+          user: {
+            id: existingUser.id,
+            email: existingUser.email,
+            name,
+            role: role || 'user'
+          }
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    
+    // Create the auth user
     const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
