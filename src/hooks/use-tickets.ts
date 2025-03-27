@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Ticket } from "@/types/ticket";
 import { DateRange } from "react-day-picker";
@@ -28,6 +27,7 @@ export function useTickets() {
     handleFaturarTicket,
     updateTicketStatus,
     handleAssignTicket,
+    handleMarkEquipmentAsDelivered,
     addProgressNote,
   } = useTicketActions(systemUsers, refetch);
 
@@ -79,8 +79,10 @@ export function useTickets() {
     setSelectedUser,
     handleStatusChange,
     handleAssignTicket,
+    handleFaturarTicket,
     updateTicketStatus,
     handleReasonSubmit,
+    handleMarkEquipmentAsDelivered,
     addProgressNote,
     refetch,
   };

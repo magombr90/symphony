@@ -129,6 +129,7 @@ export function useTicketQueries(
 
       if (error) throw error;
 
+      console.log("Ticket history fetched:", data);
       return (data || []) as TicketHistory[];
     },
   });
