@@ -1,163 +1,177 @@
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Mail, Lock, Loader2, UserPlus } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [creatingAdminUser, setCreatingAdminUser] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
+    
     try {
+      console.log("Tentando fazer login com:", email);
+      
+      // Try to sign in with Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data.user) {
-        navigate("/");
-      }
-    } catch (error: any) {
-      console.error("Erro ao fazer login:", error);
+      
+      if (error) throw error;
+      
+      console.log("Login successful:", data);
       toast({
-        variant: "destructive",
+        title: "Login realizado com sucesso",
+        description: "Bem-vindo ao sistema.",
+      });
+      
+      navigate("/");
+    } catch (error: any) {
+      console.error("Login error:", error);
+      
+      // Mensagem de erro mais específica
+      let errorMessage = "Verifique suas credenciais e tente novamente.";
+      if (error.message) {
+        if (error.message.includes("Invalid login credentials")) {
+          errorMessage = "Credenciais inválidas. Verifique seu email e senha.";
+        } else if (error.message.includes("Email not confirmed")) {
+          errorMessage = "Email não confirmado. Verifique sua caixa de entrada.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      toast({
         title: "Erro ao fazer login",
-        description: error.message || "Verifique suas credenciais e tente novamente.",
+        description: errorMessage,
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
 
+  // Função para criar usuário administrador diretamente na tela de login (para facilitar o primeiro acesso)
   const createAdminUser = async () => {
-    setCreatingAdminUser(true);
+    setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-admin-user", {
+      // Preencher automaticamente os campos
+      setEmail('mailton@tfsinformatica.com.br');
+      setPassword('29786015');
+      
+      // Cria o usuário admin
+      const response = await supabase.functions.invoke('create-user', {
         body: {
-          name: "Administrador",
-          email: "admin@example.com",
-          password: "admin123",
-          role: "admin"
-        },
+          email: 'mailton@tfsinformatica.com.br',
+          password: '29786015',
+          name: 'Mailton',
+          role: 'admin'
+        }
       });
       
-      if (error) {
-        throw new Error(error.message || "Erro ao criar usuário administrador");
+      if (response.error) {
+        throw new Error(response.error);
       }
       
       toast({
-        title: "Usuário administrador criado com sucesso!",
-        description: `Email: admin@example.com, Senha: admin123`,
-        duration: 10000,
+        title: "Usuário administrador criado com sucesso",
+        description: "Agora você pode fazer login usando os dados preenchidos."
       });
       
-      // Preencher automaticamente o formulário com as credenciais
-      setEmail("admin@example.com");
-      setPassword("admin123");
+      // Esperar um pouco antes de tentar fazer login
+      setTimeout(() => {
+        handleLogin({ preventDefault: () => {} } as React.FormEvent);
+      }, 1500);
+      
     } catch (error: any) {
-      console.error("Erro ao criar usuário admin:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao criar usuário administrador",
-        description: error.message || "Ocorreu um erro ao criar o usuário.",
-      });
+      console.error("Error creating admin user:", error);
+      
+      // Se o erro for que o usuário já existe, informamos que está tudo bem e preenchemos os campos
+      if (error.message && (
+          error.message.includes("already exists") || 
+          error.message.includes("já existe") ||
+          error.message.includes("User already exists")
+        )) {
+        toast({
+          title: "Usuário já existe",
+          description: "Você pode fazer login com as credenciais preenchidas"
+        });
+        
+        // Esperar um pouco antes de tentar fazer login
+        setTimeout(() => {
+          handleLogin({ preventDefault: () => {} } as React.FormEvent);
+        }, 1500);
+      } else {
+        toast({
+          title: "Erro ao criar usuário administrador",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
     } finally {
-      setCreatingAdminUser(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md">
-        <Card className="shadow-lg">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    className="pl-10"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type="password"
-                    className="pl-10"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Autenticando...
-                  </>
-                ) : (
-                  "Entrar"
-                )}
-              </Button>
-            </form>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-2">
-            <div className="text-sm text-center text-muted-foreground mb-2">
-              Para acesso ao sistema, entre em contato com o administrador
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <Card className="w-[350px]">
+        <CardHeader>
+          <CardTitle className="text-2xl text-center">Symphony</CardTitle>
+          <CardDescription className="text-center">
+            Entre com suas credenciais para acessar o sistema
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleLogin}>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium">Email</label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium">Senha</label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+          </CardContent>
+          <CardFooter className="flex flex-col gap-2">
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Entrando..." : "Entrar"}
+            </Button>
             <Button 
+              type="button" 
               variant="outline" 
-              className="w-full"
+              className="w-full mt-2" 
               onClick={createAdminUser}
-              disabled={creatingAdminUser}
+              disabled={loading}
             >
-              {creatingAdminUser ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Criando...
-                </>
-              ) : (
-                <>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Criar Usuário Admin
-                </>
-              )}
+              Criar Usuário Admin
             </Button>
           </CardFooter>
-        </Card>
-      </div>
+        </form>
+      </Card>
     </div>
   );
 }

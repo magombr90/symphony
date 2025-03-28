@@ -13,7 +13,8 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
+import { Button } from "./ui/button";
+import { toast } from "@/hooks/use-toast";
 
 export default function AppSidebar() {
   const location = useLocation();
@@ -22,8 +23,19 @@ export default function AppSidebar() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await signOut();
-    navigate('/login');
+    try {
+      await signOut();
+      toast({
+        title: "Logout realizado com sucesso",
+      });
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({
+        title: "Erro ao fazer logout",
+        variant: "destructive",
+      });
+    }
   };
 
   const menuItems = [
@@ -96,17 +108,9 @@ export default function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                >
-                  <Button 
-                    variant="ghost" 
-                    onClick={handleLogout} 
-                    className="w-full justify-start px-3 py-2 h-auto"
-                  >
-                    <LogOut className="h-5 w-5 mr-3" />
-                    <span>Sair</span>
-                  </Button>
+                <SidebarMenuButton onClick={handleLogout} className="flex items-center gap-3 text-destructive hover:bg-destructive/10">
+                  <LogOut className="h-5 w-5" />
+                  <span>Sair</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

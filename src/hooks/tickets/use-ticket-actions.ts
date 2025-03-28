@@ -265,14 +265,23 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
         return false;
       }
 
+      // Get the current ticket status to store as previous_status
+      const { data: ticketData } = await supabase
+        .from("tickets")
+        .select("status")
+        .eq("id", ticketId)
+        .single();
+
+      const currentStatus = ticketData?.status || ticketStatus;
+
       // Registrar o andamento no histórico do ticket
       const historyData = {
         ticket_id: ticketId,
-        status: ticketStatus,
-        reason: note,
+        status: currentStatus,         // Current status of the ticket
+        reason: note,                  // The progress note text
         created_by: user.id,
         action_type: 'PROGRESS_NOTE',
-        previous_status: ticketStatus // O status não muda, mas precisamos preencher para manter consistência
+        previous_status: currentStatus // O status não muda, mas precisamos preencher para manter consistência
       };
 
       console.log("Sending history data:", historyData);

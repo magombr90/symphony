@@ -14,81 +14,90 @@ import ClientPortal from "./pages/ClientPortal";
 import ClientTicketForm from "./pages/ClientTicketForm";
 import ClientTicketSuccess from "./pages/ClientTicketSuccess";
 import Login from "./pages/Login";
-import { useAuth } from "./hooks/use-auth";
+import { AuthProvider, useAuth } from "./hooks/use-auth";
 
 const queryClient = new QueryClient();
 
-// Componente para proteger rotas que requerem autenticação
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+// Auth guard component to protect routes
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuth();
   
-  // Mostra um indicador de carregamento enquanto verifica a autenticação
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
+    return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
   }
   
-  // Redireciona para login se não estiver autenticado
   if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
   
-  // Renderiza o conteúdo se estiver autenticado
   return <>{children}</>;
-}
-
-function AppRoutes() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        {/* Rota de Login - Não requer autenticação */}
-        <Route path="/login" element={<Login />} />
-        
-        {/* Client Portal Routes - Não requer autenticação */}
-        <Route path="/client-portal" element={<ClientPortal />} />
-        <Route path="/client-ticket-form" element={<ClientTicketForm />} />
-        <Route path="/client-ticket-success" element={<ClientTicketSuccess />} />
-        
-        {/* Admin App Routes - Requer autenticação */}
-        <Route path="/" element={
-          <ProtectedRoute>
-            <AppLayout><Dashboard /></AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/clients" element={
-          <ProtectedRoute>
-            <AppLayout><Clients /></AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/tickets" element={
-          <ProtectedRoute>
-            <AppLayout><Tickets /></AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/system-users" element={
-          <ProtectedRoute>
-            <AppLayout><SystemUsers /></AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/equipments" element={
-          <ProtectedRoute>
-            <AppLayout><Equipments /></AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/profile" element={
-          <ProtectedRoute>
-            <AppLayout><UserProfile /></AppLayout>
-          </ProtectedRoute>
-        } />
-      </Routes>
-      <Toaster />
-    </BrowserRouter>
-  );
-}
+};
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppRoutes />
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/client-portal" element={<ClientPortal />} />
+            <Route path="/client-ticket-form" element={<ClientTicketForm />} />
+            <Route path="/client-ticket-success" element={<ClientTicketSuccess />} />
+            
+            {/* Protected Routes */}
+            <Route 
+              path="/" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout><Dashboard /></AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/clients" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout><Clients /></AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/tickets" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout><Tickets /></AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/system-users" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout><SystemUsers /></AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/equipments" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout><Equipments /></AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout><UserProfile /></AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+          </Routes>
+          <Toaster />
+        </BrowserRouter>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

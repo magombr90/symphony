@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -251,7 +250,7 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
                                 {getStatusBadge(entry.status)}
                               </div>
                               {entry.reason && (
-                                <div className="mt-1">
+                                <div className="mt-1 whitespace-pre-line">
                                   <span className="font-semibold">Motivo: </span>
                                   {entry.reason}
                                 </div>
@@ -271,7 +270,7 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
                                 <span>{entry.equipment_codigo}</span>
                                 {getEquipmentStatusBadge(entry.equipment_status)}
                               </div>
-                              {entry.reason && <div className="text-sm">{entry.reason}</div>}
+                              {entry.reason && <div className="text-sm whitespace-pre-line">{entry.reason}</div>}
                               {entry.equipment_status !== "ENTREGUE" && entry.equipment_id && (
                                 <Button 
                                   variant="outline" 
@@ -292,7 +291,10 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
                             </div>
                           )}
                           {entry.action_type === "PROGRESS_NOTE" && (
-                            <div className="whitespace-pre-line">{entry.reason}</div>
+                            <div className="whitespace-pre-line">
+                              <span className="font-semibold">Andamento: </span>
+                              {entry.reason}
+                            </div>
                           )}
                         </TableCell>
                       </TableRow>
