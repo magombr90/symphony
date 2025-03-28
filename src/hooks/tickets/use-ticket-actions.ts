@@ -37,12 +37,28 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
     try {
       console.log("Atualizando ticket:", { ticketId, newStatus, reasonText });
 
+      // Get current user
+      let userId = currentUser?.id;
+      if (!userId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        userId = user?.id;
+        
+        if (!userId) {
+          toast({
+            variant: "destructive",
+            title: "Erro ao autenticar",
+            description: "Usuário não encontrado.",
+          });
+          return false;
+        }
+      }
+
       // Verifica se o usuário já moveu o ticket (exceto para admins)
-      if (!isAdmin && currentUser?.id) {
+      if (!isAdmin && userId) {
         const { data: canMove } = await supabase
           .rpc('can_move_ticket', { 
             ticket_id: ticketId, 
-            user_id: currentUser.id 
+            user_id: userId 
           });
 
         if (!canMove) {
@@ -91,14 +107,14 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
       }
 
       // Registrar o histórico independentemente do motivo
-      if (currentUser?.id) {
+      if (userId) {
         console.log("Registrando histórico com motivo:", { reasonText });
 
         const historyData = {
           ticket_id: ticketId,
           status: newStatus,
           reason: reasonText || null,
-          created_by: currentUser.id,
+          created_by: userId,
           action_type: 'STATUS_CHANGE',
           previous_status: previousStatus
         };
@@ -139,6 +155,22 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
 
   const handleAssignTicket = async (ticketId: string, newUserId: string, currentAssignedTo: string | null = null) => {
     try {
+      // Get current user
+      let userId = currentUser?.id;
+      if (!userId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        userId = user?.id;
+        
+        if (!userId) {
+          toast({
+            variant: "destructive",
+            title: "Erro ao autenticar",
+            description: "Usuário não encontrado.",
+          });
+          return false;
+        }
+      }
+
       const { data: ticket } = await supabase
         .from("tickets")
         .select("status")
@@ -152,14 +184,14 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
 
       if (updateError) throw updateError;
 
-      if (currentUser?.id) {
+      if (userId) {
         const historyData = {
           ticket_id: ticketId,
           action_type: 'USER_ASSIGNMENT',
           status: ticket?.status,
           previous_assigned_to: currentAssignedTo,
           new_assigned_to: newUserId,
-          created_by: currentUser.id,
+          created_by: userId,
         };
 
         const { error: historyError } = await supabase
@@ -189,6 +221,22 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
     try {
       console.log("Marcando equipamento como entregue:", { equipmentId, equipmentCode, ticketId });
       
+      // Get current user
+      let userId = currentUser?.id;
+      if (!userId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        userId = user?.id;
+        
+        if (!userId) {
+          toast({
+            variant: "destructive",
+            title: "Erro ao autenticar",
+            description: "Usuário não encontrado.",
+          });
+          return false;
+        }
+      }
+      
       // Atualizar o status do equipamento para ENTREGUE
       const { error: equipmentError } = await supabase
         .from("equipamentos")
@@ -204,11 +252,11 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
       }
 
       // Registrar no histórico do ticket
-      if (currentUser?.id) {
+      if (userId) {
         const historyData = {
           ticket_id: ticketId,
           status: ticketStatus,
-          created_by: currentUser.id,
+          created_by: userId,
           action_type: "EQUIPMENT_STATUS",
           equipment_id: equipmentId,
           equipment_codigo: equipmentCode,
@@ -252,15 +300,13 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
 
       console.log("Adding progress note:", { ticketId, note, ticketStatus });
 
-      // Check if we have a current user from the useAuth hook
-      if (!currentUser?.id) {
-        console.error("No authenticated user found in useAuth");
-        
-        // Fallback: Get the current user ID directly from Supabase auth
+      // Get current user
+      let userId = currentUser?.id;
+      if (!userId) {
         const { data: { user } } = await supabase.auth.getUser();
+        userId = user?.id;
         
-        if (!user) {
-          console.error("No authenticated user found");
+        if (!userId) {
           toast({
             variant: "destructive",
             title: "Erro ao registrar andamento",
@@ -268,83 +314,44 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
           });
           return false;
         }
-        
-        // Get the current ticket status to store as previous_status
-        const { data: ticketData } = await supabase
-          .from("tickets")
-          .select("status")
-          .eq("id", ticketId)
-          .single();
+      }
+      
+      // Get the current ticket status to store as previous_status
+      const { data: ticketData } = await supabase
+        .from("tickets")
+        .select("status")
+        .eq("id", ticketId)
+        .single();
 
-        const currentStatus = ticketData?.status || ticketStatus;
+      const currentStatus = ticketData?.status || ticketStatus;
 
-        // Register progress note in ticket history
-        const historyData = {
-          ticket_id: ticketId,
-          status: currentStatus,
-          reason: note,
-          created_by: user.id,
-          action_type: 'PROGRESS_NOTE',
-          previous_status: currentStatus
-        };
+      // Register progress note in ticket history
+      const historyData = {
+        ticket_id: ticketId,
+        status: currentStatus,
+        reason: note,
+        created_by: userId,
+        action_type: 'PROGRESS_NOTE',
+        previous_status: currentStatus
+      };
 
-        console.log("Sending history data:", historyData);
+      console.log("Sending history data:", historyData);
 
-        const { data: historyResult, error: historyError } = await supabase
-          .from("ticket_history")
-          .insert([historyData])
-          .select();
+      const { data: historyResult, error: historyError } = await supabase
+        .from("ticket_history")
+        .insert([historyData])
+        .select();
 
-        console.log("Progress note history result:", { historyResult, historyError });
+      console.log("Progress note history result:", { historyResult, historyError });
 
-        if (historyError) {
-          console.error("Error registering progress:", historyError);
-          toast({
-            variant: "destructive",
-            title: "Erro ao registrar andamento",
-            description: historyError.message,
-          });
-          return false;
-        }
-      } else {
-        // Use currentUser from useAuth hook
-        // Get the current ticket status
-        const { data: ticketData } = await supabase
-          .from("tickets")
-          .select("status")
-          .eq("id", ticketId)
-          .single();
-
-        const currentStatus = ticketData?.status || ticketStatus;
-
-        // Register progress note in ticket history
-        const historyData = {
-          ticket_id: ticketId,
-          status: currentStatus,
-          reason: note,
-          created_by: currentUser.id,
-          action_type: 'PROGRESS_NOTE',
-          previous_status: currentStatus
-        };
-
-        console.log("Sending history data with currentUser:", historyData);
-
-        const { data: historyResult, error: historyError } = await supabase
-          .from("ticket_history")
-          .insert([historyData])
-          .select();
-
-        console.log("Progress note history result:", { historyResult, historyError });
-
-        if (historyError) {
-          console.error("Error registering progress:", historyError);
-          toast({
-            variant: "destructive",
-            title: "Erro ao registrar andamento",
-            description: historyError.message,
-          });
-          return false;
-        }
+      if (historyError) {
+        console.error("Error registering progress:", historyError);
+        toast({
+          variant: "destructive",
+          title: "Erro ao registrar andamento",
+          description: historyError.message,
+        });
+        return false;
       }
 
       toast({
