@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,27 +9,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ClientTicketsList } from "@/components/client/ClientTicketsList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-type ClientSession = {
-  clientId: string;
-  clientName: string;
-  email: string;
-  timestamp: string;
-};
+import { useAuth } from "@/hooks/use-auth";
 
 export default function ClientTicketForm() {
   const [description, setDescription] = useState("");
   const [scheduledDate, setScheduledDate] = useState("");
   const [loading, setLoading] = useState(false);
-  const [clientSession, setClientSession] = useState<ClientSession | null>(null);
   const [activeTab, setActiveTab] = useState("new");
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { clientData, clientLogout } = useAuth();
 
   // Check if client is authenticated
   useEffect(() => {
-    const session = localStorage.getItem("clientPortalSession");
-    if (!session) {
+    if (!clientData) {
       toast({
         variant: "destructive",
         title: "Acesso não autorizado",
@@ -39,36 +31,28 @@ export default function ClientTicketForm() {
       navigate("/client-portal");
       return;
     }
-
-    try {
-      const parsedSession = JSON.parse(session) as ClientSession;
-      // Check if session is expired (24 hours)
-      const sessionTime = new Date(parsedSession.timestamp).getTime();
-      const currentTime = new Date().getTime();
-      const sessionAge = (currentTime - sessionTime) / (1000 * 60 * 60); // in hours
-      
-      if (sessionAge > 24) {
-        localStorage.removeItem("clientPortalSession");
-        toast({
-          variant: "destructive",
-          title: "Sessão expirada",
-          description: "Sua sessão expirou. Por favor, faça login novamente.",
-        });
-        navigate("/client-portal");
-        return;
-      }
-      
-      setClientSession(parsedSession);
-    } catch (error) {
-      localStorage.removeItem("clientPortalSession");
+    
+    // Check if session is expired (24 hours)
+    const sessionTime = new Date(localStorage.getItem("clientPortalSession") ? 
+      JSON.parse(localStorage.getItem("clientPortalSession")!).timestamp : "").getTime();
+    const currentTime = new Date().getTime();
+    const sessionAge = (currentTime - sessionTime) / (1000 * 60 * 60); // in hours
+    
+    if (sessionAge > 24) {
+      clientLogout();
+      toast({
+        variant: "destructive",
+        title: "Sessão expirada",
+        description: "Sua sessão expirou. Por favor, faça login novamente.",
+      });
       navigate("/client-portal");
     }
-  }, [navigate, toast]);
+  }, [navigate, toast, clientData, clientLogout]);
 
   const handleSubmitTicket = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!clientSession) {
+    if (!clientData) {
       toast({
         variant: "destructive",
         title: "Erro ao enviar ticket",
@@ -99,7 +83,7 @@ export default function ClientTicketForm() {
       const { data, error } = await supabase
         .from("tickets")
         .insert({
-          client_id: clientSession.clientId,
+          client_id: clientData.clientId,
           description: description,
           scheduled_for: new Date(scheduledDate).toISOString(),
           created_by: systemUser.id,
@@ -138,11 +122,11 @@ export default function ClientTicketForm() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("clientPortalSession");
+    clientLogout();
     navigate("/client-portal");
   };
 
-  if (!clientSession) {
+  if (!clientData) {
     return <div className="p-8 text-center">Carregando...</div>;
   }
 
@@ -153,7 +137,7 @@ export default function ClientTicketForm() {
           <h1 className="text-2xl font-bold">Portal do Cliente</h1>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">
-              Olá, <strong>{clientSession.clientName}</strong>
+              Olá, <strong>{clientData.clientName}</strong>
             </span>
             <Button variant="outline" size="sm" onClick={handleLogout}>
               Sair
@@ -209,8 +193,8 @@ export default function ClientTicketForm() {
           </TabsContent>
           
           <TabsContent value="tickets">
-            {clientSession && (
-              <ClientTicketsList clientId={clientSession.clientId} />
+            {clientData && (
+              <ClientTicketsList clientId={clientData.clientId} />
             )}
           </TabsContent>
         </Tabs>

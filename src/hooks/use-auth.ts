@@ -28,6 +28,7 @@ export function useAuth() {
     clientId: string;
     clientName: string;
     email: string;
+    cnpj: string;
   } | null>(() => {
     const storedData = localStorage.getItem("clientPortalSession");
     return storedData ? JSON.parse(storedData) : null;
@@ -37,22 +38,29 @@ export function useAuth() {
   useEffect(() => {
     const storedData = localStorage.getItem("clientPortalSession");
     if (storedData) {
-      const parsedData = JSON.parse(storedData);
-      setClientData({
-        clientId: parsedData.clientId,
-        clientName: parsedData.clientName,
-        email: parsedData.email,
-      });
+      try {
+        const parsedData = JSON.parse(storedData);
+        setClientData({
+          clientId: parsedData.clientId,
+          clientName: parsedData.clientName,
+          email: parsedData.email,
+          cnpj: parsedData.cnpj
+        });
+      } catch (error) {
+        console.error("Error parsing client session:", error);
+        localStorage.removeItem("clientPortalSession");
+      }
     }
   }, []);
 
   // Client authentication function
-  const clientAuth = async (clientId: string, clientName: string, email: string) => {
+  const clientAuth = async (clientId: string, clientName: string, email: string, cnpj: string) => {
     // Store client information in localStorage for the portal session
     const clientSession = {
       clientId,
       clientName,
       email,
+      cnpj,
       timestamp: new Date().toISOString()
     };
     
@@ -60,7 +68,8 @@ export function useAuth() {
     setClientData({
       clientId,
       clientName,
-      email
+      email,
+      cnpj
     });
     
     return true;

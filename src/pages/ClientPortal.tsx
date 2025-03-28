@@ -25,7 +25,7 @@ export default function ClientPortal() {
       // Look for a client with the given email and CNPJ
       const { data, error } = await supabase
         .from("clients")
-        .select("id, razao_social")
+        .select("id, razao_social, cnpj")
         .eq("email", email)
         .eq("cnpj", cnpj)
         .single();
@@ -35,8 +35,8 @@ export default function ClientPortal() {
       }
 
       if (data) {
-        // Set client auth state
-        await clientAuth(data.id, data.razao_social, email);
+        // Set client auth state with all needed information
+        await clientAuth(data.id, data.razao_social, email, data.cnpj);
         
         toast({
           title: "Acesso com sucesso",
