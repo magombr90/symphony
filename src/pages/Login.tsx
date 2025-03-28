@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Mail, Lock, Loader2 } from "lucide-react";
+import { Mail, Lock, Loader2, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -13,6 +13,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [creatingAdminUser, setCreatingAdminUser] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -42,6 +43,53 @@ export default function Login() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createAdminUser = async () => {
+    setCreatingAdminUser(true);
+    try {
+      // Chama a Edge Function para criar um usuário admin
+      const adminEmail = "admin@example.com";
+      const adminPassword = "admin123";
+      
+      const response = await fetch(`${window.location.origin}/functions/v1/create-admin-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: "Administrador",
+          email: adminEmail,
+          password: adminPassword,
+          role: "admin"
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok) {
+        toast({
+          title: "Usuário administrador criado com sucesso!",
+          description: `Email: ${adminEmail}, Senha: ${adminPassword}`,
+          duration: 10000,
+        });
+        
+        // Preencher automaticamente o formulário com as credenciais
+        setEmail(adminEmail);
+        setPassword(adminPassword);
+      } else {
+        throw new Error(result.error || "Erro ao criar usuário administrador");
+      }
+    } catch (error: any) {
+      console.error("Erro ao criar usuário admin:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao criar usuário administrador",
+        description: error.message || "Ocorreu um erro ao criar o usuário.",
+      });
+    } finally {
+      setCreatingAdminUser(false);
     }
   };
 
@@ -96,9 +144,27 @@ export default function Login() {
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-2">
-            <div className="text-sm text-center text-muted-foreground">
+            <div className="text-sm text-center text-muted-foreground mb-2">
               Para acesso ao sistema, entre em contato com o administrador
             </div>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={createAdminUser}
+              disabled={creatingAdminUser}
+            >
+              {creatingAdminUser ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Criando...
+                </>
+              ) : (
+                <>
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Criar Usuário Admin
+                </>
+              )}
+            </Button>
           </CardFooter>
         </Card>
       </div>
