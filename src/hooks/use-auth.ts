@@ -15,16 +15,16 @@ export function useAuth() {
         .eq("id", user.id)
         .single();
 
-      console.log("Current user data:", data); // Log para debug
+      console.log("Current user data:", data); 
       return data;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutos
+    staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: false,
   });
 
-  // Verificar explicitamente se o usuário tem role admin
+  // Verify explicitly if the user has admin role, handling undefined case
   const isAdmin = Boolean(currentUser?.role === "admin");
-  console.log("Is admin:", isAdmin, "User role:", currentUser?.role); // Log para debug
+  console.log("Is admin:", isAdmin, "User role:", currentUser?.role); 
 
   return {
     currentUser,

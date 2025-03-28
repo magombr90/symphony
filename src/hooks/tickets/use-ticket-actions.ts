@@ -252,55 +252,99 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
 
       console.log("Adding progress note:", { ticketId, note, ticketStatus });
 
-      // Get the current user ID directly from Supabase auth
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        console.error("No authenticated user found");
-        toast({
-          variant: "destructive",
-          title: "Erro ao registrar andamento",
-          description: "Você precisa estar autenticado para registrar andamentos.",
-        });
-        return false;
-      }
+      // Check if we have a current user from the useAuth hook
+      if (!currentUser?.id) {
+        console.error("No authenticated user found in useAuth");
+        
+        // Fallback: Get the current user ID directly from Supabase auth
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          console.error("No authenticated user found");
+          toast({
+            variant: "destructive",
+            title: "Erro ao registrar andamento",
+            description: "Você precisa estar autenticado para registrar andamentos.",
+          });
+          return false;
+        }
+        
+        // Get the current ticket status to store as previous_status
+        const { data: ticketData } = await supabase
+          .from("tickets")
+          .select("status")
+          .eq("id", ticketId)
+          .single();
 
-      // Get the current ticket status to store as previous_status
-      const { data: ticketData } = await supabase
-        .from("tickets")
-        .select("status")
-        .eq("id", ticketId)
-        .single();
+        const currentStatus = ticketData?.status || ticketStatus;
 
-      const currentStatus = ticketData?.status || ticketStatus;
+        // Register progress note in ticket history
+        const historyData = {
+          ticket_id: ticketId,
+          status: currentStatus,
+          reason: note,
+          created_by: user.id,
+          action_type: 'PROGRESS_NOTE',
+          previous_status: currentStatus
+        };
 
-      // Registrar o andamento no histórico do ticket
-      const historyData = {
-        ticket_id: ticketId,
-        status: currentStatus,         // Current status of the ticket
-        reason: note,                  // The progress note text
-        created_by: user.id,
-        action_type: 'PROGRESS_NOTE',
-        previous_status: currentStatus // O status não muda, mas precisamos preencher para manter consistência
-      };
+        console.log("Sending history data:", historyData);
 
-      console.log("Sending history data:", historyData);
+        const { data: historyResult, error: historyError } = await supabase
+          .from("ticket_history")
+          .insert([historyData])
+          .select();
 
-      const { data: historyResult, error: historyError } = await supabase
-        .from("ticket_history")
-        .insert([historyData])
-        .select();
+        console.log("Progress note history result:", { historyResult, historyError });
 
-      console.log("Progress note history result:", { historyResult, historyError });
+        if (historyError) {
+          console.error("Error registering progress:", historyError);
+          toast({
+            variant: "destructive",
+            title: "Erro ao registrar andamento",
+            description: historyError.message,
+          });
+          return false;
+        }
+      } else {
+        // Use currentUser from useAuth hook
+        // Get the current ticket status
+        const { data: ticketData } = await supabase
+          .from("tickets")
+          .select("status")
+          .eq("id", ticketId)
+          .single();
 
-      if (historyError) {
-        console.error("Erro ao registrar andamento:", historyError);
-        toast({
-          variant: "destructive",
-          title: "Erro ao registrar andamento",
-          description: historyError.message,
-        });
-        return false;
+        const currentStatus = ticketData?.status || ticketStatus;
+
+        // Register progress note in ticket history
+        const historyData = {
+          ticket_id: ticketId,
+          status: currentStatus,
+          reason: note,
+          created_by: currentUser.id,
+          action_type: 'PROGRESS_NOTE',
+          previous_status: currentStatus
+        };
+
+        console.log("Sending history data with currentUser:", historyData);
+
+        const { data: historyResult, error: historyError } = await supabase
+          .from("ticket_history")
+          .insert([historyData])
+          .select();
+
+        console.log("Progress note history result:", { historyResult, historyError });
+
+        if (historyError) {
+          console.error("Error registering progress:", historyError);
+          toast({
+            variant: "destructive",
+            title: "Erro ao registrar andamento",
+            description: historyError.message,
+          });
+          return false;
+        }
       }
 
       toast({
