@@ -80,11 +80,14 @@ export function useTicketQueries(
         return {
           ...ticket,
           equipamentos: ticketEquipments.map(eq => ({
+            id: eq.id,
             codigo: eq.codigo,
             equipamento: eq.equipamento,
             numero_serie: eq.numero_serie,
             condicao: eq.condicao,
-            observacoes: eq.observacoes
+            observacoes: eq.observacoes,
+            status: eq.status,
+            entregue_at: eq.entregue_at
           }))
         };
       }) as Ticket[];

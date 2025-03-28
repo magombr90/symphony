@@ -150,6 +150,9 @@ export type Database = {
           action_type: string
           created_at: string
           created_by: string
+          equipment_codigo: string | null
+          equipment_id: string | null
+          equipment_status: string | null
           id: string
           new_assigned_to: string | null
           previous_assigned_to: string | null
@@ -163,6 +166,9 @@ export type Database = {
           action_type?: string
           created_at?: string
           created_by: string
+          equipment_codigo?: string | null
+          equipment_id?: string | null
+          equipment_status?: string | null
           id?: string
           new_assigned_to?: string | null
           previous_assigned_to?: string | null
@@ -176,6 +182,9 @@ export type Database = {
           action_type?: string
           created_at?: string
           created_by?: string
+          equipment_codigo?: string | null
+          equipment_id?: string | null
+          equipment_status?: string | null
           id?: string
           new_assigned_to?: string | null
           previous_assigned_to?: string | null
