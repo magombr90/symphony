@@ -49,14 +49,13 @@ export default function Login() {
   const createAdminUser = async () => {
     setCreatingAdminUser(true);
     try {
-      // Usando o client do Supabase para chamar a edge function
       const { data, error } = await supabase.functions.invoke("create-admin-user", {
-        body: JSON.stringify({
+        body: {
           name: "Administrador",
           email: "admin@example.com",
           password: "admin123",
           role: "admin"
-        }),
+        },
       });
       
       if (error) {

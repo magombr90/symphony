@@ -38,34 +38,26 @@ serve(async (req) => {
       );
     }
 
-    // Primeiro, verificar se o usuário já existe na tabela system_users
-    const { data: existingUser, error: queryError } = await supabase
-      .from("system_users")
-      .select("id")
-      .eq("email", email)
-      .maybeSingle();
+    // Criar o usuário no auth
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { name, role }
+    });
 
-    if (queryError) {
-      throw new Error(`Erro ao verificar usuário existente: ${queryError.message}`);
+    if (authError) {
+      throw new Error(`Erro ao criar usuário de autenticação: ${authError.message}`);
     }
 
-    if (existingUser) {
-      return new Response(
-        JSON.stringify({ error: "Usuário com este e-mail já existe" }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, "Content-Type": "application/json" } 
-        }
-      );
-    }
-
-    // Inserir diretamente na tabela system_users
+    // Criar o perfil do usuário na tabela system_users
     const { data: userData, error: insertError } = await supabase
       .from("system_users")
       .insert({
+        id: authData.user.id,
         name,
         email,
-        password_hash: password, // O trigger vai lidar com a criptografia
+        password_hash: "", // Não precisamos salvar a senha aqui, já está em auth.users
         role,
         active: true
       })
@@ -73,7 +65,7 @@ serve(async (req) => {
       .single();
 
     if (insertError) {
-      throw new Error(`Erro ao criar usuário: ${insertError.message}`);
+      throw new Error(`Erro ao criar perfil de usuário: ${insertError.message}`);
     }
 
     return new Response(
