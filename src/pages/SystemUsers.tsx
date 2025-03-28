@@ -1,30 +1,29 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Plus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -33,263 +32,238 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface SystemUser {
+type SystemUser = {
   id: string;
   name: string;
   email: string;
   role: string;
   active: boolean;
-}
+  created_at: string;
+};
+
+const roleOptions = [
+  { value: "admin", label: "Administrador" },
+  { value: "user", label: "Usuário" },
+];
 
 export default function SystemUsers() {
-  const [openNewUser, setOpenNewUser] = useState(false);
-  const [users, setUsers] = useState<SystemUser[]>([]);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState("user");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<SystemUser | null>(null);
   const { toast } = useToast();
+  const [selectedRole, setSelectedRole] = useState("user");
 
-  useEffect(() => {
-    refetchUsers();
-  }, []);
-
-  const refetchUsers = async () => {
-    setIsLoading(true);
-    try {
+  const { data: users, refetch } = useQuery({
+    queryKey: ["system-users"],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("system_users")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("name");
+      if (error) throw error;
+      return data as SystemUser[];
+    },
+  });
 
-      if (error) {
-        console.error("Error fetching users:", error);
-        toast({
-          title: "Erro ao carregar usuários",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setUsers(data || []);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleEdit = (user: SystemUser) => {
+    setEditingUser(user);
+    setSelectedRole(user.role);
+    setOpen(true);
   };
 
-  // Move the function inside the component to access component variables
-  const handleCreateAdminUser = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Call the edge function to create the admin user
-      const response = await supabase.functions.invoke('create-user', {
-        body: {
-          email: 'mailton@tfsinformatica.com.br',
-          password: '29786015',
-          name: 'Mailton',
-          role: 'admin'
-        }
-      });
-      
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-      
-      toast({
-        title: "Usuário administrador criado com sucesso",
-        description: "Você já pode fazer login com esse usuário"
-      });
-      
-      void refetchUsers();
-    } catch (error) {
-      console.error("Error creating admin user:", error);
-      toast({
-        title: "Erro ao criar usuário administrador",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+
+    const userData = {
+      name: String(formData.get("name")),
+      email: String(formData.get("email")),
+      role: selectedRole,
+      active: formData.get("active") === "true",
+    };
+
+    // Se tiver senha nova, inclui no objeto
+    const password = formData.get("password");
+    if (password && String(password).length > 0) {
+      Object.assign(userData, { password_hash: String(password) });
     }
-  };
 
-  const createUser = async () => {
-    setIsLoading(true);
-    try {
-      // Call the edge function to create the user
-      const response = await supabase.functions.invoke('create-user', {
-        body: {
-          email,
-          password,
-          name,
-          role
-        }
-      });
-      
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
-      toast({
-        title: "Usuário criado com sucesso",
-        description: `${name} foi adicionado ao sistema.`,
-      });
-      setOpenNewUser(false);
-      void refetchUsers();
-    } catch (error) {
-      console.error("Error creating user:", error);
-      toast({
-        title: "Erro ao criar usuário",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const toggleUserStatus = async (user: SystemUser) => {
-    setIsLoading(true);
-    try {
-      const { error } = await supabase
+    let error;
+    if (editingUser) {
+      // Atualização
+      ({ error } = await supabase
         .from("system_users")
-        .update({ active: !user.active })
-        .eq("id", user.id);
-
-      if (error) {
-        console.error("Error updating user status:", error);
+        .update(userData)
+        .eq("id", editingUser.id));
+    } else {
+      // Criação
+      if (!password) {
         toast({
-          title: "Erro ao atualizar status do usuário",
-          description: error.message,
           variant: "destructive",
+          title: "Erro ao criar usuário",
+          description: "Senha é obrigatória para novos usuários",
         });
         return;
       }
-
-      toast({
-        title: "Status do usuário atualizado",
-        description: `O status de ${user.name} foi alterado.`,
-      });
-      void refetchUsers();
-    } finally {
-      setIsLoading(false);
+      ({ error } = await supabase.from("system_users").insert({
+        ...userData,
+        password_hash: String(password),
+      }));
     }
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: `Erro ao ${editingUser ? 'atualizar' : 'criar'} usuário`,
+        description: error.message,
+      });
+      return;
+    }
+
+    toast({
+      title: `Usuário ${editingUser ? 'atualizado' : 'criado'} com sucesso!`,
+    });
+    setOpen(false);
+    setEditingUser(null);
+    refetch();
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setEditingUser(null);
+    setSelectedRole("user");
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
+    <div className="fade-in">
+      <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Usuários do Sistema</h1>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={handleCreateAdminUser}
-            disabled={isLoading}
-          >
-            Criar Admin (mailton@tfsinformatica.com.br)
-          </Button>
-          <Button onClick={() => setOpenNewUser(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Usuário
-          </Button>
-        </div>
+        <Dialog open={open} onOpenChange={handleClose}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Usuário
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {editingUser ? "Editar Usuário" : "Novo Usuário"}
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="name">Nome</Label>
+                <Input 
+                  id="name" 
+                  name="name" 
+                  required 
+                  defaultValue={editingUser?.name || ""}
+                />
+              </div>
+              <div>
+                <Label htmlFor="email">E-mail</Label>
+                <Input 
+                  id="email" 
+                  name="email" 
+                  type="email" 
+                  required 
+                  defaultValue={editingUser?.email || ""}
+                />
+              </div>
+              <div>
+                <Label htmlFor="password">
+                  {editingUser ? "Nova Senha (opcional)" : "Senha"}
+                </Label>
+                <Input 
+                  id="password" 
+                  name="password" 
+                  type="password" 
+                  required={!editingUser}
+                  minLength={6}
+                />
+              </div>
+              <div>
+                <Label>Função</Label>
+                <Select value={selectedRole} onValueChange={setSelectedRole}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roleOptions.map((role) => (
+                      <SelectItem key={role.value} value={role.value}>
+                        {role.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {editingUser && (
+                <div>
+                  <Label>Status</Label>
+                  <Select 
+                    defaultValue={editingUser.active ? "true" : "false"} 
+                    name="active"
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="true">Ativo</SelectItem>
+                      <SelectItem value="false">Inativo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <Button type="submit" className="w-full">
+                {editingUser ? "Atualizar" : "Salvar"}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <Table>
-        <TableCaption>Lista de usuários do sistema.</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[100px]">Nome</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell className="font-medium">{user.name}</TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>{user.role}</TableCell>
-              <TableCell>
-                <Switch
-                  checked={user.active}
-                  onCheckedChange={() => toggleUserStatus(user)}
-                  disabled={isLoading}
-                />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
-      <Dialog open={openNewUser} onOpenChange={setOpenNewUser}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Novo Usuário</DialogTitle>
-            <DialogDescription>
-              Crie um novo usuário para acessar o sistema.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Nome
-              </Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="email" className="text-right">
-                Email
-              </Label>
-              <Input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="password" className="text-right">
-                Senha
-              </Label>
-              <Input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="role" className="text-right">
-                Role
-              </Label>
-              <Select onValueChange={setRole} defaultValue={role}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Selecione um role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <Button onClick={createUser} disabled={isLoading}>
-            Criar Usuário
-          </Button>
-        </DialogContent>
-      </Dialog>
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>E-mail</TableHead>
+                <TableHead>Função</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users?.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    {roleOptions.find((r) => r.value === user.role)?.label}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      className={user.active ? "bg-green-500" : "bg-red-500"}
+                    >
+                      {user.active ? "Ativo" : "Inativo"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEdit(user)}
+                    >
+                      Editar
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

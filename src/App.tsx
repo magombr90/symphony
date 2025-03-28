@@ -1,5 +1,5 @@
 
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AppLayout from "./components/AppLayout";
 import "./App.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -13,91 +13,29 @@ import UserProfile from "./pages/UserProfile";
 import ClientPortal from "./pages/ClientPortal";
 import ClientTicketForm from "./pages/ClientTicketForm";
 import ClientTicketSuccess from "./pages/ClientTicketSuccess";
-import Login from "./pages/Login";
-import { AuthProvider, useAuth } from "./hooks/use-auth";
 
 const queryClient = new QueryClient();
-
-// Auth guard component to protect routes
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-  
-  if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
-  }
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return <>{children}</>;
-};
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/client-portal" element={<ClientPortal />} />
-            <Route path="/client-ticket-form" element={<ClientTicketForm />} />
-            <Route path="/client-ticket-success" element={<ClientTicketSuccess />} />
-            
-            {/* Protected Routes */}
-            <Route 
-              path="/" 
-              element={
-                <ProtectedRoute>
-                  <AppLayout><Dashboard /></AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/clients" 
-              element={
-                <ProtectedRoute>
-                  <AppLayout><Clients /></AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/tickets" 
-              element={
-                <ProtectedRoute>
-                  <AppLayout><Tickets /></AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/system-users" 
-              element={
-                <ProtectedRoute>
-                  <AppLayout><SystemUsers /></AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/equipments" 
-              element={
-                <ProtectedRoute>
-                  <AppLayout><Equipments /></AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/profile" 
-              element={
-                <ProtectedRoute>
-                  <AppLayout><UserProfile /></AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-          </Routes>
-          <Toaster />
-        </BrowserRouter>
-      </AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Client Portal Routes - No AppLayout */}
+          <Route path="/client-portal" element={<ClientPortal />} />
+          <Route path="/client-ticket-form" element={<ClientTicketForm />} />
+          <Route path="/client-ticket-success" element={<ClientTicketSuccess />} />
+          
+          {/* Admin App Routes */}
+          <Route path="/" element={<AppLayout><Dashboard /></AppLayout>} />
+          <Route path="/clients" element={<AppLayout><Clients /></AppLayout>} />
+          <Route path="/tickets" element={<AppLayout><Tickets /></AppLayout>} />
+          <Route path="/system-users" element={<AppLayout><SystemUsers /></AppLayout>} />
+          <Route path="/equipments" element={<AppLayout><Equipments /></AppLayout>} />
+          <Route path="/profile" element={<AppLayout><UserProfile /></AppLayout>} />
+        </Routes>
+        <Toaster />
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }
