@@ -49,38 +49,29 @@ export default function Login() {
   const createAdminUser = async () => {
     setCreatingAdminUser(true);
     try {
-      // Chama a Edge Function para criar um usuário admin
-      const adminEmail = "admin@example.com";
-      const adminPassword = "admin123";
-      
-      const response = await fetch(`${window.location.origin}/functions/v1/create-admin-user`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      // Usando o client do Supabase para chamar a edge function
+      const { data, error } = await supabase.functions.invoke("create-admin-user", {
         body: JSON.stringify({
           name: "Administrador",
-          email: adminEmail,
-          password: adminPassword,
+          email: "admin@example.com",
+          password: "admin123",
           role: "admin"
         }),
       });
       
-      const result = await response.json();
-      
-      if (response.ok) {
-        toast({
-          title: "Usuário administrador criado com sucesso!",
-          description: `Email: ${adminEmail}, Senha: ${adminPassword}`,
-          duration: 10000,
-        });
-        
-        // Preencher automaticamente o formulário com as credenciais
-        setEmail(adminEmail);
-        setPassword(adminPassword);
-      } else {
-        throw new Error(result.error || "Erro ao criar usuário administrador");
+      if (error) {
+        throw new Error(error.message || "Erro ao criar usuário administrador");
       }
+      
+      toast({
+        title: "Usuário administrador criado com sucesso!",
+        description: `Email: admin@example.com, Senha: admin123`,
+        duration: 10000,
+      });
+      
+      // Preencher automaticamente o formulário com as credenciais
+      setEmail("admin@example.com");
+      setPassword("admin123");
     } catch (error: any) {
       console.error("Erro ao criar usuário admin:", error);
       toast({
