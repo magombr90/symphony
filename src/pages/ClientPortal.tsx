@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function ClientPortal() {
   const [email, setEmail] = useState("");
@@ -14,6 +15,7 @@ export default function ClientPortal() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { clientAuth } = useAuth();
 
   const handleAccess = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,16 +35,8 @@ export default function ClientPortal() {
       }
 
       if (data) {
-        // Set client information in localStorage for the portal session
-        localStorage.setItem(
-          "clientPortalSession", 
-          JSON.stringify({
-            clientId: data.id,
-            clientName: data.razao_social,
-            email: email,
-            timestamp: new Date().toISOString()
-          })
-        );
+        // Set client auth state
+        await clientAuth(data.id, data.razao_social, email);
         
         toast({
           title: "Acesso com sucesso",
