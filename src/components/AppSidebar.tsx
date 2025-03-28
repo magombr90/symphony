@@ -1,5 +1,5 @@
 
-import { Home, Users, Ticket, LayoutDashboard, Box, User, UserCircle } from "lucide-react";
+import { Home, Users, Ticket, LayoutDashboard, Box, User, UserCircle, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -10,14 +10,21 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
 
 export default function AppSidebar() {
   const location = useLocation();
   const isMobile = useIsMobile();
-  const { currentUser } = useAuth();
+  const { currentUser, isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   const menuItems = [
     {
@@ -40,7 +47,7 @@ export default function AppSidebar() {
       icon: Box,
       path: "/equipments",
     },
-    ...(currentUser?.role === 'admin' ? [
+    ...(isAdmin ? [
       {
         title: "Usuários",
         icon: User,
@@ -86,6 +93,20 @@ export default function AppSidebar() {
                     <UserCircle className="h-5 w-5" />
                     <span>{currentUser?.name || "Meu Perfil"}</span>
                   </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                >
+                  <Button 
+                    variant="ghost" 
+                    onClick={handleLogout} 
+                    className="w-full justify-start px-3 py-2 h-auto"
+                  >
+                    <LogOut className="h-5 w-5 mr-3" />
+                    <span>Sair</span>
+                  </Button>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
