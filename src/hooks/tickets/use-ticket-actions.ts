@@ -1,4 +1,3 @@
-
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SystemUser } from "@/types/ticket";
@@ -221,6 +220,16 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
     try {
       console.log("Marcando equipamento como entregue:", { equipmentId, equipmentCode, ticketId });
       
+      if (!equipmentId || !equipmentCode) {
+        console.error("ID do equipamento ou código não fornecido");
+        toast({
+          variant: "destructive",
+          title: "Erro ao atualizar equipamento",
+          description: "Identificação do equipamento não fornecida corretamente.",
+        });
+        return false;
+      }
+      
       // Get current user
       let userId = currentUser?.id;
       if (!userId) {
@@ -248,7 +257,12 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
 
       if (equipmentError) {
         console.error("Erro ao atualizar equipamento:", equipmentError);
-        throw equipmentError;
+        toast({
+          variant: "destructive",
+          title: "Erro ao atualizar equipamento",
+          description: equipmentError.message,
+        });
+        return false;
       }
 
       // Registrar no histórico do ticket
@@ -270,7 +284,12 @@ export function useTicketActions(systemUsers: SystemUser[] | undefined, refetch:
 
         if (historyError) {
           console.error("Erro ao registrar histórico:", historyError);
-          throw historyError;
+          toast({
+            variant: "destructive",
+            title: "Erro ao registrar histórico",
+            description: historyError.message,
+          });
+          return false;
         }
       }
 

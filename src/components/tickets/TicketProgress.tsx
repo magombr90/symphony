@@ -77,12 +77,19 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
   };
 
   const handleDeliverEquipment = async (equipmentId: string, equipmentCode: string) => {
+    if (!equipmentId) return;
+    
     setProcessingEquipment(equipmentId);
     try {
       await handleMarkEquipmentAsDelivered(equipmentId, equipmentCode, ticket.id, ticket.status);
       onSuccess();
     } catch (error) {
       console.error("Erro ao marcar equipamento como entregue:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao marcar equipamento como entregue",
+        description: "Não foi possível atualizar o status deste equipamento.",
+      });
     } finally {
       setProcessingEquipment(null);
     }

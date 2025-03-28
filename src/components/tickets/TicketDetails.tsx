@@ -83,11 +83,14 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
   };
 
   const handleDeliverEquipment = async (equipmentId: string, equipmentCode: string) => {
-    if (!ticket) return;
+    if (!ticket || !equipmentId) return;
     
     setProcessingEquipment(equipmentId);
     try {
       await handleMarkEquipmentAsDelivered(equipmentId, equipmentCode, ticket.id, ticket.status);
+      onClose();
+    } catch (error) {
+      console.error("Error marking equipment as delivered:", error);
     } finally {
       setProcessingEquipment(null);
     }
@@ -104,6 +107,7 @@ export function TicketDetails({ ticket, history, onClose }: TicketDetailsProps) 
       if (success) {
         setProgressNote("");
         setShowProgressForm(false);
+        onClose();
       }
     } finally {
       setIsSubmittingProgress(false);
