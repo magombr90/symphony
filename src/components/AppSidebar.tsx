@@ -1,5 +1,5 @@
 
-import { Home, Users, Ticket, LayoutDashboard, Box, User, UserCircle } from "lucide-react";
+import { Home, Users, Ticket, LayoutDashboard, Box, User, UserCircle, ExternalLink } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -69,6 +69,25 @@ export default function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Portal</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  className={location.pathname === "/client-portal" ? "bg-accent" : ""}
+                  asChild
+                >
+                  <Link to="/client-portal" className="flex items-center gap-3" target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-5 w-5" />
+                    <span>Portal de Clientes</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
