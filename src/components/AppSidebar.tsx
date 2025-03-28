@@ -1,5 +1,5 @@
 
-import { Home, Users, Ticket, LayoutDashboard, Box, User, UserCircle, LogOut } from "lucide-react";
+import { Home, Users, Ticket, LayoutDashboard, Box, User, UserCircle } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -10,33 +10,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
-import { Button } from "./ui/button";
-import { toast } from "@/hooks/use-toast";
 
 export default function AppSidebar() {
   const location = useLocation();
   const isMobile = useIsMobile();
-  const { currentUser, isAdmin, signOut } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      toast({
-        title: "Logout realizado com sucesso",
-      });
-      navigate("/login");
-    } catch (error) {
-      console.error("Logout error:", error);
-      toast({
-        title: "Erro ao fazer logout",
-        variant: "destructive",
-      });
-    }
-  };
+  const { currentUser } = useAuth();
 
   const menuItems = [
     {
@@ -59,7 +40,7 @@ export default function AppSidebar() {
       icon: Box,
       path: "/equipments",
     },
-    ...(isAdmin ? [
+    ...(currentUser?.role === 'admin' ? [
       {
         title: "Usuários",
         icon: User,
@@ -105,12 +86,6 @@ export default function AppSidebar() {
                     <UserCircle className="h-5 w-5" />
                     <span>{currentUser?.name || "Meu Perfil"}</span>
                   </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton onClick={handleLogout} className="flex items-center gap-3 text-destructive hover:bg-destructive/10">
-                  <LogOut className="h-5 w-5" />
-                  <span>Sair</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

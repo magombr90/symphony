@@ -1,65 +1,12 @@
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Session, User } from "@supabase/supabase-js";
 
-interface AuthContextType {
-  session: Session | null;
-  user: User | null;
-  currentUser: any;
-  isAdmin: boolean;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  signOut: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType>({
-  session: null,
-  user: null,
-  currentUser: null,
-  isAdmin: false,
-  isAuthenticated: false,
-  isLoading: true,
-  signOut: async () => {},
-});
-
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const queryClient = useQueryClient();
-
-  useEffect(() => {
-    // Set up auth state listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
-        console.log("Auth state changed:", event, newSession?.user?.email);
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        
-        if (event === 'SIGNED_OUT') {
-          queryClient.clear();
-        }
-      }
-    );
-
-    // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
-      setIsLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [queryClient]);
-
-  // Fetch user data from system_users table when authenticated
+export function useAuth() {
   const { data: currentUser } = useQuery({
-    queryKey: ["current-user", user?.id],
+    queryKey: ["current-user"],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
       const { data } = await supabase
@@ -68,37 +15,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .eq("id", user.id)
         .single();
 
-      console.log("Current user data:", data);
+      console.log("Current user data:", data); // Log para debug
       return data;
     },
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5, // 5 minutos
     refetchOnWindowFocus: false,
   });
 
-  // Verify if user has admin role
+  // Verificar explicitamente se o usuário tem role admin
   const isAdmin = Boolean(currentUser?.role === "admin");
-  
-  // Sign out function
-  const signOut = async () => {
-    await supabase.auth.signOut();
+  console.log("Is admin:", isAdmin, "User role:", currentUser?.role); // Log para debug
+
+  return {
+    currentUser,
+    isAdmin,
   };
-
-  return (
-    <AuthContext.Provider
-      value={{
-        session,
-        user,
-        currentUser,
-        isAdmin,
-        isAuthenticated: !!user,
-        isLoading,
-        signOut,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-export const useAuth = () => useContext(AuthContext);
+}
