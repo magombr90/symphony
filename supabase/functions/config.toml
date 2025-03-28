@@ -2,4 +2,3 @@
 project_id = "zooxsmqfzpxedecpukjq"
 [create-user.secrets]
 SUPABASE_URL = "https://zooxsmqfzpxedecpukjq.supabase.co"
-SUPABASE_SERVICE_ROLE_KEY = ""
