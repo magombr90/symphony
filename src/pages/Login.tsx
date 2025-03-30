@@ -6,16 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, LogIn, User, UserPlus } from "lucide-react";
+import { Eye, EyeOff, LogIn, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { createTestUser } from "@/utils/createTestUser";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [creatingTestUser, setCreatingTestUser] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -84,29 +82,6 @@ export default function Login() {
     }
   };
 
-  const handleCreateTestUser = async () => {
-    setCreatingTestUser(true);
-    try {
-      await createTestUser();
-      toast({
-        title: "Usuário de teste criado",
-        description: "Agora você pode fazer login com teste@exemplo.com e senha123",
-      });
-      
-      // Preencher automaticamente os campos
-      setEmail("teste@exemplo.com");
-      setPassword("senha123");
-    } catch (error) {
-      toast({
-        title: "Erro ao criar usuário de teste",
-        description: "Verifique o console para mais detalhes",
-        variant: "destructive"
-      });
-    } finally {
-      setCreatingTestUser(false);
-    }
-  };
-
   return (
     <div className="h-screen w-full flex items-center justify-center bg-muted/40">
       <Card className="w-full max-w-md">
@@ -159,7 +134,7 @@ export default function Login() {
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col gap-2">
+          <CardFooter>
             <Button 
               type="submit" 
               className="w-full" 
@@ -174,26 +149,6 @@ export default function Login() {
                 <span className="flex items-center gap-2">
                   <LogIn className="h-4 w-4" />
                   Entrar
-                </span>
-              )}
-            </Button>
-            
-            <Button 
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={handleCreateTestUser}
-              disabled={creatingTestUser}
-            >
-              {creatingTestUser ? (
-                <span className="flex items-center gap-2">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
-                  Criando...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <UserPlus className="h-4 w-4" />
-                  Criar usuário de teste
                 </span>
               )}
             </Button>
