@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,12 +7,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, LogIn, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { updateUserPassword } from "@/utils/updateUserPassword";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [updatingPassword, setUpdatingPassword] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -32,7 +33,6 @@ export default function Login() {
     try {
       setLoading(true);
       
-      // Verificar se o usuário existe e está ativo na tabela system_users
       const { data: userData, error: userError } = await supabase
         .from("system_users")
         .select("*")
@@ -49,7 +49,6 @@ export default function Login() {
         return;
       }
 
-      // Tentar fazer login via Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -64,7 +63,6 @@ export default function Login() {
         return;
       }
 
-      // Sucesso no login
       toast({
         title: "Login realizado com sucesso",
         description: `Bem-vindo, ${userData.name}!`
@@ -79,6 +77,40 @@ export default function Login() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateSpecificPassword = async () => {
+    setUpdatingPassword(true);
+    try {
+      const targetEmail = "mailton@tfsinformatica.com.br";
+      const targetPassword = "29786015";
+      
+      const result = await updateUserPassword(targetEmail, targetPassword);
+      
+      if (result.success) {
+        toast({
+          title: "Senha atualizada",
+          description: `Senha definida para o usuário ${targetEmail}`,
+        });
+        
+        setEmail(targetEmail);
+        setPassword(targetPassword);
+      } else {
+        toast({
+          title: "Erro ao atualizar senha",
+          description: result.message,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro inesperado",
+        description: "Ocorreu um erro ao tentar atualizar a senha",
+        variant: "destructive"
+      });
+    } finally {
+      setUpdatingPassword(false);
     }
   };
 
@@ -134,7 +166,7 @@ export default function Login() {
               </div>
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex flex-col gap-2">
             <Button 
               type="submit" 
               className="w-full" 
@@ -149,6 +181,25 @@ export default function Login() {
                 <span className="flex items-center gap-2">
                   <LogIn className="h-4 w-4" />
                   Entrar
+                </span>
+              )}
+            </Button>
+            
+            <Button 
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleUpdateSpecificPassword}
+              disabled={updatingPassword}
+            >
+              {updatingPassword ? (
+                <span className="flex items-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                  Atualizando senha...
+                </span>
+              ) : (
+                <span>
+                  Configurar usuário mailton@tfsinformatica.com.br
                 </span>
               )}
             </Button>
