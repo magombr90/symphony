@@ -97,7 +97,7 @@ export function useTicketQueries(
         };
       });
 
-      return transformedData as Ticket[];
+      return transformedData as unknown as Ticket[];
     },
   });
 
@@ -157,7 +157,7 @@ export function useTicketQueries(
       }));
 
       console.log("Ticket history fetched:", transformedData);
-      return transformedData as TicketHistory[];
+      return transformedData as unknown as TicketHistory[];
     },
   });
 

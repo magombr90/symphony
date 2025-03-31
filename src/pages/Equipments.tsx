@@ -179,7 +179,7 @@ export default function Equipments() {
           item.new_assigned_to_user : { name: null }
       }));
       
-      return transformedData as TicketHistory[];
+      return transformedData as unknown as TicketHistory[];
     },
   });
 
