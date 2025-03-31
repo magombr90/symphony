@@ -58,10 +58,10 @@ export type TicketHistory = {
   previous_assigned_to: string | null;
   new_assigned_to: string | null;
   previous_assigned_to_user?: {
-    name: string;
+    name: string | null;
   } | null;
   new_assigned_to_user?: {
-    name: string;
+    name: string | null;
   } | null;
   equipment_id?: string;
   equipment_codigo?: string;

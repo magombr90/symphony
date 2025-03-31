@@ -23,7 +23,7 @@ import { EditEquipmentDialog } from "@/components/equipments/EditEquipmentDialog
 import { AssociateTicketDialog } from "@/components/equipments/AssociateTicketDialog";
 import { DeleteEquipmentDialog } from "@/components/equipments/DeleteEquipmentDialog";
 
-interface SelectQueryError<T> {
+interface SelectQueryError {
   error: true;
 }
 
@@ -45,7 +45,7 @@ type EquipmentTicket = {
   };
   assigned_user?: {
     name: string | null;
-  } | null | SelectQueryError<any>;
+  } | null | SelectQueryError;
 } | null;
 
 type Equipment = {
