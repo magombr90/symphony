@@ -92,46 +92,6 @@ export default function Login() {
     }
   };
 
-  // Adicionando função para resetar a senha do usuário específico
-  const resetPassword = async () => {
-    try {
-      setLoading(true);
-      
-      // Update the password in the system_users table
-      const { error } = await supabase
-        .from("system_users")
-        .update({ password: "29786015" })
-        .eq("email", "mailton@tfsinformatica.com.br");
-      
-      if (error) {
-        toast({
-          title: "Erro ao resetar senha",
-          description: error.message,
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      toast({
-        title: "Senha resetada com sucesso",
-        description: "A senha foi atualizada para o usuário mailton@tfsinformatica.com.br"
-      });
-      
-      // Preencher os campos automaticamente para facilitar o login
-      setEmail("mailton@tfsinformatica.com.br");
-      setPassword("29786015");
-      
-    } catch (error) {
-      toast({
-        title: "Erro inesperado",
-        description: "Ocorreu um erro ao tentar resetar a senha",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="h-screen w-full flex items-center justify-center bg-muted/40">
       <Card className="w-full max-w-md">
@@ -184,7 +144,7 @@ export default function Login() {
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-2">
+          <CardFooter>
             <Button 
               type="submit" 
               className="w-full" 
@@ -201,17 +161,6 @@ export default function Login() {
                   Entrar
                 </span>
               )}
-            </Button>
-            
-            {/* Botão temporário para resetar a senha */}
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="w-full" 
-              onClick={resetPassword}
-              disabled={loading}
-            >
-              Resetar Senha (mailton@tfsinformatica.com.br)
             </Button>
           </CardFooter>
         </form>
