@@ -8,7 +8,7 @@ export type SystemUser = {
 };
 
 // Define a type for SelectQueryError for handling Supabase relation errors
-interface SelectQueryError {
+export interface SelectQueryError {
   error: true;
 }
 

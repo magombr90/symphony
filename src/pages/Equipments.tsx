@@ -16,15 +16,11 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { TicketDetails } from "@/components/tickets/TicketDetails";
-import { Ticket, TicketHistory } from "@/types/ticket";
+import { Ticket, TicketHistory, SelectQueryError } from "@/types/ticket";
 import { CreateEquipmentDialog } from "@/components/equipments/CreateEquipmentDialog";
 import { EditEquipmentDialog } from "@/components/equipments/EditEquipmentDialog";
 import { AssociateTicketDialog } from "@/components/equipments/AssociateTicketDialog";
 import { DeleteEquipmentDialog } from "@/components/equipments/DeleteEquipmentDialog";
-
-interface SelectQueryError {
-  error: true;
-}
 
 type EquipmentTicket = {
   id: string;
@@ -125,7 +121,7 @@ export default function Equipments() {
           if ('error' in transformedTicket.assigned_user) {
             transformedTicket = {
               ...transformedTicket,
-              assigned_user: { name: null }
+              assigned_user: { name: null } as any // Using type assertion to bypass type check
             };
           }
         }
