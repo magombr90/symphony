@@ -39,6 +39,7 @@ export default function Login() {
       });
 
       if (error) {
+        console.error("Auth error:", error);
         toast({
           title: "Erro de autenticação",
           description: error.message,
@@ -47,34 +48,25 @@ export default function Login() {
         return;
       }
 
-      // Verificar se o usuário existe e está ativo na tabela system_users
-      const { data: userData, error: userError } = await supabase
-        .from("system_users")
-        .select("*")
-        .eq("email", email)
-        .eq("active", true)
-        .single();
-      
-      if (userError || !userData) {
-        // Se falhar na verificação do system_users, fazer logout da auth
-        await supabase.auth.signOut();
-        
+      if (!data.user) {
         toast({
           title: "Erro de autenticação",
-          description: "Usuário não encontrado ou inativo",
+          description: "Usuário não encontrado",
           variant: "destructive"
         });
         return;
       }
 
-      // Sucesso no login
+      // Sucesso no login - não precisamos verificar a tabela system_users separadamente
+      // pois o trigger deve ter criado o registro automaticamente e o RLS vai gerenciar o acesso
       toast({
         title: "Login realizado com sucesso",
-        description: `Bem-vindo, ${userData.name}!`
+        description: `Bem-vindo!`
       });
       
       navigate("/");
     } catch (error) {
+      console.error("Unexpected error:", error);
       toast({
         title: "Erro inesperado",
         description: "Ocorreu um erro ao tentar fazer login",
