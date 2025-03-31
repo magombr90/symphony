@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +17,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { TicketDetails } from "@/components/tickets/TicketDetails";
-import { TicketHistory } from "@/types/ticket";
+import { Ticket, TicketHistory } from "@/types/ticket";
 import { CreateEquipmentDialog } from "@/components/equipments/CreateEquipmentDialog";
 import { EditEquipmentDialog } from "@/components/equipments/EditEquipmentDialog";
 import { AssociateTicketDialog } from "@/components/equipments/AssociateTicketDialog";
@@ -64,7 +65,7 @@ type Equipment = {
 
 export default function Equipments() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTicket, setSelectedTicket] = useState<EquipmentTicket | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const { toast } = useToast();
 
   const { data: equipments, refetch } = useQuery({
@@ -188,6 +189,31 @@ export default function Equipments() {
     },
   });
 
+  const handleViewTicket = (ticket: EquipmentTicket) => {
+    if (!ticket) return;
+    
+    // Convert from EquipmentTicket to Ticket format
+    const ticketData: Ticket = {
+      id: ticket.id,
+      codigo: ticket.codigo,
+      status: ticket.status,
+      description: ticket.description,
+      client_id: ticket.client_id,
+      scheduled_for: ticket.scheduled_for,
+      assigned_to: ticket.assigned_to,
+      created_by: ticket.created_by,
+      created_at: ticket.created_at,
+      updated_at: ticket.updated_at,
+      client: ticket.client,
+      faturado: ticket.faturado,
+      faturado_at: ticket.faturado_at,
+      assigned_user: ticket.assigned_user && !('error' in ticket.assigned_user) ? 
+        ticket.assigned_user : { name: null }
+    };
+    
+    setSelectedTicket(ticketData);
+  };
+
   return (
     <div className="container mx-auto py-6">
       <CardHeader className="flex flex-row items-center justify-between px-0">
@@ -266,7 +292,7 @@ export default function Equipments() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => setSelectedTicket(equipment.ticket)}
+                        onClick={() => handleViewTicket(equipment.ticket)}
                         className="hover:bg-gray-100"
                       >
                         <Eye className="h-4 w-4" />
