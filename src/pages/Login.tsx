@@ -49,6 +49,16 @@ export default function Login() {
         return;
       }
 
+      // Verificar a senha no sistema_users antes de tentar auth
+      if (userData.password !== password) {
+        toast({
+          title: "Erro de autenticação",
+          description: "Senha incorreta",
+          variant: "destructive"
+        });
+        return;
+      }
+
       // Tentar fazer login via Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
         email,

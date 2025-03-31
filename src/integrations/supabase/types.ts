@@ -119,7 +119,8 @@ export type Database = {
           email: string
           id: string
           name: string
-          password_hash: string
+          old_password_hash: string
+          password: string
           role: string
           username: string | null
         }
@@ -129,7 +130,8 @@ export type Database = {
           email: string
           id?: string
           name: string
-          password_hash?: string
+          old_password_hash?: string
+          password?: string
           role?: string
           username?: string | null
         }
@@ -139,7 +141,8 @@ export type Database = {
           email?: string
           id?: string
           name?: string
-          password_hash?: string
+          old_password_hash?: string
+          password?: string
           role?: string
           username?: string | null
         }
