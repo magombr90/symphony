@@ -110,8 +110,27 @@ export default function Equipments() {
         throw error;
       }
 
-      console.log("Dados processados:", data);
-      return data as Equipment[];
+      // Transform the data to handle relationship errors
+      const transformedData = (data || []).map(equipment => {
+        // Handle ticket.assigned_user if it exists and is an error
+        let transformedTicket = equipment.ticket;
+        if (transformedTicket && transformedTicket.assigned_user && 
+            typeof transformedTicket.assigned_user === 'object' && 
+            'error' in transformedTicket.assigned_user) {
+          transformedTicket = {
+            ...transformedTicket,
+            assigned_user: { name: null }
+          };
+        }
+
+        return {
+          ...equipment,
+          ticket: transformedTicket
+        };
+      });
+
+      console.log("Dados processados:", transformedData);
+      return transformedData as Equipment[];
     },
   });
 
@@ -140,7 +159,25 @@ export default function Equipments() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as TicketHistory[];
+      
+      // Transform data to handle relationship errors
+      const transformedData = (data || []).map(item => ({
+        ...item,
+        created_by_user: item.created_by_user && 
+          typeof item.created_by_user === 'object' && 
+          !('error' in item.created_by_user) ? 
+          item.created_by_user : { name: "Usuário não disponível" },
+        previous_assigned_to_user: item.previous_assigned_to_user && 
+          typeof item.previous_assigned_to_user === 'object' && 
+          !('error' in item.previous_assigned_to_user) ? 
+          item.previous_assigned_to_user : { name: null },
+        new_assigned_to_user: item.new_assigned_to_user && 
+          typeof item.new_assigned_to_user === 'object' && 
+          !('error' in item.new_assigned_to_user) ? 
+          item.new_assigned_to_user : { name: null }
+      }));
+      
+      return transformedData as TicketHistory[];
     },
   });
 

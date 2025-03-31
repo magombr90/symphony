@@ -73,7 +73,19 @@ export function ClientTicketDetails({ ticket, onClose }: ClientTicketDetailsProp
           .order("created_at", { ascending: false });
 
         if (historyError) throw historyError;
-        setHistory(historyData);
+        
+        // Transform the history data to handle relationship errors
+        const transformedHistory = (historyData || []).map(item => {
+          return {
+            ...item,
+            created_by_user: item.created_by_user && 
+              typeof item.created_by_user === 'object' && 
+              !('error' in item.created_by_user) ? 
+              item.created_by_user : { name: "Usuário não disponível" }
+          };
+        }) as TicketHistory[];
+        
+        setHistory(transformedHistory);
 
         // Fetch equipment
         const { data: equipmentData, error: equipmentError } = await supabase

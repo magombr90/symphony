@@ -48,9 +48,22 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
 
       if (error) throw error;
 
+      // Transform the data to handle relationship errors
       return (data || []).map(item => ({
         ...item,
-        action_type: item.action_type as "STATUS_CHANGE" | "USER_ASSIGNMENT" | "EQUIPMENT_STATUS"
+        action_type: item.action_type as "STATUS_CHANGE" | "USER_ASSIGNMENT" | "EQUIPMENT_STATUS" | "PROGRESS_NOTE",
+        created_by_user: item.created_by_user && 
+          typeof item.created_by_user === 'object' && 
+          !('error' in item.created_by_user) ? 
+          item.created_by_user : { name: "Usuário não disponível" },
+        previous_assigned_to_user: item.previous_assigned_to_user && 
+          typeof item.previous_assigned_to_user === 'object' && 
+          !('error' in item.previous_assigned_to_user) ? 
+          item.previous_assigned_to_user : { name: null },
+        new_assigned_to_user: item.new_assigned_to_user && 
+          typeof item.new_assigned_to_user === 'object' && 
+          !('error' in item.new_assigned_to_user) ? 
+          item.new_assigned_to_user : { name: null }
       })) as TicketHistory[];
     },
   });
