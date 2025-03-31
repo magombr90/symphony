@@ -18,7 +18,7 @@ type ClientTicket = {
   description: string;
   scheduled_for: string;
   created_at: string;
-  assigned_user?: { name: string } | null;
+  assigned_user?: { name: string | null } | null;
 };
 
 interface ClientTicketsListProps {
@@ -56,7 +56,7 @@ export function ClientTicketsList({ clientId }: ClientTicketsListProps) {
         const assignedUser = ticket.assigned_user && 
           typeof ticket.assigned_user === 'object' && 
           !('error' in ticket.assigned_user) ? 
-          ticket.assigned_user : { name: "Não disponível" };
+          ticket.assigned_user : { name: null };
           
         return {
           ...ticket,

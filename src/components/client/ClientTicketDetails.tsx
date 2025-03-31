@@ -22,7 +22,7 @@ type TicketHistory = {
   created_at: string;
   created_by_user: {
     name: string;
-  };
+  } | null;
   action_type: string;
   previous_status?: string | null;
 };
@@ -217,7 +217,7 @@ export function ClientTicketDetails({ ticket, onClose }: ClientTicketDetailsProp
                         {item.reason || "Sem observações adicionais"}
                       </p>
                       <p className="text-xs text-muted-foreground mt-2">
-                        Por: {item.created_by_user.name}
+                        Por: {item.created_by_user?.name || "Usuário não disponível"}
                       </p>
                     </CardContent>
                   </Card>

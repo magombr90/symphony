@@ -115,12 +115,14 @@ export default function Equipments() {
         // Handle ticket.assigned_user if it exists and is an error
         let transformedTicket = equipment.ticket;
         if (transformedTicket && transformedTicket.assigned_user && 
-            typeof transformedTicket.assigned_user === 'object' && 
-            'error' in transformedTicket.assigned_user) {
-          transformedTicket = {
-            ...transformedTicket,
-            assigned_user: { name: null }
-          };
+            typeof transformedTicket.assigned_user === 'object') {
+          // Check if it's an error object
+          if ('error' in transformedTicket.assigned_user) {
+            transformedTicket = {
+              ...transformedTicket,
+              assigned_user: { name: null }
+            };
+          }
         }
 
         return {
