@@ -81,7 +81,7 @@ export function ClientTicketDetails({ ticket, onClose }: ClientTicketDetailsProp
             created_by_user: item.created_by_user && 
               typeof item.created_by_user === 'object' && 
               !('error' in item.created_by_user) ? 
-              item.created_by_user : { name: "Usuário não disponível" }
+              item.created_by_user : null
           };
         }) as TicketHistory[];
         

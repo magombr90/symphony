@@ -132,7 +132,7 @@ export default function Equipments() {
       });
 
       console.log("Dados processados:", transformedData);
-      return transformedData as Equipment[];
+      return transformedData as unknown as Equipment[];
     },
   });
 
