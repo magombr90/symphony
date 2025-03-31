@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +22,31 @@ import { EditEquipmentDialog } from "@/components/equipments/EditEquipmentDialog
 import { AssociateTicketDialog } from "@/components/equipments/AssociateTicketDialog";
 import { DeleteEquipmentDialog } from "@/components/equipments/DeleteEquipmentDialog";
 
+interface SelectQueryError<T> {
+  error: true;
+}
+
+type EquipmentTicket = {
+  id: string;
+  codigo: string;
+  status: string;
+  description: string;
+  client_id: string;
+  scheduled_for: string;
+  assigned_to: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  faturado: boolean;
+  faturado_at: string | null;
+  client: {
+    razao_social: string;
+  };
+  assigned_user?: {
+    name: string | null;
+  } | null | SelectQueryError<any>;
+} | null;
+
 type Equipment = {
   id: string;
   codigo: string;
@@ -35,31 +59,12 @@ type Equipment = {
     razao_social: string;
   };
   ticket_id: string | null;
-  ticket: {
-    id: string;
-    codigo: string;
-    status: string;
-    description: string;
-    client_id: string;
-    scheduled_for: string;
-    assigned_to: string | null;
-    created_by: string;
-    created_at: string;
-    updated_at: string;
-    faturado: boolean;
-    faturado_at: string | null;
-    client: {
-      razao_social: string;
-    };
-    assigned_user?: {
-      name: string | null;
-    } | null;
-  } | null;
+  ticket: EquipmentTicket;
 };
 
 export default function Equipments() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTicket, setSelectedTicket] = useState<Equipment["ticket"] | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<EquipmentTicket | null>(null);
   const { toast } = useToast();
 
   const { data: equipments, refetch } = useQuery({
@@ -120,7 +125,7 @@ export default function Equipments() {
           if ('error' in transformedTicket.assigned_user) {
             transformedTicket = {
               ...transformedTicket,
-              assigned_user: { name: null }
+              assigned_user: { name: null } as any
             };
           }
         }

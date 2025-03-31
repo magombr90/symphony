@@ -64,7 +64,7 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
           typeof item.new_assigned_to_user === 'object' && 
           !('error' in item.new_assigned_to_user) ? 
           item.new_assigned_to_user : { name: null }
-      })) as TicketHistory[];
+      })) as unknown as TicketHistory[];
     },
   });
 
