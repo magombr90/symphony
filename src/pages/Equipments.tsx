@@ -207,8 +207,9 @@ export default function Equipments() {
       client: ticket.client,
       faturado: ticket.faturado,
       faturado_at: ticket.faturado_at,
-      assigned_user: ticket.assigned_user && !('error' in ticket.assigned_user) ? 
-        ticket.assigned_user : { name: null }
+      assigned_user: ticket.assigned_user && typeof ticket.assigned_user === 'object' && 
+                      !('error' in ticket.assigned_user) ? 
+                      ticket.assigned_user : { name: null }
     };
     
     setSelectedTicket(ticketData);
