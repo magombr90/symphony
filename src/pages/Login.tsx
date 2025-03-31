@@ -32,33 +32,6 @@ export default function Login() {
     try {
       setLoading(true);
       
-      // Verificar se o usuário existe e está ativo na tabela system_users
-      const { data: userData, error: userError } = await supabase
-        .from("system_users")
-        .select("*")
-        .eq("email", email)
-        .eq("active", true)
-        .single();
-      
-      if (userError || !userData) {
-        toast({
-          title: "Erro de autenticação",
-          description: "Usuário não encontrado ou inativo",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Verificar a senha no sistema_users antes de tentar auth
-      if (userData.password !== password) {
-        toast({
-          title: "Erro de autenticação",
-          description: "Senha incorreta",
-          variant: "destructive"
-        });
-        return;
-      }
-
       // Tentar fazer login via Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -69,6 +42,26 @@ export default function Login() {
         toast({
           title: "Erro de autenticação",
           description: error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Verificar se o usuário existe e está ativo na tabela system_users
+      const { data: userData, error: userError } = await supabase
+        .from("system_users")
+        .select("*")
+        .eq("email", email)
+        .eq("active", true)
+        .single();
+      
+      if (userError || !userData) {
+        // Se falhar na verificação do system_users, fazer logout da auth
+        await supabase.auth.signOut();
+        
+        toast({
+          title: "Erro de autenticação",
+          description: "Usuário não encontrado ou inativo",
           variant: "destructive"
         });
         return;
