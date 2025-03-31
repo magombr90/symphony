@@ -178,9 +178,9 @@ export default function Equipments() {
           typeof item.new_assigned_to_user === 'object' && 
           !('error' in item.new_assigned_to_user) ? 
           item.new_assigned_to_user : { name: null }
-      }));
+      })) as unknown as TicketHistory[];
       
-      return transformedData as unknown as TicketHistory[];
+      return transformedData;
     },
   });
 
