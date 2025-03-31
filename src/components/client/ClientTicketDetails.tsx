@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,7 +56,6 @@ export function ClientTicketDetails({ ticket, onClose }: ClientTicketDetailsProp
     const fetchTicketDetails = async () => {
       setLoading(true);
       try {
-        // Fetch ticket history
         const { data: historyData, error: historyError } = await supabase
           .from("ticket_history")
           .select(`
@@ -74,7 +72,6 @@ export function ClientTicketDetails({ ticket, onClose }: ClientTicketDetailsProp
 
         if (historyError) throw historyError;
         
-        // Transform the history data to handle relationship errors
         const transformedHistory = (historyData || []).map(item => {
           return {
             ...item,
@@ -87,7 +84,6 @@ export function ClientTicketDetails({ ticket, onClose }: ClientTicketDetailsProp
         
         setHistory(transformedHistory);
 
-        // Fetch equipment
         const { data: equipmentData, error: equipmentError } = await supabase
           .from("equipamentos")
           .select("*")

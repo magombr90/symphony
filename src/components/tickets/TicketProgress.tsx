@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,6 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
   const { toast } = useToast();
   const { handleFaturarTicket, handleMarkEquipmentAsDelivered } = useTicketActions([], onSuccess);
 
-  // Buscar histórico do ticket para o PDF
   const { data: ticketHistory } = useQuery({
     queryKey: ["ticket-history-for-pdf", ticket.id],
     queryFn: async () => {
@@ -48,7 +46,6 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
 
       if (error) throw error;
 
-      // Transform the data to handle relationship errors
       return (data || []).map(item => ({
         ...item,
         action_type: item.action_type as "STATUS_CHANGE" | "USER_ASSIGNMENT" | "EQUIPMENT_STATUS" | "PROGRESS_NOTE",
@@ -117,7 +114,6 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          {/* PDF Download Link */}
           {ticketHistory && (
             <DropdownMenuItem className="w-full cursor-pointer" onSelect={(e) => e.preventDefault()}>
               <PDFDownloadLink

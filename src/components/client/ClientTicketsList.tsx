@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,9 +49,7 @@ export function ClientTicketsList({ clientId }: ClientTicketsListProps) {
 
       if (error) throw error;
       
-      // Transform the data to ensure assigned_user has the correct shape
       const transformedData = (data || []).map(ticket => {
-        // Handle the case when assigned_user is an error object
         const assignedUser = ticket.assigned_user && 
           typeof ticket.assigned_user === 'object' && 
           !('error' in ticket.assigned_user) ? 
@@ -66,7 +63,6 @@ export function ClientTicketsList({ clientId }: ClientTicketsListProps) {
       
       setTickets(transformedData);
       
-      // Filtrar tickets com agendamento nos próximos 3 dias
       const now = new Date();
       const threeDaysLater = new Date();
       threeDaysLater.setDate(now.getDate() + 3);
