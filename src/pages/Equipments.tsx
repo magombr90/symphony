@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +17,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { TicketDetails } from "@/components/tickets/TicketDetails";
-import { Ticket, TicketHistory, SelectQueryError } from "@/types/ticket";
+import { Ticket, TicketHistory } from "@/types/ticket";
 import { CreateEquipmentDialog } from "@/components/equipments/CreateEquipmentDialog";
 import { EditEquipmentDialog } from "@/components/equipments/EditEquipmentDialog";
 import { AssociateTicketDialog } from "@/components/equipments/AssociateTicketDialog";
@@ -40,7 +41,7 @@ type EquipmentTicket = {
   };
   assigned_user?: {
     name: string | null;
-  } | null | SelectQueryError;
+  } | null;
 } | null;
 
 type Equipment = {
