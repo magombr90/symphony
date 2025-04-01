@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, LogIn, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { AuthError } from "@supabase/supabase-js";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -32,19 +33,13 @@ export default function Login() {
     try {
       setLoading(true);
       
-      // Tentar fazer login via Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        console.error("Auth error:", error);
-        toast({
-          title: "Erro de autenticação",
-          description: error.message,
-          variant: "destructive"
-        });
+        handleAuthError(error);
         return;
       }
 
@@ -57,8 +52,6 @@ export default function Login() {
         return;
       }
 
-      // Sucesso no login - não precisamos verificar a tabela system_users separadamente
-      // pois o trigger deve ter criado o registro automaticamente e o RLS vai gerenciar o acesso
       toast({
         title: "Login realizado com sucesso",
         description: `Bem-vindo!`
@@ -75,6 +68,22 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAuthError = (error: AuthError) => {
+    console.error("Auth error:", error);
+    
+    const errorMessages: Record<string, string> = {
+      "Invalid login credentials": "Credenciais inválidas. Verifique seu email e senha.",
+      "Email not confirmed": "Email não confirmado. Verifique sua caixa de entrada.",
+      "Invalid email or password": "Email ou senha inválidos."
+    };
+
+    toast({
+      title: "Erro de autenticação",
+      description: errorMessages[error.message] || error.message,
+      variant: "destructive"
+    });
   };
 
   return (
