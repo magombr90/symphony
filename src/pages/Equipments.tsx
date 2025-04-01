@@ -122,7 +122,7 @@ export default function Equipments() {
           if ('error' in transformedTicket.assigned_user) {
             transformedTicket = {
               ...transformedTicket,
-              assigned_user: { name: null } as any // Using type assertion to bypass type check
+              assigned_user: { name: null }
             };
           }
         }

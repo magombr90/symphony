@@ -57,10 +57,10 @@ export type TicketHistory = {
   action_type: "STATUS_CHANGE" | "USER_ASSIGNMENT" | "EQUIPMENT_STATUS" | "PROGRESS_NOTE";
   previous_assigned_to: string | null;
   new_assigned_to: string | null;
-  previous_assigned_to_user?: {
+  previous_assigned_to_user: {
     name: string | null;
   } | null;
-  new_assigned_to_user?: {
+  new_assigned_to_user: {
     name: string | null;
   } | null;
   equipment_id?: string;
