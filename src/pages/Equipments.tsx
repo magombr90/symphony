@@ -122,7 +122,7 @@ export default function Equipments() {
           if ('error' in transformedTicket.assigned_user) {
             transformedTicket = {
               ...transformedTicket,
-              assigned_user: { name: null }
+              assigned_user: { name: null } as SelectQueryError
             };
           }
         }
