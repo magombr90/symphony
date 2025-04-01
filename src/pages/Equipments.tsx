@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -122,7 +121,7 @@ export default function Equipments() {
           if ('error' in transformedTicket.assigned_user) {
             transformedTicket = {
               ...transformedTicket,
-              assigned_user: { name: null } as SelectQueryError
+              assigned_user: { name: null }
             };
           }
         }
