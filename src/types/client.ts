@@ -22,3 +22,10 @@ export interface ClientFormData {
   cep: string;
   observacoes: string;
 }
+
+export interface ClientOption {
+  id: string;
+  razao_social: string;
+  nome_fantasia: string | null;
+  cnpj: string;
+}

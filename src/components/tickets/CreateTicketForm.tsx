@@ -13,6 +13,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AddEquipmentDialog } from "./AddEquipmentDialog";
+import { ClientSearch } from "./ClientSearch";
 
 interface CreateTicketFormProps {
   clients: Array<{ id: string; razao_social: string }>;
@@ -113,22 +114,7 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <Label>Cliente</Label>
-        <Select
-          value={selectedClient}
-          onValueChange={setSelectedClient}
-          required
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione um cliente" />
-          </SelectTrigger>
-          <SelectContent>
-            {(clients || []).map((client) => (
-              <SelectItem key={client.id} value={client.id}>
-                {client.razao_social}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <ClientSearch value={selectedClient} onChange={setSelectedClient} />
       </div>
 
       {selectedClient && (

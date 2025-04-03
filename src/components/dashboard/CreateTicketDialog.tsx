@@ -3,7 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { CreateTicketForm } from "@/components/tickets/CreateTicketForm";
-import { Client, SystemUser } from "@/types/ticket";
+import { Client } from "@/types/client";
+import { SystemUser } from "@/types/ticket";
 
 interface CreateTicketDialogProps {
   open: boolean;
