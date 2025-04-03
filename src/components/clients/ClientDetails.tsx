@@ -184,7 +184,12 @@ export function ClientDetails({ client, onEdit }: ClientDetailsProps) {
                     <TableCell>
                       {format(new Date(ticket.scheduled_for), "dd/MM/yyyy HH:mm")}
                     </TableCell>
-                    <TableCell>{ticket.assigned_user?.name || "-"}</TableCell>
+                    <TableCell>
+                      {/* Fixed here: properly handle the case where assigned_user could be an error object */}
+                      {(ticket.assigned_user && 'name' in ticket.assigned_user) 
+                        ? ticket.assigned_user.name 
+                        : "-"}
+                    </TableCell>
                     <TableCell>
                       {ticket.faturado ? (
                         <Badge variant="outline" className="bg-green-50">

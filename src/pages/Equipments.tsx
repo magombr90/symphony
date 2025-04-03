@@ -111,7 +111,7 @@ export default function Equipments() {
       }
 
       // Process data to handle relation errors
-      return (data || []).map(item => ({
+      const processedData = (data || []).map(item => ({
         ...item,
         ticket: item.ticket ? {
           ...item.ticket,
@@ -119,7 +119,10 @@ export default function Equipments() {
             ? { name: 'Não atribuído' } 
             : item.ticket.assigned_user
         } : null
-      })) as Equipment[];
+      }));
+
+      // Safely cast to Equipment type after handling error cases
+      return processedData as Equipment[];
     },
   });
 
@@ -150,12 +153,21 @@ export default function Equipments() {
       if (error) throw error;
       
       // Process data to handle relation errors
-      return (data || []).map(item => ({
+      const processedData = (data || []).map(item => ({
         ...item,
-        created_by_user: item.created_by_user?.error ? { name: 'Usuário desconhecido' } : item.created_by_user,
-        previous_assigned_to_user: item.previous_assigned_to_user?.error ? null : item.previous_assigned_to_user,
-        new_assigned_to_user: item.new_assigned_to_user?.error ? null : item.new_assigned_to_user
-      })) as TicketHistory[];
+        created_by_user: item.created_by_user?.error 
+          ? { name: 'Usuário desconhecido' } 
+          : item.created_by_user,
+        previous_assigned_to_user: item.previous_assigned_to_user?.error 
+          ? null 
+          : item.previous_assigned_to_user,
+        new_assigned_to_user: item.new_assigned_to_user?.error 
+          ? null 
+          : item.new_assigned_to_user
+      }));
+      
+      // Safely cast to TicketHistory array after processing all error cases
+      return processedData as unknown as TicketHistory[];
     },
   });
 

@@ -48,14 +48,23 @@ export function TicketProgress({ ticket, onSuccess }: TicketProgressProps) {
 
       if (error) throw error;
 
-      // Process data to handle relation errors
-      return (data || []).map(item => ({
+      // Process data to handle relation errors - now with appropriate type casting
+      const processedData = (data || []).map(item => ({
         ...item,
         action_type: item.action_type as "STATUS_CHANGE" | "USER_ASSIGNMENT" | "EQUIPMENT_STATUS" | "PROGRESS_NOTE",
-        created_by_user: item.created_by_user?.error ? { name: 'Usuário desconhecido' } : item.created_by_user,
-        previous_assigned_to_user: item.previous_assigned_to_user?.error ? null : item.previous_assigned_to_user,
-        new_assigned_to_user: item.new_assigned_to_user?.error ? null : item.new_assigned_to_user
-      })) as TicketHistory[];
+        created_by_user: item.created_by_user?.error 
+          ? { name: 'Usuário desconhecido' } 
+          : item.created_by_user,
+        previous_assigned_to_user: item.previous_assigned_to_user?.error 
+          ? null 
+          : item.previous_assigned_to_user,
+        new_assigned_to_user: item.new_assigned_to_user?.error 
+          ? null 
+          : item.new_assigned_to_user
+      }));
+      
+      // Safely cast to the expected type after processing all error cases
+      return processedData as unknown as TicketHistory[];
     },
   });
 
