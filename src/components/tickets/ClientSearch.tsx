@@ -114,36 +114,33 @@ export function ClientSearch({ value, onChange }: ClientSearchProps) {
             </div>
           ) : (
             <>
-              {clients.length === 0 ? (
-                <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
-              ) : (
-                <CommandGroup>
-                  {clients.map((client) => (
-                    <CommandItem
-                      key={client.id}
-                      onSelect={() => {
-                        onChange(client.id);
-                        setOpen(false);
-                      }}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          value === client.id ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      <div className="flex flex-col">
-                        <span className="font-medium">
-                          {client.nome_fantasia || client.razao_social}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          CNPJ: {client.cnpj}
-                        </span>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              )}
+              <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
+              <CommandGroup>
+                {clients.map((client) => (
+                  <CommandItem
+                    key={client.id}
+                    onSelect={() => {
+                      onChange(client.id);
+                      setOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        value === client.id ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    <div className="flex flex-col">
+                      <span className="font-medium">
+                        {client.nome_fantasia || client.razao_social}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        CNPJ: {client.cnpj}
+                      </span>
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
             </>
           )}
         </Command>

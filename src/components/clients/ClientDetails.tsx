@@ -46,7 +46,14 @@ export function ClientDetails({ client, onEdit }: ClientDetailsProps) {
       const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      
+      // Process data to handle relation errors
+      return data?.map(ticket => ({
+        ...ticket,
+        assigned_user: ticket.assigned_user?.error 
+          ? { name: 'Não atribuído' } 
+          : ticket.assigned_user
+      }));
     },
   });
 

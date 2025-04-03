@@ -87,11 +87,14 @@ export default function SystemUsers() {
       const password = formData.get("password");
       
       if (password && String(password).length > 0) {
-        // If password is provided, handle it separately
-        const { error: pwdError } = await supabase.rpc('update_user_password', {
-          user_id: editingUser.id,
-          new_password: String(password)
-        });
+        // If password is provided, handle it separately - use a type assertion for the RPC function name
+        const { error: pwdError } = await supabase.rpc(
+          "update_user_password" as any, 
+          {
+            user_id: editingUser.id,
+            new_password: String(password)
+          }
+        );
         
         if (pwdError) {
           toast({
@@ -121,13 +124,16 @@ export default function SystemUsers() {
       }
 
       // Create user using a stored procedure/function
-      const { error: createError, data } = await supabase.rpc('create_system_user', {
-        user_name: userData.name,
-        user_email: userData.email,
-        user_password: String(password),
-        user_role: userData.role,
-        user_active: userData.active
-      });
+      const { error: createError } = await supabase.rpc(
+        "create_system_user" as any, 
+        {
+          user_name: userData.name,
+          user_email: userData.email,
+          user_password: String(password),
+          user_role: userData.role,
+          user_active: userData.active
+        }
+      );
       
       error = createError;
     }

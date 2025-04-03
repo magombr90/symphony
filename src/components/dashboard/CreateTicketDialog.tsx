@@ -23,12 +23,6 @@ export function CreateTicketDialog({
 }: CreateTicketDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Ticket
-        </Button>
-      </DialogTrigger>
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle>Novo Ticket</DialogTitle>

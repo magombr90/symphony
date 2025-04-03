@@ -49,14 +49,23 @@ export function ClientTicketsList({ clientId }: ClientTicketsListProps) {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setTickets(data as ClientTicket[]);
+      
+      // Process data to handle potential relation errors
+      const processedData = data?.map(ticket => ({
+        ...ticket,
+        assigned_user: ticket.assigned_user?.error 
+          ? { name: 'Não atribuído' } 
+          : ticket.assigned_user
+      })) as ClientTicket[];
+      
+      setTickets(processedData || []);
       
       // Filtrar tickets com agendamento nos próximos 3 dias
       const now = new Date();
       const threeDaysLater = new Date();
       threeDaysLater.setDate(now.getDate() + 3);
       
-      const upcoming = (data as ClientTicket[]).filter(ticket => {
+      const upcoming = processedData.filter(ticket => {
         const scheduledDate = new Date(ticket.scheduled_for);
         return scheduledDate > now && scheduledDate < threeDaysLater && 
                (ticket.status === "PENDENTE" || ticket.status === "EM_ANDAMENTO");

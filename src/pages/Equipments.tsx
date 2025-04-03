@@ -110,8 +110,16 @@ export default function Equipments() {
         throw error;
       }
 
-      console.log("Dados processados:", data);
-      return data as Equipment[];
+      // Process data to handle relation errors
+      return (data || []).map(item => ({
+        ...item,
+        ticket: item.ticket ? {
+          ...item.ticket,
+          assigned_user: item.ticket.assigned_user?.error 
+            ? { name: 'Não atribuído' } 
+            : item.ticket.assigned_user
+        } : null
+      })) as Equipment[];
     },
   });
 
@@ -140,7 +148,14 @@ export default function Equipments() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as TicketHistory[];
+      
+      // Process data to handle relation errors
+      return (data || []).map(item => ({
+        ...item,
+        created_by_user: item.created_by_user?.error ? { name: 'Usuário desconhecido' } : item.created_by_user,
+        previous_assigned_to_user: item.previous_assigned_to_user?.error ? null : item.previous_assigned_to_user,
+        new_assigned_to_user: item.new_assigned_to_user?.error ? null : item.new_assigned_to_user
+      })) as TicketHistory[];
     },
   });
 
