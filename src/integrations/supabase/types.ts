@@ -114,34 +114,28 @@ export type Database = {
       }
       system_users: {
         Row: {
-          active: boolean | null
-          created_at: string
+          active: boolean
+          created_at: string | null
           email: string
           id: string
           name: string
-          password_hash: string
           role: string
-          username: string | null
         }
         Insert: {
-          active?: boolean | null
-          created_at?: string
+          active?: boolean
+          created_at?: string | null
           email: string
-          id?: string
+          id: string
           name: string
-          password_hash?: string
           role?: string
-          username?: string | null
         }
         Update: {
-          active?: boolean | null
-          created_at?: string
+          active?: boolean
+          created_at?: string | null
           email?: string
           id?: string
           name?: string
-          password_hash?: string
           role?: string
-          username?: string | null
         }
         Relationships: []
       }
@@ -195,27 +189,6 @@ export type Database = {
           time_spent?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_new_assigned_to"
-            columns: ["new_assigned_to"]
-            isOneToOne: false
-            referencedRelation: "system_users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_previous_assigned_to"
-            columns: ["previous_assigned_to"]
-            isOneToOne: false
-            referencedRelation: "system_users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ticket_history_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "system_users"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "ticket_history_ticket_id_fkey"
             columns: ["ticket_id"]
@@ -283,24 +256,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "tickets_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "system_users"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "tickets_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tickets_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "system_users"
             referencedColumns: ["id"]
           },
         ]
@@ -325,24 +284,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "tickets_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "system_users"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "tickets_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tickets_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "system_users"
             referencedColumns: ["id"]
           },
         ]

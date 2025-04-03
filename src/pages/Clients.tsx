@@ -22,6 +22,7 @@ import { Client, ClientFormData } from "@/types/client";
 const initialFormData: ClientFormData = {
   cnpj: "",
   razao_social: "",
+  nome_fantasia: "",
   endereco: "",
   telefone: "",
   email: "",
@@ -34,6 +35,7 @@ export default function Clients() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [searchingCNPJ, setSearchingCNPJ] = useState(false);
   const [formData, setFormData] = useState<ClientFormData>(initialFormData);
   const { toast } = useToast();
 
@@ -58,11 +60,20 @@ export default function Clients() {
     },
   });
 
-  const fetchCNPJData = async (cnpj: string) => {
-    setLoading(true);
+  const fetchCNPJData = async () => {
+    const cnpj = formData.cnpj.replace(/[^\d]/g, '');
+    if (cnpj.length !== 14) {
+      toast({
+        variant: "destructive",
+        title: "CNPJ inválido",
+        description: "O CNPJ deve conter 14 dígitos",
+      });
+      return;
+    }
+
+    setSearchingCNPJ(true);
     try {
-      const formattedCNPJ = cnpj.replace(/[^\d]/g, '');
-      const response = await fetch(`https://publica.cnpj.ws/cnpj/${formattedCNPJ}`);
+      const response = await fetch(`https://publica.cnpj.ws/cnpj/${cnpj}`);
       
       if (!response.ok) {
         throw new Error('CNPJ não encontrado');
@@ -71,8 +82,9 @@ export default function Clients() {
       const data = await response.json();
       
       setFormData({
-        cnpj: cnpj,
+        cnpj: formData.cnpj,
         razao_social: data.razao_social,
+        nome_fantasia: data.estabelecimento.nome_fantasia || data.razao_social,
         endereco: `${data.estabelecimento.logradouro}, ${data.estabelecimento.numero} - ${data.estabelecimento.bairro}, ${data.estabelecimento.cidade.nome}/${data.estabelecimento.estado.sigla}`,
         telefone: data.estabelecimento.ddd1 && data.estabelecimento.telefone1 
           ? `${data.estabelecimento.ddd1}${data.estabelecimento.telefone1}`
@@ -92,17 +104,27 @@ export default function Clients() {
         description: error instanceof Error ? error.message : "Erro desconhecido",
       });
     } finally {
-      setLoading(false);
+      setSearchingCNPJ(false);
     }
   };
 
   const handleCNPJChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setFormData(prev => ({ ...prev, cnpj: value }));
+    // Format CNPJ: XX.XXX.XXX/XXXX-XX
+    let formatted = value.replace(/\D/g, '');
+    if (formatted.length > 14) formatted = formatted.substring(0, 14);
     
-    if (value.replace(/[^\d]/g, '').length === 14) {
-      fetchCNPJData(value);
+    if (formatted.length > 12) {
+      formatted = `${formatted.substring(0, 2)}.${formatted.substring(2, 5)}.${formatted.substring(5, 8)}/${formatted.substring(8, 12)}-${formatted.substring(12)}`;
+    } else if (formatted.length > 8) {
+      formatted = `${formatted.substring(0, 2)}.${formatted.substring(2, 5)}.${formatted.substring(5, 8)}/${formatted.substring(8)}`;
+    } else if (formatted.length > 5) {
+      formatted = `${formatted.substring(0, 2)}.${formatted.substring(2, 5)}.${formatted.substring(5)}`;
+    } else if (formatted.length > 2) {
+      formatted = `${formatted.substring(0, 2)}.${formatted.substring(2)}`;
     }
+    
+    setFormData(prev => ({ ...prev, cnpj: formatted }));
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -112,65 +134,77 @@ export default function Clients() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
     
-    const { error } = await supabase.from("clients").insert({
-      cnpj: formData.cnpj,
-      razao_social: formData.razao_social,
-      endereco: formData.endereco || null,
-      telefone: formData.telefone || null,
-      email: formData.email || null,
-      cep: formData.cep || null,
-      observacoes: formData.observacoes || null,
-    });
-
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao criar cliente",
-        description: error.message,
-      });
-      return;
-    }
-
-    toast({
-      title: "Cliente criado com sucesso!",
-    });
-    setOpen(false);
-    setFormData(initialFormData);
-    refetch();
-  };
-
-  const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!selectedClient) return;
-
-    const { error } = await supabase
-      .from("clients")
-      .update({
+    try {
+      const { error } = await supabase.from("clients").insert({
+        cnpj: formData.cnpj,
         razao_social: formData.razao_social,
+        nome_fantasia: formData.nome_fantasia || null,
         endereco: formData.endereco || null,
         telefone: formData.telefone || null,
         email: formData.email || null,
         cep: formData.cep || null,
         observacoes: formData.observacoes || null,
-      })
-      .eq("id", selectedClient.id);
-
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao atualizar cliente",
-        description: error.message,
       });
-      return;
-    }
 
-    toast({
-      title: "Cliente atualizado com sucesso!",
-    });
-    setIsEditing(false);
-    setSelectedClient(null);
-    refetch();
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao criar cliente",
+          description: error.message,
+        });
+        return;
+      }
+
+      toast({
+        title: "Cliente criado com sucesso!",
+      });
+      setOpen(false);
+      setFormData(initialFormData);
+      refetch();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedClient) return;
+    
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from("clients")
+        .update({
+          razao_social: formData.razao_social,
+          nome_fantasia: formData.nome_fantasia || null,
+          endereco: formData.endereco || null,
+          telefone: formData.telefone || null,
+          email: formData.email || null,
+          cep: formData.cep || null,
+          observacoes: formData.observacoes || null,
+        })
+        .eq("id", selectedClient.id);
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao atualizar cliente",
+          description: error.message,
+        });
+        return;
+      }
+
+      toast({
+        title: "Cliente atualizado com sucesso!",
+      });
+      setIsEditing(false);
+      setSelectedClient(null);
+      refetch();
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -195,6 +229,7 @@ export default function Clients() {
     setFormData({
       cnpj: client.cnpj,
       razao_social: client.razao_social,
+      nome_fantasia: client.nome_fantasia || "",
       endereco: client.endereco || "",
       telefone: client.telefone || "",
       email: client.email || "",
@@ -224,8 +259,10 @@ export default function Clients() {
               formData={formData}
               onSubmit={handleSubmit}
               onCNPJChange={handleCNPJChange}
+              onCNPJSearch={fetchCNPJData}
               onInputChange={handleInputChange}
               loading={loading}
+              searchingCNPJ={searchingCNPJ}
             />
           </DialogContent>
         </Dialog>
@@ -271,9 +308,11 @@ export default function Clients() {
             formData={formData}
             onSubmit={handleUpdate}
             onCNPJChange={handleCNPJChange}
+            onCNPJSearch={fetchCNPJData}
             onInputChange={handleInputChange}
             isEdit
             loading={loading}
+            searchingCNPJ={searchingCNPJ}
           />
         </DialogContent>
       </Dialog>

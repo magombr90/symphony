@@ -19,6 +19,7 @@ export type Ticket = {
   updated_at: string;
   client: {
     razao_social: string;
+    nome_fantasia?: string | null;
   };
   assigned_to: string | null;
   assigned_user?: {
