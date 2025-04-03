@@ -22,7 +22,7 @@ type TicketHistory = {
   created_at: string;
   created_by_user: {
     name: string;
-  } | null;
+  };
   action_type: string;
   previous_status?: string | null;
 };
@@ -57,6 +57,7 @@ export function ClientTicketDetails({ ticket, onClose }: ClientTicketDetailsProp
     const fetchTicketDetails = async () => {
       setLoading(true);
       try {
+        // Fetch ticket history
         const { data: historyData, error: historyError } = await supabase
           .from("ticket_history")
           .select(`
@@ -72,19 +73,9 @@ export function ClientTicketDetails({ ticket, onClose }: ClientTicketDetailsProp
           .order("created_at", { ascending: false });
 
         if (historyError) throw historyError;
-        
-        const transformedHistory = (historyData || []).map(item => {
-          return {
-            ...item,
-            created_by_user: item.created_by_user && 
-              typeof item.created_by_user === 'object' && 
-              !('error' in item.created_by_user) ? 
-              item.created_by_user : { name: "Usuário não disponível" }
-          };
-        }) as TicketHistory[];
-        
-        setHistory(transformedHistory);
+        setHistory(historyData);
 
+        // Fetch equipment
         const { data: equipmentData, error: equipmentError } = await supabase
           .from("equipamentos")
           .select("*")
@@ -214,7 +205,7 @@ export function ClientTicketDetails({ ticket, onClose }: ClientTicketDetailsProp
                         {item.reason || "Sem observações adicionais"}
                       </p>
                       <p className="text-xs text-muted-foreground mt-2">
-                        Por: {item.created_by_user?.name || "Usuário não disponível"}
+                        Por: {item.created_by_user.name}
                       </p>
                     </CardContent>
                   </Card>

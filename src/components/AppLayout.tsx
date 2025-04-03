@@ -5,28 +5,13 @@ import AppSidebar from "./AppSidebar";
 import { ThemeToggle } from "./ThemeToggle";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "./ui/button";
-import { LogOut, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetContent } from "./ui/sheet";
-import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { signOut } = useAuth();
-  const { toast } = useToast();
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await signOut();
-    toast({
-      title: "Logout realizado",
-      description: "Você foi desconectado com sucesso"
-    });
-    navigate("/login");
-  };
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -55,15 +40,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
           <main className="flex-1 overflow-auto">
             <div className="container mx-auto p-6 max-w-[1600px]">
-              <div className="flex justify-end mb-4 gap-2">
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  onClick={handleLogout}
-                  title="Sair"
-                >
-                  <LogOut className="h-4 w-4" />
-                </Button>
+              <div className="flex justify-end mb-4">
                 <ThemeToggle />
               </div>
               {children}

@@ -18,7 +18,7 @@ type ClientTicket = {
   description: string;
   scheduled_for: string;
   created_at: string;
-  assigned_user?: { name: string | null } | null;
+  assigned_user?: { name: string } | null;
 };
 
 interface ClientTicketsListProps {
@@ -49,26 +49,14 @@ export function ClientTicketsList({ clientId }: ClientTicketsListProps) {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
+      setTickets(data as ClientTicket[]);
       
-      const transformedData = (data || []).map(ticket => {
-        const assignedUser = ticket.assigned_user && 
-          typeof ticket.assigned_user === 'object' && 
-          !('error' in ticket.assigned_user) ? 
-          ticket.assigned_user : { name: null };
-          
-        return {
-          ...ticket,
-          assigned_user: assignedUser
-        };
-      }) as ClientTicket[];
-      
-      setTickets(transformedData);
-      
+      // Filtrar tickets com agendamento nos próximos 3 dias
       const now = new Date();
       const threeDaysLater = new Date();
       threeDaysLater.setDate(now.getDate() + 3);
       
-      const upcoming = transformedData.filter(ticket => {
+      const upcoming = (data as ClientTicket[]).filter(ticket => {
         const scheduledDate = new Date(ticket.scheduled_for);
         return scheduledDate > now && scheduledDate < threeDaysLater && 
                (ticket.status === "PENDENTE" || ticket.status === "EM_ANDAMENTO");

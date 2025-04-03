@@ -81,9 +81,12 @@ export default function SystemUsers() {
       active: formData.get("active") === "true",
     };
 
-    // Get the password value
+    // Se tiver senha nova, inclui no objeto
     const password = formData.get("password");
-    
+    if (password && String(password).length > 0) {
+      Object.assign(userData, { password_hash: String(password) });
+    }
+
     let error;
     if (editingUser) {
       // Atualização
@@ -91,21 +94,8 @@ export default function SystemUsers() {
         .from("system_users")
         .update(userData)
         .eq("id", editingUser.id));
-        
-      // If there's a password, we need to update it separately via a custom API call or function
-      if (password && String(password).length > 0) {
-        // Handle password update through a custom API endpoint or function
-        // This should be implemented according to your application's auth flow
-        console.log("Password update required for user", editingUser.id);
-        
-        toast({
-          title: "Senha não pode ser alterada diretamente",
-          description: "A alteração de senha precisa ser feita por outro meio.",
-          variant: "destructive"
-        });
-      }
     } else {
-      // Criação - use the Auth API instead of direct DB insert for new users
+      // Criação
       if (!password) {
         toast({
           variant: "destructive",
@@ -114,32 +104,10 @@ export default function SystemUsers() {
         });
         return;
       }
-      
-      // Use Auth signup API instead of direct insert
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: String(formData.get("email")),
-        password: String(password),
-        options: {
-          data: {
-            name: String(formData.get("name")),
-            role: selectedRole
-          }
-        }
-      });
-      
-      error = authError;
-      
-      // The trigger should handle creating the system_users record,
-      // but we can update it if needed
-      if (!error && authData.user) {
-        // We might need to update additional fields not handled by the trigger
-        if (selectedRole !== "user") {
-          await supabase
-            .from("system_users")
-            .update({ role: selectedRole })
-            .eq("id", authData.user.id);
-        }
-      }
+      ({ error } = await supabase.from("system_users").insert({
+        ...userData,
+        password_hash: String(password),
+      }));
     }
 
     if (error) {

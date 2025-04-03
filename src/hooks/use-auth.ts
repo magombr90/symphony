@@ -2,11 +2,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
-import { useAuthContext } from "@/contexts/AuthContext";
 
 export function useAuth() {
-  const { signOut } = useAuthContext();
-  
   const { data: currentUser } = useQuery({
     queryKey: ["current-user"],
     queryFn: async () => {
@@ -94,7 +91,6 @@ export function useAuth() {
     clientData,
     clientAuth,
     clientLogout,
-    isClientAuthenticated: Boolean(clientData),
-    signOut
+    isClientAuthenticated: Boolean(clientData)
   };
 }

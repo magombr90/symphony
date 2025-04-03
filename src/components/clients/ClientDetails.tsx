@@ -46,15 +46,7 @@ export function ClientDetails({ client, onEdit }: ClientDetailsProps) {
       const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
-      
-      // Transform data to handle relationship errors
-      return data?.map(ticket => ({
-        ...ticket,
-        assigned_user: ticket.assigned_user && 
-          typeof ticket.assigned_user === 'object' && 
-          !('error' in ticket.assigned_user) ? 
-          ticket.assigned_user : { name: null }
-      }));
+      return data;
     },
   });
 

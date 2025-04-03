@@ -17,32 +17,11 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { TicketDetails } from "@/components/tickets/TicketDetails";
-import { Ticket, TicketHistory, SelectQueryError } from "@/types/ticket";
+import { TicketHistory } from "@/types/ticket";
 import { CreateEquipmentDialog } from "@/components/equipments/CreateEquipmentDialog";
 import { EditEquipmentDialog } from "@/components/equipments/EditEquipmentDialog";
 import { AssociateTicketDialog } from "@/components/equipments/AssociateTicketDialog";
 import { DeleteEquipmentDialog } from "@/components/equipments/DeleteEquipmentDialog";
-
-type EquipmentTicket = {
-  id: string;
-  codigo: string;
-  status: string;
-  description: string;
-  client_id: string;
-  scheduled_for: string;
-  assigned_to: string | null;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-  faturado: boolean;
-  faturado_at: string | null;
-  client: {
-    razao_social: string;
-  };
-  assigned_user?: {
-    name: string | null;
-  } | null;
-} | null;
 
 type Equipment = {
   id: string;
@@ -56,12 +35,31 @@ type Equipment = {
     razao_social: string;
   };
   ticket_id: string | null;
-  ticket: EquipmentTicket;
+  ticket: {
+    id: string;
+    codigo: string;
+    status: string;
+    description: string;
+    client_id: string;
+    scheduled_for: string;
+    assigned_to: string | null;
+    created_by: string;
+    created_at: string;
+    updated_at: string;
+    faturado: boolean;
+    faturado_at: string | null;
+    client: {
+      razao_social: string;
+    };
+    assigned_user?: {
+      name: string | null;
+    } | null;
+  } | null;
 };
 
 export default function Equipments() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<Equipment["ticket"] | null>(null);
   const { toast } = useToast();
 
   const { data: equipments, refetch } = useQuery({
@@ -112,29 +110,8 @@ export default function Equipments() {
         throw error;
       }
 
-      // Transform the data to handle relationship errors
-      const transformedData = (data || []).map(equipment => {
-        // Handle ticket.assigned_user if it exists and is an error
-        let transformedTicket = equipment.ticket;
-        if (transformedTicket && transformedTicket.assigned_user && 
-            typeof transformedTicket.assigned_user === 'object') {
-          // Check if it's an error object
-          if ('error' in transformedTicket.assigned_user) {
-            transformedTicket = {
-              ...transformedTicket,
-              assigned_user: { name: null }
-            };
-          }
-        }
-
-        return {
-          ...equipment,
-          ticket: transformedTicket
-        };
-      });
-
-      console.log("Dados processados:", transformedData);
-      return transformedData as unknown as Equipment[];
+      console.log("Dados processados:", data);
+      return data as Equipment[];
     },
   });
 
@@ -163,53 +140,9 @@ export default function Equipments() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      
-      // Transform data to handle relationship errors
-      const transformedData = (data || []).map(item => ({
-        ...item,
-        created_by_user: item.created_by_user && 
-          typeof item.created_by_user === 'object' && 
-          !('error' in item.created_by_user) ? 
-          item.created_by_user : { name: "Usuário não disponível" },
-        previous_assigned_to_user: item.previous_assigned_to_user && 
-          typeof item.previous_assigned_to_user === 'object' && 
-          !('error' in item.previous_assigned_to_user) ? 
-          item.previous_assigned_to_user : { name: null },
-        new_assigned_to_user: item.new_assigned_to_user && 
-          typeof item.new_assigned_to_user === 'object' && 
-          !('error' in item.new_assigned_to_user) ? 
-          item.new_assigned_to_user : { name: null }
-      })) as unknown as TicketHistory[];
-      
-      return transformedData;
+      return data as TicketHistory[];
     },
   });
-
-  const handleViewTicket = (ticket: EquipmentTicket) => {
-    if (!ticket) return;
-    
-    // Convert from EquipmentTicket to Ticket format
-    const ticketData: Ticket = {
-      id: ticket.id,
-      codigo: ticket.codigo,
-      status: ticket.status,
-      description: ticket.description,
-      client_id: ticket.client_id,
-      scheduled_for: ticket.scheduled_for,
-      assigned_to: ticket.assigned_to,
-      created_by: ticket.created_by,
-      created_at: ticket.created_at,
-      updated_at: ticket.updated_at,
-      client: ticket.client,
-      faturado: ticket.faturado,
-      faturado_at: ticket.faturado_at,
-      assigned_user: ticket.assigned_user && typeof ticket.assigned_user === 'object' && 
-                      !('error' in ticket.assigned_user) ? 
-                      ticket.assigned_user : { name: null }
-    };
-    
-    setSelectedTicket(ticketData);
-  };
 
   return (
     <div className="container mx-auto py-6">
@@ -289,7 +222,7 @@ export default function Equipments() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleViewTicket(equipment.ticket)}
+                        onClick={() => setSelectedTicket(equipment.ticket)}
                         className="hover:bg-gray-100"
                       >
                         <Eye className="h-4 w-4" />

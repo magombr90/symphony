@@ -7,11 +7,6 @@ export type SystemUser = {
   email: string;
 };
 
-// Update the SelectQueryError interface to include the required error property
-export interface SelectQueryError {
-  error: true;
-}
-
 export type Ticket = {
   id: string;
   codigo: string;
@@ -53,15 +48,15 @@ export type TicketHistory = {
   created_by: string;
   created_by_user: {
     name: string;
-  } | null;
+  };
   action_type: "STATUS_CHANGE" | "USER_ASSIGNMENT" | "EQUIPMENT_STATUS" | "PROGRESS_NOTE";
   previous_assigned_to: string | null;
   new_assigned_to: string | null;
-  previous_assigned_to_user: {
-    name: string | null;
+  previous_assigned_to_user?: {
+    name: string;
   } | null;
-  new_assigned_to_user: {
-    name: string | null;
+  new_assigned_to_user?: {
+    name: string;
   } | null;
   equipment_id?: string;
   equipment_codigo?: string;

@@ -74,16 +74,11 @@ export function useTicketQueries(
       const { data, error } = await query;
       if (error) throw error;
 
-      // Transform data to handle relationship errors
-      const transformedData = (data || []).map(ticket => {
+      // Map equipment data to tickets
+      return (data || []).map(ticket => {
         const ticketEquipments = equipmentData?.filter(eq => eq.ticket_id === ticket.id) || [];
-        
         return {
           ...ticket,
-          assigned_user: ticket.assigned_user && 
-            typeof ticket.assigned_user === 'object' && 
-            !('error' in ticket.assigned_user) ? 
-            ticket.assigned_user : { name: null },
           equipamentos: ticketEquipments.map(eq => ({
             id: eq.id,
             codigo: eq.codigo,
@@ -95,9 +90,7 @@ export function useTicketQueries(
             entregue_at: eq.entregue_at
           }))
         };
-      });
-
-      return transformedData as unknown as Ticket[];
+      }) as Ticket[];
     },
   });
 
@@ -139,25 +132,8 @@ export function useTicketQueries(
 
       if (error) throw error;
 
-      // Transform data to handle relationship errors
-      const transformedData = (data || []).map(item => ({
-        ...item,
-        created_by_user: item.created_by_user && 
-          typeof item.created_by_user === 'object' && 
-          !('error' in item.created_by_user) ? 
-          item.created_by_user : { name: "Usuário não disponível" },
-        previous_assigned_to_user: item.previous_assigned_to_user && 
-          typeof item.previous_assigned_to_user === 'object' && 
-          !('error' in item.previous_assigned_to_user) ? 
-          item.previous_assigned_to_user : { name: null },
-        new_assigned_to_user: item.new_assigned_to_user && 
-          typeof item.new_assigned_to_user === 'object' && 
-          !('error' in item.new_assigned_to_user) ? 
-          item.new_assigned_to_user : { name: null }
-      }));
-
-      console.log("Ticket history fetched:", transformedData);
-      return transformedData as unknown as TicketHistory[];
+      console.log("Ticket history fetched:", data);
+      return (data || []) as TicketHistory[];
     },
   });
 
