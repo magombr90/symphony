@@ -7,7 +7,7 @@ export type SystemUser = {
   email: string;
 };
 
-// Define a type for SelectQueryError for handling Supabase relation errors
+// Update the SelectQueryError interface to include the required error property
 export interface SelectQueryError {
   error: true;
 }
