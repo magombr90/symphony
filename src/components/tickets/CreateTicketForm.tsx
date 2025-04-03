@@ -39,6 +39,16 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
+    // Validate client selection
+    if (!selectedClient) {
+      toast({
+        variant: "destructive",
+        title: "Cliente não selecionado",
+        description: "Por favor, selecione um cliente para continuar.",
+      });
+      return;
+    }
+
     const scheduledForValue = formData.get("scheduled_for");
     
     if (!scheduledForValue) {
@@ -82,26 +92,37 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
       codigo: "TEMP", // Valor temporário que será substituído pelo trigger generate_ticket_code
     };
 
-    const { data, error } = await supabase
-      .from("tickets")
-      .insert(newTicketData)
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from("tickets")
+        .insert(newTicketData)
+        .select()
+        .single();
 
-    if (error) {
+      if (error) {
+        console.error("Error creating ticket:", error);
+        toast({
+          variant: "destructive",
+          title: "Erro ao criar ticket",
+          description: error.message,
+        });
+        return;
+      }
+
+      setNewTicket(data);
+      toast({
+        title: "Ticket criado com sucesso!",
+        description: `Ticket ${data.codigo} foi criado.`,
+      });
+      onSuccess();
+    } catch (error) {
+      console.error("Unexpected error:", error);
       toast({
         variant: "destructive",
         title: "Erro ao criar ticket",
-        description: error.message,
+        description: "Ocorreu um erro inesperado. Tente novamente.",
       });
-      return;
     }
-
-    setNewTicket(data);
-    toast({
-      title: "Ticket criado com sucesso!",
-    });
-    onSuccess();
   };
 
   // Formata a data mínima para o campo datetime-local (data atual)
@@ -113,11 +134,17 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <Label>Cliente</Label>
-        <ClientSearch value={selectedClient} onChange={setSelectedClient} />
+        <Label htmlFor="client">Cliente*</Label>
+        <ClientSearch 
+          value={selectedClient} 
+          onChange={(value) => {
+            console.log("Client selected:", value);
+            setSelectedClient(value);
+          }} 
+        />
       </div>
 
-      {selectedClient && (
+      {selectedClient && newTicket && (
         <div>
           <AddEquipmentDialog 
             clientId={selectedClient}
@@ -134,13 +161,16 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
       )}
 
       <div>
-        <Label>Responsável</Label>
+        <Label htmlFor="assigned_to">Responsável*</Label>
         <Select
           value={selectedUser}
-          onValueChange={setSelectedUser}
+          onValueChange={(value) => {
+            console.log("User selected:", value);
+            setSelectedUser(value);
+          }}
           required
         >
-          <SelectTrigger>
+          <SelectTrigger id="assigned_to">
             <SelectValue placeholder="Selecione um responsável" />
           </SelectTrigger>
           <SelectContent>
@@ -153,17 +183,17 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
         </Select>
       </div>
       <div>
-        <Label htmlFor="description">Descrição</Label>
+        <Label htmlFor="description">Descrição*</Label>
         <Input id="description" name="description" required />
       </div>
       <div>
-        <Label>Status</Label>
+        <Label htmlFor="status">Status*</Label>
         <Select
           value={selectedStatus}
           onValueChange={setSelectedStatus}
           required
         >
-          <SelectTrigger>
+          <SelectTrigger id="status">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -176,7 +206,7 @@ export function CreateTicketForm({ clients = [], systemUsers = [], onSuccess }: 
         </Select>
       </div>
       <div>
-        <Label htmlFor="scheduled_for">Data Agendada</Label>
+        <Label htmlFor="scheduled_for">Data Agendada*</Label>
         <Input
           id="scheduled_for"
           name="scheduled_for"

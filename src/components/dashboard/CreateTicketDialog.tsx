@@ -1,7 +1,5 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CreateTicketForm } from "@/components/tickets/CreateTicketForm";
 import { Client } from "@/types/client";
 import { SystemUser } from "@/types/ticket";
