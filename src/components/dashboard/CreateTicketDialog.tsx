@@ -29,7 +29,7 @@ export function CreateTicketDialog({
           Novo Ticket
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle>Novo Ticket</DialogTitle>
         </DialogHeader>

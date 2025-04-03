@@ -81,21 +81,36 @@ export default function SystemUsers() {
       active: formData.get("active") === "true",
     };
 
-    // Se tiver senha nova, inclui no objeto
-    const password = formData.get("password");
-    if (password && String(password).length > 0) {
-      Object.assign(userData, { password_hash: String(password) });
-    }
-
     let error;
     if (editingUser) {
       // Atualização
+      const password = formData.get("password");
+      
+      if (password && String(password).length > 0) {
+        // If password is provided, handle it separately
+        const { error: pwdError } = await supabase.rpc('update_user_password', {
+          user_id: editingUser.id,
+          new_password: String(password)
+        });
+        
+        if (pwdError) {
+          toast({
+            variant: "destructive",
+            title: "Erro ao atualizar senha",
+            description: pwdError.message,
+          });
+          return;
+        }
+      }
+      
+      // Now update the user data without password
       ({ error } = await supabase
         .from("system_users")
         .update(userData)
         .eq("id", editingUser.id));
     } else {
-      // Criação
+      // Criação - for new users, use a different approach
+      const password = formData.get("password");
       if (!password) {
         toast({
           variant: "destructive",
@@ -104,10 +119,17 @@ export default function SystemUsers() {
         });
         return;
       }
-      ({ error } = await supabase.from("system_users").insert({
-        ...userData,
-        password_hash: String(password),
-      }));
+
+      // Create user using a stored procedure/function
+      const { error: createError, data } = await supabase.rpc('create_system_user', {
+        user_name: userData.name,
+        user_email: userData.email,
+        user_password: String(password),
+        user_role: userData.role,
+        user_active: userData.active
+      });
+      
+      error = createError;
     }
 
     if (error) {

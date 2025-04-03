@@ -88,7 +88,11 @@ export function useTicketQueries(
             observacoes: eq.observacoes,
             status: eq.status,
             entregue_at: eq.entregue_at
-          }))
+          })),
+          // Ensure assigned_user always has expected shape
+          assigned_user: ticket.assigned_user?.error 
+            ? { id: '', name: 'Não atribuído' }
+            : ticket.assigned_user || { id: '', name: 'Não atribuído' }
         };
       }) as Ticket[];
     },
@@ -132,8 +136,13 @@ export function useTicketQueries(
 
       if (error) throw error;
 
-      console.log("Ticket history fetched:", data);
-      return (data || []) as TicketHistory[];
+      return (data || []).map(item => ({
+        ...item,
+        // Fix any field with error by providing default values
+        created_by_user: item.created_by_user?.error ? { name: 'Usuário desconhecido' } : item.created_by_user,
+        previous_assigned_to_user: item.previous_assigned_to_user?.error ? { name: 'Usuário desconhecido' } : item.previous_assigned_to_user,
+        new_assigned_to_user: item.new_assigned_to_user?.error ? { name: 'Usuário desconhecido' } : item.new_assigned_to_user
+      })) as TicketHistory[];
     },
   });
 
