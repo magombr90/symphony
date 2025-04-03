@@ -9,6 +9,9 @@ import { CreateTicketDialog } from "@/components/dashboard/CreateTicketDialog";
 import { RecentTickets } from "@/components/dashboard/RecentTickets";
 import { calculateUserStats, calculateStatusCounts } from "@/components/dashboard/UserStatsCalculator";
 import { ReasonDialog } from "@/components/tickets/ReasonDialog";
+import { Button } from "@/components/ui/button";
+import { ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function Dashboard() {
   const { 
@@ -75,13 +78,21 @@ export default function Dashboard() {
     <div className="fade-in space-y-8">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <CreateTicketDialog
-          open={open}
-          onOpenChange={setOpen}
-          clients={clients || []}
-          systemUsers={systemUsers || []}
-          onSuccess={refetch}
-        />
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/client-portal" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+              <ExternalLink className="h-4 w-4" />
+              Portal de Clientes
+            </Link>
+          </Button>
+          <CreateTicketDialog
+            open={open}
+            onOpenChange={setOpen}
+            clients={clients || []}
+            systemUsers={systemUsers || []}
+            onSuccess={refetch}
+          />
+        </div>
       </div>
 
       <div className="grid gap-4">
