@@ -91,12 +91,14 @@ export default function SystemUsers() {
         const password = formData.get("password");
         
         if (password && String(password).length > 0) {
-          // If password is provided, handle it separately using rpc
-          const { error: pwdError } = await supabase.rpc(
-            "update_user_password",
-            { 
-              user_id: editingUser.id, 
-              new_password: String(password) 
+          // If password is provided, handle it separately using a function call
+          const { error: pwdError } = await supabase.functions.invoke(
+            "update-user-password",
+            {
+              body: { 
+                user_id: editingUser.id, 
+                new_password: String(password) 
+              }
             }
           );
           
@@ -129,15 +131,17 @@ export default function SystemUsers() {
           return;
         }
 
-        // Create user using proper rpc call
-        const { error: createError, data } = await supabase.rpc(
-          "create_system_user",
+        // Create user using an edge function call
+        const { error: createError, data } = await supabase.functions.invoke(
+          "create-system-user",
           {
-            user_name: userData.name,
-            user_email: userData.email,
-            user_password: String(password),
-            user_role: userData.role,
-            user_active: userData.active
+            body: {
+              user_name: userData.name,
+              user_email: userData.email,
+              user_password: String(password),
+              user_role: userData.role,
+              user_active: userData.active
+            }
           }
         );
         
