@@ -51,6 +51,7 @@ export default function SystemUsers() {
   const [editingUser, setEditingUser] = useState<SystemUser | null>(null);
   const { toast } = useToast();
   const [selectedRole, setSelectedRole] = useState("user");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: users, refetch } = useQuery({
     queryKey: ["system-users"],
@@ -72,87 +73,106 @@ export default function SystemUsers() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    setIsSubmitting(true);
+    
+    try {
+      const formData = new FormData(e.currentTarget);
 
-    const userData = {
-      name: String(formData.get("name")),
-      email: String(formData.get("email")),
-      role: selectedRole,
-      active: formData.get("active") === "true",
-    };
+      const userData = {
+        name: String(formData.get("name")),
+        email: String(formData.get("email")),
+        role: selectedRole,
+        active: formData.get("active") === "true",
+      };
 
-    let error;
-    if (editingUser) {
-      // Atualização
-      const password = formData.get("password");
-      
-      if (password && String(password).length > 0) {
-        // If password is provided, handle it separately - use a type assertion for the RPC function name
-        const { error: pwdError } = await supabase.rpc(
-          "update_user_password" as any, 
+      let error;
+      if (editingUser) {
+        // Atualização
+        const password = formData.get("password");
+        
+        if (password && String(password).length > 0) {
+          // If password is provided, handle it separately
+          const { error: pwdError } = await supabase.rpc(
+            "update_user_password",
+            {
+              user_id: editingUser.id,
+              new_password: String(password)
+            }
+          );
+          
+          if (pwdError) {
+            toast({
+              variant: "destructive",
+              title: "Erro ao atualizar senha",
+              description: pwdError.message,
+            });
+            setIsSubmitting(false);
+            return;
+          }
+        }
+        
+        // Now update the user data without password
+        ({ error } = await supabase
+          .from("system_users")
+          .update(userData)
+          .eq("id", editingUser.id));
+      } else {
+        // Criação - for new users
+        const password = formData.get("password");
+        if (!password) {
+          toast({
+            variant: "destructive",
+            title: "Erro ao criar usuário",
+            description: "Senha é obrigatória para novos usuários",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Create user using the stored procedure/function
+        const { error: createError, data } = await supabase.rpc(
+          "create_system_user",
           {
-            user_id: editingUser.id,
-            new_password: String(password)
+            user_name: userData.name,
+            user_email: userData.email,
+            user_password: String(password),
+            user_role: userData.role,
+            user_active: userData.active
           }
         );
         
-        if (pwdError) {
-          toast({
-            variant: "destructive",
-            title: "Erro ao atualizar senha",
-            description: pwdError.message,
-          });
-          return;
-        }
+        error = createError;
+        console.log("User creation response:", data);
       }
-      
-      // Now update the user data without password
-      ({ error } = await supabase
-        .from("system_users")
-        .update(userData)
-        .eq("id", editingUser.id));
-    } else {
-      // Criação - for new users, use a different approach
-      const password = formData.get("password");
-      if (!password) {
+
+      if (error) {
+        console.error("Error operation:", error);
         toast({
           variant: "destructive",
-          title: "Erro ao criar usuário",
-          description: "Senha é obrigatória para novos usuários",
+          title: `Erro ao ${editingUser ? 'atualizar' : 'criar'} usuário`,
+          description: error.message,
         });
+        setIsSubmitting(false);
         return;
       }
 
-      // Create user using a stored procedure/function
-      const { error: createError } = await supabase.rpc(
-        "create_system_user" as any, 
-        {
-          user_name: userData.name,
-          user_email: userData.email,
-          user_password: String(password),
-          user_role: userData.role,
-          user_active: userData.active
-        }
-      );
-      
-      error = createError;
-    }
-
-    if (error) {
+      toast({
+        title: `Usuário ${editingUser ? 'atualizado' : 'criado'} com sucesso!`,
+      });
+      setOpen(false);
+      setEditingUser(null);
+      setSelectedRole("user");
+      refetch();
+    } catch (error) {
+      console.error("Unexpected error:", error);
       toast({
         variant: "destructive",
         title: `Erro ao ${editingUser ? 'atualizar' : 'criar'} usuário`,
-        description: error.message,
+        description: "Ocorreu um erro inesperado. Tente novamente.",
       });
-      return;
+    } finally {
+      setIsSubmitting(false);
     }
-
-    toast({
-      title: `Usuário ${editingUser ? 'atualizado' : 'criado'} com sucesso!`,
-    });
-    setOpen(false);
-    setEditingUser(null);
-    refetch();
   };
 
   const handleClose = () => {
@@ -242,8 +262,8 @@ export default function SystemUsers() {
                   </Select>
                 </div>
               )}
-              <Button type="submit" className="w-full">
-                {editingUser ? "Atualizar" : "Salvar"}
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Salvando..." : (editingUser ? "Atualizar" : "Salvar")}
               </Button>
             </form>
           </DialogContent>

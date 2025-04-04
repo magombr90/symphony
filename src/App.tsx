@@ -13,29 +13,32 @@ import UserProfile from "./pages/UserProfile";
 import ClientPortal from "./pages/ClientPortal";
 import ClientTicketForm from "./pages/ClientTicketForm";
 import ClientTicketSuccess from "./pages/ClientTicketSuccess";
+import { AuthProvider } from "@/hooks/use-auth";
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          {/* Client Portal Routes - No AppLayout */}
-          <Route path="/client-portal" element={<ClientPortal />} />
-          <Route path="/client-ticket-form" element={<ClientTicketForm />} />
-          <Route path="/client-ticket-success" element={<ClientTicketSuccess />} />
-          
-          {/* Admin App Routes */}
-          <Route path="/" element={<AppLayout><Dashboard /></AppLayout>} />
-          <Route path="/clients" element={<AppLayout><Clients /></AppLayout>} />
-          <Route path="/tickets" element={<AppLayout><Tickets /></AppLayout>} />
-          <Route path="/system-users" element={<AppLayout><SystemUsers /></AppLayout>} />
-          <Route path="/equipments" element={<AppLayout><Equipments /></AppLayout>} />
-          <Route path="/profile" element={<AppLayout><UserProfile /></AppLayout>} />
-        </Routes>
-        <Toaster />
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Client Portal Routes - No AppLayout */}
+            <Route path="/client-portal" element={<ClientPortal />} />
+            <Route path="/client-ticket-form" element={<ClientTicketForm />} />
+            <Route path="/client-ticket-success" element={<ClientTicketSuccess />} />
+            
+            {/* Admin App Routes */}
+            <Route path="/" element={<AppLayout><Dashboard /></AppLayout>} />
+            <Route path="/clients" element={<AppLayout><Clients /></AppLayout>} />
+            <Route path="/tickets" element={<AppLayout><Tickets /></AppLayout>} />
+            <Route path="/system-users" element={<AppLayout><SystemUsers /></AppLayout>} />
+            <Route path="/equipments" element={<AppLayout><Equipments /></AppLayout>} />
+            <Route path="/profile" element={<AppLayout><UserProfile /></AppLayout>} />
+          </Routes>
+          <Toaster />
+        </BrowserRouter>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

@@ -1,8 +1,47 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 
+// Define types for our auth context
+type AuthContextType = {
+  currentUser: any;
+  isAdmin: boolean;
+  clientData: {
+    clientId: string;
+    clientName: string;
+    email: string;
+    cnpj: string;
+  } | null;
+  clientAuth: (clientId: string, clientName: string, email: string, cnpj: string) => Promise<boolean>;
+  clientLogout: () => void;
+  isClientAuthenticated: boolean;
+};
+
+// Create context
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Provider component
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const auth = useAuth();
+  
+  return (
+    <AuthContext.Provider value={auth}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+// Hook for consuming the context
+export function useAuthContext() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuthContext must be used within an AuthProvider");
+  }
+  return context;
+}
+
+// Main auth hook implementation
 export function useAuth() {
   const { data: currentUser } = useQuery({
     queryKey: ["current-user"],
