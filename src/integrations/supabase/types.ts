@@ -304,6 +304,23 @@ export type Database = {
         }
         Returns: boolean
       }
+      create_system_user: {
+        Args: {
+          user_name: string
+          user_email: string
+          user_password: string
+          user_role: string
+          user_active: boolean
+        }
+        Returns: string
+      }
+      update_user_password: {
+        Args: {
+          user_id: string
+          new_password: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       equipment_condition: "NOVO" | "USADO" | "DEFEITO"
