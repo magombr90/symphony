@@ -91,11 +91,14 @@ export default function SystemUsers() {
         const password = formData.get("password");
         
         if (password && String(password).length > 0) {
-          // If password is provided, handle it separately - using a direct query instead of rpc
-          const { error: pwdError } = await supabase.from('_rpc')
-            .select('*')
-            .eq('name', 'update_user_password')
-            .eq('args', { user_id: editingUser.id, new_password: String(password) });
+          // If password is provided, handle it separately using rpc
+          const { error: pwdError } = await supabase.rpc(
+            "update_user_password",
+            { 
+              user_id: editingUser.id, 
+              new_password: String(password) 
+            }
+          );
           
           if (pwdError) {
             toast({
@@ -126,17 +129,17 @@ export default function SystemUsers() {
           return;
         }
 
-        // Create user using direct query instead of rpc
-        const { error: createError, data } = await supabase.from('_rpc')
-          .select('*')
-          .eq('name', 'create_system_user')
-          .eq('args', {
+        // Create user using proper rpc call
+        const { error: createError, data } = await supabase.rpc(
+          "create_system_user",
+          {
             user_name: userData.name,
             user_email: userData.email,
             user_password: String(password),
             user_role: userData.role,
             user_active: userData.active
-          });
+          }
+        );
         
         error = createError;
         console.log("User creation response:", data);
